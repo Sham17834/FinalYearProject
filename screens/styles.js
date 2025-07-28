@@ -1,0 +1,271 @@
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  header: {
+    paddingTop: 10,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  appName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  appTagline: {
+    fontSize: 14,
+    color: '#ffffff',
+    opacity: 0.9,
+  },
+  logo: {
+    fontSize: 64,
+    textAlign: 'center',
+    marginBottom: 16,
+    color: '#ffffff',
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  content: {
+    padding: 20,
+    paddingBottom: 100,
+  },
+  welcomeSection: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 8,
+  },
+  welcomeText: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  scoreCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+  },
+  scoreTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 12,
+  },
+  progressContainer: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  progressNumber: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  progressBarContainer: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 4,
+    marginTop: 8,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#3b82f6',
+    borderRadius: 4,
+  },
+  scoreMessage: {
+    fontSize: 14,
+    color: '#10b981',
+    fontWeight: '500',
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 12,
+  },
+  metricCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+  },
+  metricIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    alignSelf: 'center',
+  },
+  metricEmoji: {
+    fontSize: 18,
+  },
+  metricTitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6b7280',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  metricValue: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 4,
+    justifyContent: 'center',
+  },
+  metricNumber: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  metricUnit: {
+    fontSize: 10,
+    color: '#6b7280',
+    marginLeft: 4,
+  },
+  metricStatus: {
+    fontSize: 10,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  primaryButton: {
+    borderRadius: 12,
+    marginBottom: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  primaryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  secondaryButton: {
+    backgroundColor: '#ffffff',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  secondaryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  progressItem: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  progressDate: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 8,
+  },
+  progressMetrics: {
+    flexDirection: 'column',
+  },
+  progressMetric: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 4,
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1f2937',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    fontSize: 14,
+  },
+  picker: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    padding: 12,
+    fontSize: 14,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#6b7280',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  checkboxChecked: {
+    backgroundColor: '#10b981',
+    borderColor: '#10b981',
+  },
+  checkboxText: {
+    color: '#ffffff',
+    fontSize: 16,
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    color: '#1f2937',
+  },
+});
