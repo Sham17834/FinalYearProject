@@ -268,4 +268,8 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1f2937',
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
 });

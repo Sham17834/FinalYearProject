@@ -15,6 +15,7 @@ import { styles } from './styles';
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isFirstLogin] = useState(true); // Placeholder: Replace with AsyncStorage or backend check
   const navigation = useNavigation();
 
   const handleLogin = () => {
@@ -24,8 +25,8 @@ const LoginScreen = () => {
     }
     console.log('Login:', { email, password });
     Alert.alert('Success', 'Login submitted (placeholder)');
-    // Placeholder: Navigate to MainApp after successful login
-    navigation.navigate('MainApp');
+    // Navigate to LifestyleDataInputScreen for first login, else MainApp
+    navigation.navigate(isFirstLogin ? 'LifestyleDataInput' : 'MainApp');
   };
 
   return (

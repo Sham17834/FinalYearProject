@@ -8,6 +8,7 @@ import WelcomeScreen from './screens/WelcomeScreen';
 import AuthChoiceScreen from './screens/AuthChoiceScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import LoginScreen from './screens/LoginScreen';
+import LifestyleDataInputScreen from './screens/LifestyleDataInputScreen';
 import HealthTrackHomeScreen from './screens/HealthHomeScreen';
 import ProgressScreen from './screens/ProgressScreen';
 import TrackScreen from './screens/TrackScreen';
@@ -83,6 +84,11 @@ const App = () => {
           name="Login"
           component={LoginScreen}
           options={{ title: 'Login', headerStyle: { backgroundColor: '#3b82f6' }, headerTintColor: '#ffffff' }}
+        />
+        <Stack.Screen
+          name="LifestyleDataInput"
+          component={LifestyleDataInputScreen}
+          options={{ title: 'Lifestyle Data', headerStyle: { backgroundColor: '#3b82f6' }, headerTintColor: '#ffffff' }}
         />
         <Stack.Screen
           name="MainApp"
