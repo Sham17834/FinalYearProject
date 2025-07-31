@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,16 @@ import {
   StatusBar,
   TouchableOpacity,
 } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { styles } from './styles';
 
-const HealthTrackHomeScreen = () => {
-  const [userName] = useState('John');
-  const [lifestyleScore] = useState(85);
-
-  const healthMetrics = [
+const HealthHomeScreen = () => {
+  const route = useRoute();
+  const navigation = useNavigation();
+  const [userName] = useState('John'); // Placeholder: Replace with actual user data
+  const [lifestyleScore, setLifestyleScore] = useState(85); // Default value
+  const [riskLevel, setRiskLevel] = useState('Low'); // Default risk
+  const [healthMetrics, setHealthMetrics] = useState([
     {
       title: 'BMI',
       value: '22.4',
@@ -50,7 +53,31 @@ const HealthTrackHomeScreen = () => {
       bgColor: '#fdf2f8',
       icon: '❤️',
     },
-  ];
+  ]);
+
+  // Update data when received from LifestyleDataInputScreen
+  useEffect(() => {
+    console.log('HealthTrackHomeScreen received params:', route.params);
+    if (route.params?.lifestyleData) {
+      const { bmi, dailySteps, sleepDuration, score, risk } = route.params.lifestyleData;
+      setLifestyleScore(score || 85);
+      setRiskLevel(risk || 'Low');
+      setHealthMetrics((prev) =>
+        prev.map((metric) => {
+          if (metric.title === 'BMI') {
+            return { ...metric, value: bmi.toString(), status: bmi < 25 ? 'Normal' : 'Overweight' };
+          }
+          if (metric.title === 'Steps Today') {
+            return { ...metric, value: dailySteps.toString(), status: `${Math.round((dailySteps / 10000) * 100)}% of goal` };
+          }
+          if (metric.title === 'Sleep') {
+            return { ...metric, value: sleepDuration.toString(), status: sleepDuration >= 7 ? 'Good quality' : 'Needs improvement' };
+          }
+          return metric;
+        })
+      );
+    }
+  }, [route.params?.lifestyleData]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -100,7 +127,14 @@ const HealthTrackHomeScreen = () => {
             <View style={styles.scoreCard}>
               <Text style={styles.scoreTitle}>Your Lifestyle Score</Text>
               <ProgressBar percentage={lifestyleScore} />
-              <Text style={styles.scoreMessage}>Great job! Keep it up.</Text>
+              <Text style={styles.scoreMessage}>
+                {riskLevel === 'Low' ? 'Great job! Keep it up.' : 
+                 riskLevel === 'Medium' ? 'Good effort, but there’s room to improve.' : 
+                 'Consider making lifestyle changes to reduce risk.'}
+              </Text>
+              <Text style={[styles.scoreMessage, { color: riskLevel === 'High' ? '#f43f5e' : riskLevel === 'Medium' ? '#f59e0b' : '#10b981' }]}>
+                Risk Level: {riskLevel}
+              </Text>
             </View>
 
             <View style={styles.section}>
@@ -144,4 +178,4 @@ const HealthTrackHomeScreen = () => {
   );
 };
 
-export default HealthTrackHomeScreen;
+export default HealthHomeScreen;
