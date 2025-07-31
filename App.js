@@ -37,6 +37,7 @@ const MainApp = () => {
         options={{
           tabBarLabel: t.healthHome,
           tabBarIcon: ({ color }) => <Icon name="home" color={color} size={24} />,
+          headerShown: false,
         }}
       />
       <Tab.Screen
@@ -45,6 +46,7 @@ const MainApp = () => {
         options={{
           tabBarLabel: t.progress,
           tabBarIcon: ({ color }) => <Icon name="analytics" color={color} size={24} />,
+          headerShown: false,
         }}
       />
       <Tab.Screen
@@ -53,6 +55,7 @@ const MainApp = () => {
         options={{
           tabBarLabel: t.track,
           tabBarIcon: ({ color }) => <Icon name="track-changes" color={color} size={24} />,
+          headerShown: false,
         }}
       />
       <Tab.Screen
@@ -61,6 +64,7 @@ const MainApp = () => {
         options={{
           tabBarLabel: t.profile,
           tabBarIcon: ({ color }) => <Icon name="person" color={color} size={24} />,
+          headerShown: false,
         }}
       />
     </Tab.Navigator>
@@ -73,43 +77,29 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Welcome">
+      <Stack.Navigator 
+        initialRouteName="Welcome"
+        screenOptions={{ headerShown: false }}
+      >
         <Stack.Screen
           name="Welcome"
           component={WelcomeScreen}
-          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="Register"
           component={RegisterScreen}
-          options={{ 
-            title: t.registerTitle, 
-            headerStyle: { backgroundColor: '#008080' }, 
-            headerTintColor: '#ffffff' 
-          }}
         />
         <Stack.Screen
           name="Login"
           component={LoginScreen}
-          options={{ 
-            title: t.loginTitle, 
-            headerStyle: { backgroundColor: '#008080' }, 
-            headerTintColor: '#ffffff' 
-          }}
         />
         <Stack.Screen
           name="LifestyleDataInput"
           component={LifestyleDataInputScreen}
-          options={{ 
-            title: t.lifestyleData, 
-            headerStyle: { backgroundColor: '#008080' }, 
-            headerTintColor: '#ffffff' 
-          }}
         />
         <Stack.Screen
           name="MainApp"
           component={MainApp}
-          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>
@@ -129,7 +119,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
     borderTopColor: '#d1d5db',
-    paddingBottom: 5,
+    paddingBottom: 5
   },
 });
 
