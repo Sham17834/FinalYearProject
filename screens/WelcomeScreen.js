@@ -7,7 +7,7 @@ import {
   StatusBar,
   Alert,
   Image,
-  ScrollView, // Import ScrollView
+  ScrollView, 
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
@@ -29,7 +29,7 @@ const WelcomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1e40af" />
+      <StatusBar barStyle="light-content" backgroundColor="#008080" />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.welcomeHeader}>
           <View style={styles.logoContainer}>
