@@ -15,12 +15,6 @@ export const translations = {
     footerText: 'Join thousands of users on their health journey',
     errorPleaseAgree: 'Please agree to the privacy terms',
     
-    // Auth Choice Screen
-    chooseOption: 'Choose an Option',
-    login: 'Login',
-    register: 'Register',
-    authDescription: 'Please choose whether to log in or register to continue',
-    
     // Login Screen
     loginTitle: 'Welcome Back',
     loginSubtitle: 'Sign in to your account',
@@ -185,12 +179,6 @@ export const translations = {
     footerText: '与数千名用户一起踏上健康之旅',
     errorPleaseAgree: '请同意隐私条款',
     
-    // Auth Choice Screen
-    chooseOption: '选择一个选项',
-    login: '登录',
-    register: '注册',
-    authDescription: '请选择登录或注册以继续',
-    
     // Login Screen
     loginTitle: '欢迎回来',
     loginSubtitle: '登录您的账户',
@@ -354,12 +342,6 @@ export const translations = {
     getStarted: 'Mula',
     footerText: 'Sertai ribuan pengguna dalam perjalanan kesihatan mereka',
     errorPleaseAgree: 'Sila bersetuju dengan terma privasi',
-    
-    // Auth Choice Screen
-    chooseOption: 'Pilih Pilihan',
-    login: 'Log Masuk',
-    register: 'Daftar',
-    authDescription: 'Sila pilih sama ada untuk log masuk atau mendaftar untuk meneruskan',
     
     // Login Screen
     loginTitle: 'Selamat Kembali',
