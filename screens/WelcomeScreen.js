@@ -23,7 +23,7 @@ const WelcomeScreen = () => {
       Alert.alert('Error', t.errorPleaseAgree);
       return;
     }
-    navigation.navigate('AuthChoice');
+    navigation.navigate('Login'); 
   };
 
   return (
@@ -94,7 +94,6 @@ const WelcomeScreen = () => {
           </Text>
         </TouchableOpacity>
 
-        {/* Footer */}
         <Text style={styles.footerText}>
           {t.footerText}
         </Text>

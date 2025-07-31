@@ -5,7 +5,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { StyleSheet } from 'react-native';
 import WelcomeScreen from './screens/WelcomeScreen';
-import AuthChoiceScreen from './screens/AuthChoiceScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import LoginScreen from './screens/LoginScreen';
 import LifestyleDataInputScreen from './screens/LifestyleDataInputScreen';
@@ -79,15 +78,6 @@ const AppNavigator = () => {
           name="Welcome"
           component={WelcomeScreen}
           options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="AuthChoice"
-          component={AuthChoiceScreen}
-          options={{ 
-            title: t.chooseOption, 
-            headerStyle: { backgroundColor: '#3b82f6' }, 
-            headerTintColor: '#ffffff' 
-          }}
         />
         <Stack.Screen
           name="Register"
