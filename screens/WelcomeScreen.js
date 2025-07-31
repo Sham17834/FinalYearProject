@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -10,16 +10,17 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { LanguageContext } from './LanguageContext';
 import { styles } from './styles';
 
 const WelcomeScreen = () => {
-  const [language, setLanguage] = useState('English');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const navigation = useNavigation();
+  const { language, changeLanguage, t } = useContext(LanguageContext);
 
   const handleGetStarted = () => {
     if (!agreedToTerms) {
-      Alert.alert('Error', 'Please agree to the privacy terms');
+      Alert.alert('Error', t.errorPleaseAgree);
       return;
     }
     navigation.navigate('AuthChoice');
@@ -33,33 +34,34 @@ const WelcomeScreen = () => {
         <View style={styles.logoContainer}>
           <View style={styles.illustrationContainer}>
             <Image 
-              source={require('../assets/Healthy lifestyle-cuate.png')} // Update path as needed
+              source={require('../assets/Healthy lifestyle-cuate.png')} 
               style={styles.headerIllustration}
               resizeMode="contain"
             />
           </View>
-          <Text style={styles.welcomeAppName}>HealthTrack</Text>
-          <Text style={styles.welcomeTagline}>Your Personal Health Companion</Text>
+          <Text style={styles.welcomeAppName}>{t.appName}</Text>
+          <Text style={styles.welcomeTagline}>{t.tagline}</Text>
         </View>
       </View>
 
       <View style={styles.welcomeContent}>
         <View style={styles.welcomeMessageContainer}>
-          <Text style={styles.welcomeTitle}>Welcome!</Text>
+          <Text style={styles.welcomeTitle}>{t.welcome}</Text>
           <Text style={styles.welcomeDescription}>
-            Take control of your health journey with personalized tracking and insights
+            {t.welcomeDescription}
           </Text>
         </View>
 
         <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeSectionTitle}>Choose Your Language</Text>
+          <Text style={styles.welcomeSectionTitle}>{t.chooseLanguage}</Text>
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={language}
               style={styles.welcomePicker}
-              onValueChange={(itemValue) => setLanguage(itemValue)}
+              onValueChange={(itemValue) => changeLanguage(itemValue)}
             >
               <Picker.Item label="English" value="English" />
+              <Picker.Item label="中文" value="Chinese" />
               <Picker.Item label="Bahasa Malaysia" value="Malay" />
             </Picker>
           </View>
@@ -74,10 +76,10 @@ const WelcomeScreen = () => {
               {agreedToTerms && <Text style={styles.checkmarkIcon}>✓</Text>}
             </View>
             <Text style={styles.privacyText}>
-              I agree to the{' '}
-              <Text style={styles.linkText}>Terms of Service</Text>
-              {' '}and{' '}
-              <Text style={styles.linkText}>Privacy Policy</Text>
+              {t.agreeTerms}{' '}
+              <Text style={styles.linkText}>{t.termsOfService}</Text>
+              {' '}{t.and}{' '}
+              <Text style={styles.linkText}>{t.privacyPolicy}</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -88,13 +90,13 @@ const WelcomeScreen = () => {
           disabled={!agreedToTerms}
         >
           <Text style={[styles.getStartedButtonText, !agreedToTerms && styles.disabledButtonText]}>
-            Get Started
+            {t.getStarted}
           </Text>
         </TouchableOpacity>
 
         {/* Footer */}
         <Text style={styles.footerText}>
-          Join thousands of users on their health journey
+          {t.footerText}
         </Text>
       </View>
     </SafeAreaView>

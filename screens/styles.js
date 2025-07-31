@@ -1,4 +1,5 @@
-import { StyleSheet, Dimensions } from 'react-native';
+
+import { StyleSheet, Dimensions, Platform } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -11,21 +12,26 @@ export const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 20,
     paddingHorizontal: 20,
+    minHeight: 70, 
   },
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap', 
   },
   appName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: '#ffffff', 
+    flexShrink: 1, 
   },
   appTagline: {
     fontSize: 14,
     color: '#ffffff',
     opacity: 0.9,
+    flexShrink: 1,
+    lineHeight: 20, 
   },
   logo: {
     fontSize: 64,
@@ -59,11 +65,15 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1f2937',
     marginBottom: 8,
+    textAlign: 'center', 
+    lineHeight: 32, 
   },
   welcomeText: {
     fontSize: 16,
     color: '#6b7280',
     textAlign: 'center',
+    lineHeight: 24,
+    paddingHorizontal: 10, 
   },
   scoreCard: {
     backgroundColor: '#ffffff',
@@ -73,12 +83,15 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e5e7eb',
     alignItems: 'center',
+    minHeight: 120, 
   },
   scoreTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#1f2937',
     marginBottom: 12,
+    textAlign: 'center',
+    lineHeight: 24,
   },
   progressContainer: {
     alignItems: 'center',
@@ -92,6 +105,7 @@ export const styles = StyleSheet.create({
   progressLabel: {
     fontSize: 12,
     color: '#6b7280',
+    lineHeight: 16,
   },
   progressBarContainer: {
     width: '100%',
@@ -109,6 +123,9 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: '#10b981',
     fontWeight: '500',
+    textAlign: 'center',
+    lineHeight: 20,
+    paddingHorizontal: 10,
   },
   section: {
     marginBottom: 20,
@@ -118,6 +135,7 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1f2937',
     marginBottom: 12,
+    lineHeight: 22,
   },
   metricCard: {
     backgroundColor: '#ffffff',
@@ -129,6 +147,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     justifyContent: 'space-between',
+    minHeight: 120, 
   },
   metricIcon: {
     width: 36,
@@ -148,6 +167,8 @@ export const styles = StyleSheet.create({
     color: '#6b7280',
     marginBottom: 4,
     textAlign: 'center',
+    lineHeight: 16,
+    numberOfLines: 2, 
   },
   metricValue: {
     flexDirection: 'row',
@@ -169,30 +190,39 @@ export const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '500',
     textAlign: 'center',
+    lineHeight: 14,
   },
   primaryButton: {
     borderRadius: 12,
     marginBottom: 12,
-    paddingVertical: 12,
+    paddingVertical: 16, 
+    paddingHorizontal: 20,
     alignItems: 'center',
+    minHeight: 50, 
   },
   primaryButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#ffffff',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   secondaryButton: {
     backgroundColor: '#ffffff',
-    paddingVertical: 12,
+    paddingVertical: 16, 
+    paddingHorizontal: 20,
     borderRadius: 12,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#e5e7eb',
+    minHeight: 50, 
   },
   secondaryButtonText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#374151',
+    textAlign: 'center',
+    lineHeight: 18,
   },
   progressItem: {
     backgroundColor: '#ffffff',
@@ -207,6 +237,7 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1f2937',
     marginBottom: 8,
+    lineHeight: 22,
   },
   progressMetrics: {
     flexDirection: 'column',
@@ -215,6 +246,7 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7280',
     marginBottom: 4,
+    lineHeight: 20,
   },
   inputContainer: {
     marginBottom: 16,
@@ -224,6 +256,7 @@ export const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#1f2937',
     marginBottom: 8,
+    lineHeight: 20,
   },
   input: {
     backgroundColor: '#ffffff',
@@ -232,18 +265,20 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e5e7eb',
     fontSize: 14,
+    minHeight: 48,
+    textAlignVertical: 'center',
   },
   picker: {
     backgroundColor: '#ffffff',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e5e7eb',
-    padding: 12,
     fontSize: 14,
+    minHeight: 48, 
   },
   checkboxContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start', 
     marginBottom: 20,
   },
   checkbox: {
@@ -255,6 +290,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 8,
+    marginTop: 2, 
   },
   checkboxChecked: {
     backgroundColor: '#10b981',
@@ -267,10 +303,13 @@ export const styles = StyleSheet.create({
   checkboxLabel: {
     fontSize: 14,
     color: '#1f2937',
+    lineHeight: 20,
+    flex: 1, 
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap', 
   },
 
   welcomeHeader: {
@@ -281,7 +320,6 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: height * 0.4,
-    background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
   },
 
   logoContainer: {
@@ -308,6 +346,8 @@ export const styles = StyleSheet.create({
     color: '#ffffff',
     marginBottom: 8,
     letterSpacing: 1,
+    textAlign: 'center',
+    lineHeight: 40,
   },
 
   welcomeTagline: {
@@ -315,6 +355,8 @@ export const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
     fontWeight: '400',
+    lineHeight: 24,
+    paddingHorizontal: 20, 
   },
 
   welcomeContent: {
@@ -334,6 +376,8 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1f2937',
     marginBottom: 12,
+    textAlign: 'center',
+    lineHeight: 36,
   },
 
   welcomeDescription: {
@@ -354,6 +398,7 @@ export const styles = StyleSheet.create({
     color: '#1f2937',
     marginBottom: 16,
     textAlign: 'center',
+    lineHeight: 24,
   },
 
   pickerContainer: {
@@ -425,6 +470,7 @@ export const styles = StyleSheet.create({
   getStartedButton: {
     backgroundColor: '#1e40af',
     paddingVertical: 18,
+    paddingHorizontal: 24, 
     borderRadius: 16,
     alignItems: 'center',
     marginBottom: 24,
@@ -436,6 +482,7 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 6,
+    minHeight: 56, 
   },
 
   disabledButton: {
@@ -449,6 +496,8 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#ffffff',
     letterSpacing: 0.5,
+    textAlign: 'center',
+    lineHeight: 22,
   },
 
   disabledButtonText: {
@@ -460,5 +509,26 @@ export const styles = StyleSheet.create({
     color: '#9ca3af',
     textAlign: 'center',
     fontStyle: 'italic',
+    lineHeight: 20,
+    paddingHorizontal: 20, 
+  },
+
+  // Auth Choice Screen Styles
+  authTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 16,
+    textAlign: 'center',
+    lineHeight: 32,
+  },
+
+  authDescription: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
+    paddingHorizontal: 20,
   },
 });

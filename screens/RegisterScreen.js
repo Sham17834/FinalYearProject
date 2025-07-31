@@ -30,7 +30,6 @@ const RegisterScreen = () => {
     }
     console.log('Register:', { fullName, email, password });
     Alert.alert('Success', 'Registration submitted (placeholder)');
-    // Placeholder: Navigate to MainApp after successful registration
     navigation.navigate('MainApp');
   };
 

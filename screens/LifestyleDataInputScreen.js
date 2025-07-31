@@ -181,7 +181,6 @@ const LifestyleDataInputScreen = () => {
       
       console.log('Navigating with lifestyleData:', lifestyleData);
       
-      // Navigate directly without Alert to avoid potential issues
       navigation.navigate('MainApp', {
         screen: 'Home',
         params: { lifestyleData: lifestyleData },

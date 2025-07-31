@@ -13,9 +13,9 @@ import { styles } from './styles';
 const HealthHomeScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const [userName] = useState('John'); // Placeholder: Replace with actual user data
-  const [lifestyleScore, setLifestyleScore] = useState(85); // Default value
-  const [riskLevel, setRiskLevel] = useState('Low'); // Default risk
+  const [userName] = useState('John'); 
+  const [lifestyleScore, setLifestyleScore] = useState(85); 
+  const [riskLevel, setRiskLevel] = useState('Low'); 
   const [healthMetrics, setHealthMetrics] = useState([
     {
       title: 'BMI',
@@ -55,7 +55,6 @@ const HealthHomeScreen = () => {
     },
   ]);
 
-  // Update data when received from LifestyleDataInputScreen
   useEffect(() => {
     console.log('HealthTrackHomeScreen received params:', route.params);
     if (route.params?.lifestyleData) {

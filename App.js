@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';  
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -13,55 +13,65 @@ import HealthTrackHomeScreen from './screens/HealthHomeScreen';
 import ProgressScreen from './screens/ProgressScreen';
 import TrackScreen from './screens/TrackScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import { LanguageProvider, LanguageContext } from './screens/LanguageContext';
+import { getTranslations } from './screens/translations';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const MainApp = () => (
-  <Tab.Navigator
-    initialRouteName="Home"
-    screenOptions={{
-      tabBarActiveTintColor: '#3b82f6',
-      tabBarInactiveTintColor: '#9ca3af',
-      tabBarStyle: styles.tabBar,
-    }}
-  >
-    <Tab.Screen
-      name="Home"
-      component={HealthTrackHomeScreen}
-      options={{
-        tabBarLabel: 'Home',
-        tabBarIcon: ({ color }) => <Icon name="home" color={color} size={24} />,
-      }}
-    />
-    <Tab.Screen
-      name="Progress"
-      component={ProgressScreen}
-      options={{
-        tabBarLabel: 'Progress',
-        tabBarIcon: ({ color }) => <Icon name="analytics" color={color} size={24} />,
-      }}
-    />
-    <Tab.Screen
-      name="Track"
-      component={TrackScreen}
-      options={{
-        tabBarLabel: 'Track',
-        tabBarIcon: ({ color }) => <Icon name="track-changes" color={color} size={24} />,
-      }}
-    />
-    <Tab.Screen
-      name="Profile"
-      component={ProfileScreen}
-      options={{
-        tabBarLabel: 'Profile',
-        tabBarIcon: ({ color }) => <Icon name="person" color={color} size={24} />,
-      }}
-    />
-  </Tab.Navigator>
-);
+const MainApp = () => {
+  const { language } = useContext(LanguageContext);
+  const t = getTranslations(language);
 
-const App = () => {
+  return (
+    <Tab.Navigator
+      initialRouteName="Home"
+      screenOptions={{
+        tabBarActiveTintColor: '#3b82f6',
+        tabBarInactiveTintColor: '#9ca3af',
+        tabBarStyle: styles.tabBar,
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HealthTrackHomeScreen}
+        options={{
+          tabBarLabel: t.healthHome,
+          tabBarIcon: ({ color }) => <Icon name="home" color={color} size={24} />,
+        }}
+      />
+      <Tab.Screen
+        name="Progress"
+        component={ProgressScreen}
+        options={{
+          tabBarLabel: t.progress,
+          tabBarIcon: ({ color }) => <Icon name="analytics" color={color} size={24} />,
+        }}
+      />
+      <Tab.Screen
+        name="Track"
+        component={TrackScreen}
+        options={{
+          tabBarLabel: t.track,
+          tabBarIcon: ({ color }) => <Icon name="track-changes" color={color} size={24} />,
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: t.profile,
+          tabBarIcon: ({ color }) => <Icon name="person" color={color} size={24} />,
+        }}
+      />
+    </Tab.Navigator>
+  );
+};
+
+const AppNavigator = () => {
+  const { language } = useContext(LanguageContext);
+  const t = getTranslations(language);
+
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Welcome">
@@ -73,22 +83,38 @@ const App = () => {
         <Stack.Screen
           name="AuthChoice"
           component={AuthChoiceScreen}
-          options={{ title: 'Choose an Option', headerStyle: { backgroundColor: '#3b82f6' }, headerTintColor: '#ffffff' }}
+          options={{ 
+            title: t.chooseOption, 
+            headerStyle: { backgroundColor: '#3b82f6' }, 
+            headerTintColor: '#ffffff' 
+          }}
         />
         <Stack.Screen
           name="Register"
           component={RegisterScreen}
-          options={{ title: 'Register', headerStyle: { backgroundColor: '#3b82f6' }, headerTintColor: '#ffffff' }}
+          options={{ 
+            title: t.registerTitle, 
+            headerStyle: { backgroundColor: '#3b82f6' }, 
+            headerTintColor: '#ffffff' 
+          }}
         />
         <Stack.Screen
           name="Login"
           component={LoginScreen}
-          options={{ title: 'Login', headerStyle: { backgroundColor: '#3b82f6' }, headerTintColor: '#ffffff' }}
+          options={{ 
+            title: t.loginTitle, 
+            headerStyle: { backgroundColor: '#3b82f6' }, 
+            headerTintColor: '#ffffff' 
+          }}
         />
         <Stack.Screen
           name="LifestyleDataInput"
           component={LifestyleDataInputScreen}
-          options={{ title: 'Lifestyle Data', headerStyle: { backgroundColor: '#3b82f6' }, headerTintColor: '#ffffff' }}
+          options={{ 
+            title: t.lifestyleData, 
+            headerStyle: { backgroundColor: '#3b82f6' }, 
+            headerTintColor: '#ffffff' 
+          }}
         />
         <Stack.Screen
           name="MainApp"
@@ -97,6 +123,14 @@ const App = () => {
         />
       </Stack.Navigator>
     </NavigationContainer>
+  );
+};
+
+const App = () => {
+  return (
+    <LanguageProvider>
+      <AppNavigator />
+    </LanguageProvider>
   );
 };
 
