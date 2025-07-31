@@ -1,6 +1,6 @@
 import { StyleSheet, Dimensions } from 'react-native';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
   container: {
@@ -271,5 +271,194 @@ export const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+
+  welcomeHeader: {
+    backgroundColor: '#3c3cbeff',
+    paddingTop: 60,
+    paddingBottom: 40,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: height * 0.4,
+    background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+  },
+
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+
+  illustrationContainer: {
+    width: 200,
+    height: 150,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+
+  headerIllustration: {
+    width: '100%',
+    height: '100%',
+  },
+
+  welcomeAppName: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 8,
+    letterSpacing: 1,
+  },
+
+  welcomeTagline: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    fontWeight: '400',
+  },
+
+  welcomeContent: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    paddingBottom: 40,
+  },
+
+  welcomeMessageContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 12,
+  },
+
+  welcomeDescription: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 24,
+    paddingHorizontal: 20,
+  },
+
+  welcomeSection: {
+    marginBottom: 32,
+  },
+
+  welcomeSectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+
+  pickerContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+
+  welcomePicker: {
+    height: 54,
+    paddingHorizontal: 16,
+  },
+
+  privacyContainer: {
+    marginBottom: 32,
+  },
+
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 4,
+  },
+
+  modernCheckbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#d1d5db',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    marginTop: 2,
+    backgroundColor: '#ffffff',
+  },
+
+  modernCheckboxChecked: {
+    backgroundColor: '#10b981',
+    borderColor: '#10b981',
+  },
+
+  checkmarkIcon: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+
+  privacyText: {
+    fontSize: 15,
+    color: '#4b5563',
+    lineHeight: 22,
+    flex: 1,
+  },
+
+  linkText: {
+    color: '#1e40af',
+    fontWeight: '600',
+  },
+
+  getStartedButton: {
+    backgroundColor: '#1e40af',
+    paddingVertical: 18,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginBottom: 24,
+    shadowColor: '#1e40af',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+
+  disabledButton: {
+    backgroundColor: '#d1d5db',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+
+  getStartedButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    letterSpacing: 0.5,
+  },
+
+  disabledButtonText: {
+    color: '#9ca3af',
+  },
+
+  footerText: {
+    fontSize: 14,
+    color: '#9ca3af',
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });
