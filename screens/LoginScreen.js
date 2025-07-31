@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,10 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker'; 
 import { useNavigation } from '@react-navigation/native';
 import { LanguageContext } from './LanguageContext';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import * as Google from 'expo-google-app-auth';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 const LoginScreen = () => {
@@ -23,13 +24,6 @@ const LoginScreen = () => {
   const [isPasswordFocused, setPasswordFocused] = useState(false);
   const navigation = useNavigation();
   const { t } = useContext(LanguageContext);
-
-  useEffect(() => {
-    GoogleSignin.configure({
-      webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', // Replace with your actual client ID
-      offlineAccess: true,
-    });
-  }, []);
 
   const handleLogin = () => {
     if (!email || !password) {
@@ -43,39 +37,41 @@ const LoginScreen = () => {
 
   const handleGoogleSignIn = async () => {
     try {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      console.log('Google User Info:', userInfo);
-      Alert.alert(t.success, 'Google sign-in successful');
-      navigation.navigate('MainApp');
-    } catch (error) {
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        console.log('User cancelled login');
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        console.log('Sign in in progress');
+      const result = await Google.logInAsync({
+        androidClientId: 'YOUR_ANDROID_CLIENT_ID',
+        iosClientId: 'YOUR_IOS_CLIENT_ID',
+        scopes: ['profile', 'email'],
+      });
+
+      if (result.type === 'success') {
+        console.log('Google Sign-In successful:', result);
+        Alert.alert(t.success, 'Google sign-in successful');
+        navigation.navigate('MainApp');
       } else {
-        console.error('Google SignIn Error:', error);
-        Alert.alert(t.error, 'Google sign-in failed');
+        console.log('Google Sign-In cancelled');
       }
+    } catch (error) {
+      console.error('Google Sign-In Error:', error);
+      Alert.alert(t.error, 'Google sign-in failed');
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
+      <StatusBar barStyle="light-content" backgroundColor="#008080" />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>{t.loginTitle}</Text>
           <Text style={styles.subtitle}>{t.loginSubtitle}</Text>
         </View>
-        
+
         <View style={styles.form}>
           {/* Email Input */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>{t.email}</Text>
             <View style={[
               styles.input,
-              isEmailFocused && { borderColor: '#3c3cbe', borderWidth: 1.5 },
+              isEmailFocused && { borderColor: '#008080', borderWidth: 1.5 },
             ]}>
               <TextInput
                 style={styles.inputText}
@@ -89,13 +85,12 @@ const LoginScreen = () => {
               />
             </View>
           </View>
-
           {/* Password Input */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>{t.password}</Text>
             <View style={[
               styles.input,
-              isPasswordFocused && { borderColor: '#3c3cbe', borderWidth: 1.5 },
+              isPasswordFocused && { borderColor: '#008080', borderWidth: 1.5 },
             ]}>
               <TextInput
                 style={styles.inputText}
@@ -112,7 +107,6 @@ const LoginScreen = () => {
               </TouchableOpacity>
             </View>
           </View>
-
           {/* Forgot Password */}
           <TouchableOpacity
             style={styles.helpLink}
@@ -120,7 +114,6 @@ const LoginScreen = () => {
           >
             <Text style={styles.linkText}>{t.forgotPassword}</Text>
           </TouchableOpacity>
-
           {/* Sign In Button */}
           <TouchableOpacity
             style={styles.loginButton}
@@ -129,14 +122,12 @@ const LoginScreen = () => {
           >
             <Text style={styles.loginButtonText}>{t.signIn}</Text>
           </TouchableOpacity>
-
           {/* Divider */}
           <View style={styles.dividerContainer}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>or</Text>
             <View style={styles.dividerLine} />
           </View>
-
           {/* Google Sign In Button */}
           <TouchableOpacity
             style={styles.googleButton}
@@ -146,7 +137,6 @@ const LoginScreen = () => {
             <Icon name="google" size={20} color="#DB4437" style={styles.googleIcon} />
             <Text style={styles.googleButtonText}>Continue with Google</Text>
           </TouchableOpacity>
-
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>{t.noAccount} </Text>
@@ -217,7 +207,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   passwordToggle: {
-    color: '#3c3cbe',
+    color: '#008080',
     fontWeight: '500',
     fontSize: 13,
   },
@@ -226,11 +216,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   linkText: {
-    color: '#3c3cbe',
+    color: '#008080',
     fontSize: 13,
   },
   loginButton: {
-    backgroundColor: '#3c3cbe',
+    backgroundColor: '#008080',
     borderRadius: 6,
     padding: 14,
     alignItems: 'center',
@@ -285,7 +275,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   footerLink: {
-    color: '#3c3cbe',
+    color: '#008080',
     fontWeight: '500',
     fontSize: 13,
   },

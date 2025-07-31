@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,11 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  StyleSheet
+  StyleSheet,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker'; 
 import { useNavigation } from '@react-navigation/native';
+import { LanguageContext } from './LanguageContext';
 
 const RegisterScreen = () => {
   const [fullName, setFullName] = useState('');
@@ -20,24 +22,25 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const navigation = useNavigation();
+  const { t } = useContext(LanguageContext);
 
   const handleRegister = () => {
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert(t?.error || 'Error', t?.validPasswordMatch || 'Passwords do not match');
       return;
     }
     if (!fullName || !email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert(t?.error || 'Error', t?.validFillAllFields || 'Please fill in all fields');
       return;
     }
     console.log('Register:', { fullName, email, password });
-    Alert.alert('Success', 'Registration submitted (placeholder)');
+    Alert.alert(t?.success || 'Success', t?.registrationSuccess || 'Registration successful');
     navigation.navigate('MainApp');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <StatusBar barStyle="light-content" backgroundColor="#008080" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -47,14 +50,14 @@ const RegisterScreen = () => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Fill in your details to begin</Text>
+            <Text style={styles.title}>{t?.registerTitle || 'Register'}</Text>
+            <Text style={styles.subtitle}>{t?.registerSubtitle || 'Fill in your details to begin'}</Text>
           </View>
           <View style={styles.formContainer}>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Full Name"
+                placeholder={t?.fullName || 'Full Name'}
                 placeholderTextColor="#999"
                 value={fullName}
                 onChangeText={setFullName}
@@ -64,7 +67,7 @@ const RegisterScreen = () => {
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Email Address"
+                placeholder={t?.emailPlaceholder || 'Email Address'}
                 placeholderTextColor="#999"
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -75,7 +78,7 @@ const RegisterScreen = () => {
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Password (min 8 characters)"
+                placeholder={t?.passwordPlaceholder || 'Password'}
                 placeholderTextColor="#999"
                 secureTextEntry
                 value={password}
@@ -85,7 +88,7 @@ const RegisterScreen = () => {
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Confirm Password"
+                placeholder={t?.confirmPassword || 'Confirm Password'}
                 placeholderTextColor="#999"
                 secureTextEntry
                 value={confirmPassword}
@@ -97,12 +100,12 @@ const RegisterScreen = () => {
               onPress={handleRegister}
               activeOpacity={0.8}
             >
-              <Text style={styles.registerButtonText}>Sign Up</Text>
+              <Text style={styles.registerButtonText}>{t?.registerButton || 'Register'}</Text>
             </TouchableOpacity>
             <View style={styles.bottomTextContainer}>
-              <Text style={styles.bottomText}>Already have an account?</Text>
+              <Text style={styles.bottomText}>{t?.haveAccount || 'Already have an account?'}</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.bottomTextLink}>Sign In</Text>
+                <Text style={styles.bottomTextLink}>{t?.signIn || 'Sign In'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -120,13 +123,13 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 30,
-    paddingTop: 50, 
-    justifyContent: 'flex-start', 
+    paddingTop: 50,
+    justifyContent: 'flex-start',
   },
   header: {
     justifyContent: 'flex-start',
     alignItems: 'center',
-    marginBottom: 30, 
+    marginBottom: 30,
   },
   title: {
     fontSize: 28,
@@ -157,12 +160,12 @@ const styles = StyleSheet.create({
   },
   registerButton: {
     height: 56,
-    backgroundColor: '#3c3cbe',
+    backgroundColor: '#008080',
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 24,
-    shadowColor: '#3c3cbe',
+    shadowColor: '#008080',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -183,7 +186,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   bottomTextLink: {
-    color: '#000000ff',
+    color: '#008080',
     fontWeight: '600',
   },
 });

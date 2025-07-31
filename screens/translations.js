@@ -1,4 +1,3 @@
-
 export const translations = {
   English: {
     // Welcome Screen
@@ -27,12 +26,17 @@ export const translations = {
     
     // Register Screen
     registerTitle: 'Create Account',
-    registerSubtitle: 'Join HealthTrack today',
+    registerSubtitle: 'Fill in your details to begin',
     fullName: 'Full Name',
+    emailPlaceholder: 'Email Address',
+    passwordPlaceholder: 'Password (min 8 characters)',
     confirmPassword: 'Confirm Password',
-    registerButton: 'Register',
+    registerButton: 'Sign Up',
     haveAccount: 'Already have an account?',
     signIn: 'Sign In',
+    validPasswordMatch: 'Passwords do not match',
+    validFillAllFields: 'Please fill in all fields',
+    registrationSuccess: 'Registration submitted (placeholder)',
     
     // Health Home Screen
     healthHome: 'Health Home',
@@ -191,12 +195,17 @@ export const translations = {
     
     // Register Screen
     registerTitle: '创建账户',
-    registerSubtitle: '今天就加入HealthTrack',
+    registerSubtitle: '填写您的详细信息以开始',
     fullName: '全名',
+    emailPlaceholder: '电子邮件地址',
+    passwordPlaceholder: '密码（最少8个字符）',
     confirmPassword: '确认密码',
     registerButton: '注册',
     haveAccount: '已有账户？',
     signIn: '登录',
+    validPasswordMatch: '密码不匹配',
+    validFillAllFields: '请填写所有字段',
+    registrationSuccess: '注册已提交（占位符）',
     
     // Health Home Screen
     healthHome: '健康首页',
@@ -355,12 +364,17 @@ export const translations = {
     
     // Register Screen
     registerTitle: 'Cipta Akaun',
-    registerSubtitle: 'Sertai HealthTrack hari ini',
+    registerSubtitle: 'Isi butiran anda untuk bermula',
     fullName: 'Nama Penuh',
+    emailPlaceholder: 'Alamat E-mel',
+    passwordPlaceholder: 'Kata Laluan (minimum 8 aksara)',
     confirmPassword: 'Sahkan Kata Laluan',
     registerButton: 'Daftar',
     haveAccount: 'Sudah ada akaun?',
     signIn: 'Log Masuk',
+    validPasswordMatch: 'Kata laluan tidak sepadan',
+    validFillAllFields: 'Sila isi semua medan',
+    registrationSuccess: 'Pendaftaran telah dihantar (penanda tempat)',
     
     // Health Home Screen
     healthHome: 'Laman Utama Kesihatan',

@@ -30,7 +30,7 @@ export const LanguageProvider = ({ children }) => {
     }
   };
 
-  // Get translations for current language
+
   const t = getTranslations(language);
 
   return (

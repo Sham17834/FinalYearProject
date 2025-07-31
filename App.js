@@ -26,7 +26,7 @@ const MainApp = () => {
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={{
-        tabBarActiveTintColor: '#3b82f6',
+        tabBarActiveTintColor: '#008080',
         tabBarInactiveTintColor: '#9ca3af',
         tabBarStyle: styles.tabBar,
       }}
@@ -84,7 +84,7 @@ const AppNavigator = () => {
           component={RegisterScreen}
           options={{ 
             title: t.registerTitle, 
-            headerStyle: { backgroundColor: '#3b82f6' }, 
+            headerStyle: { backgroundColor: '#008080' }, 
             headerTintColor: '#ffffff' 
           }}
         />
@@ -93,7 +93,7 @@ const AppNavigator = () => {
           component={LoginScreen}
           options={{ 
             title: t.loginTitle, 
-            headerStyle: { backgroundColor: '#3b82f6' }, 
+            headerStyle: { backgroundColor: '#008080' }, 
             headerTintColor: '#ffffff' 
           }}
         />
@@ -102,7 +102,7 @@ const AppNavigator = () => {
           component={LifestyleDataInputScreen}
           options={{ 
             title: t.lifestyleData, 
-            headerStyle: { backgroundColor: '#3b82f6' }, 
+            headerStyle: { backgroundColor: '#008080' }, 
             headerTintColor: '#ffffff' 
           }}
         />
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: '#d1d5db',
     paddingBottom: 5,
   },
 });
