@@ -48,7 +48,7 @@ const COLORS = {
   shadow: 'rgba(0, 0, 0, 0.08)',
 };
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }) => {
   const [name, setName] = useState('John Doe');
   const [email, setEmail] = useState('john.doe@example.com');
   const [age, setAge] = useState('30');
@@ -81,7 +81,7 @@ const ProfileScreen = () => {
   };
 
   const handlePrivacyPolicy = () => {
-    Linking.openURL('https://example.com/privacy-policy').catch(err => 
+    Linking.openURL('https://www.who.int/about/policies/privacy').catch(err => 
       Alert.alert('Error', 'Unable to open privacy policy')
     );
   };
@@ -96,6 +96,28 @@ const ProfileScreen = () => {
           text: 'Delete', 
           style: 'destructive',
           onPress: () => console.log('Account deletion requested')
+        }
+      ]
+    );
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Log Out',
+      'Are you sure you want to log out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Log Out', 
+          style: 'default',
+          onPress: () => {
+            console.log('User logged out successfully');
+            
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Welcome' }]
+            });
+          }
         }
       ]
     );
@@ -301,6 +323,14 @@ const ProfileScreen = () => {
             onPress={handleDeleteAccount}
           >
             <Text style={styles.dangerButtonText}>Delete Account</Text>
+          </TouchableOpacity>
+
+          {/* Logout Button */}
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={handleLogout}
+          >
+            <Text style={styles.secondaryButtonText}>Log Out</Text>
           </TouchableOpacity>
         </View>
 
@@ -747,6 +777,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
+    marginBottom: 12,
   },
 
   dangerButtonText: {

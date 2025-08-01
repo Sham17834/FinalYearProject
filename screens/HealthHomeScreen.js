@@ -355,7 +355,6 @@ const AnimatedProgressCircle = ({ percentage, size = 180, strokeWidth = 12 }) =>
         />
       </Svg>
       
-      {/* Score text */}
       <View style={{ position: 'absolute', alignItems: 'center' }}>
         <Text style={styles.progressNumber}>{percentage}</Text>
         <Text style={styles.progressSubtext}>out of 100</Text>
