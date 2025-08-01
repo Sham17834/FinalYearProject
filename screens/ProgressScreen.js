@@ -1,32 +1,34 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useContext } from 'react';
 import { View, Text, SectionList, SafeAreaView, StatusBar, TouchableOpacity, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { styles } from './styles';
+import { LanguageContext } from './LanguageContext';
 
 const screenWidth = Dimensions.get('window').width;
 
 const ProgressScreen = () => {
+  const { t } = useContext(LanguageContext);
   const [timeRange, setTimeRange] = useState('7days');
 
   const progressData = [
-    { date: '2025-07-27', steps: 8234, sleep: 7.2, heartRate: 72, bmi: 22.4, riskLevel: 'Low' },
-    { date: '2025-07-26', steps: 7500, sleep: 6.8, heartRate: 74, bmi: 22.4, riskLevel: 'Low' },
-    { date: '2025-07-25', steps: 9000, sleep: 7.5, heartRate: 71, bmi: 22.4, riskLevel: 'Low' },
-    { date: '2025-07-24', steps: 6500, sleep: 6.5, heartRate: 73, bmi: 22.4, riskLevel: 'Medium' },
-    { date: '2025-07-23', steps: 8200, sleep: 7.0, heartRate: 72, bmi: 22.4, riskLevel: 'Low' },
-    { date: '2025-07-22', steps: 7000, sleep: 6.7, heartRate: 75, bmi: 22.4, riskLevel: 'Medium' },
-    { date: '2025-07-21', steps: 8500, sleep: 7.3, heartRate: 70, bmi: 22.4, riskLevel: 'Low' },
-    { date: '2025-07-20', steps: 7800, sleep: 6.9, heartRate: 73, bmi: 22.5, riskLevel: 'Low' },
-    { date: '2025-07-19', steps: 9200, sleep: 7.4, heartRate: 71, bmi: 22.5, riskLevel: 'Low' },
-    { date: '2025-07-18', steps: 6300, sleep: 6.4, heartRate: 74, bmi: 22.5, riskLevel: 'Medium' },
+    { date: '2025-07-27', steps: 8234, sleep: 7.2, heartRate: 72, bmi: 22.4, riskLevel: t.low },
+    { date: '2025-07-26', steps: 7500, sleep: 6.8, heartRate: 74, bmi: 22.4, riskLevel: t.low },
+    { date: '2025-07-25', steps: 9000, sleep: 7.5, heartRate: 71, bmi: 22.4, riskLevel: t.low },
+    { date: '2025-07-24', steps: 6500, sleep: 6.5, heartRate: 73, bmi: 22.4, riskLevel: t.medium },
+    { date: '2025-07-23', steps: 8200, sleep: 7.0, heartRate: 72, bmi: 22.4, riskLevel: t.low },
+    { date: '2025-07-22', steps: 7000, sleep: 6.7, heartRate: 75, bmi: 22.4, riskLevel: t.medium },
+    { date: '2025-07-21', steps: 8500, sleep: 7.3, heartRate: 70, bmi: 22.4, riskLevel: t.low },
+    { date: '2025-07-20', steps: 7800, sleep: 6.9, heartRate: 73, bmi: 22.5, riskLevel: t.low },
+    { date: '2025-07-19', steps: 9200, sleep: 7.4, heartRate: 71, bmi: 22.5, riskLevel: t.low },
+    { date: '2025-07-18', steps: 6300, sleep: 6.4, heartRate: 74, bmi: 22.5, riskLevel: t.medium },
   ];
 
   const shapRankings = [
-    { factor: 'Steps', value: 0.45 },
-    { factor: 'Sleep Duration', value: 0.32 },
-    { factor: 'Heart Rate', value: 0.15 },
-    { factor: 'BMI', value: 0.08 },
-    { factor: 'Age', value: 0.05 },
+    { factor: t.steps, value: 0.45 },
+    { factor: t.sleep, value: 0.32 },
+    { factor: t.heartRateLabel.replace(': ', ''), value: 0.15 },
+    { factor: t.bmiLabel.replace(': ', ''), value: 0.08 },
+    { factor: t.age, value: 0.05 },
   ];
 
   const filteredData = useMemo(() => 
@@ -44,7 +46,7 @@ const ProgressScreen = () => {
   const lifestyleScores = useMemo(() => filteredData.map(item => calculateLifestyleScore(item)), [filteredData, calculateLifestyleScore]);
   const stepsData = useMemo(() => filteredData.map(item => item.steps), [filteredData]);
   const sleepData = useMemo(() => filteredData.map(item => item.sleep), [filteredData]);
-  const riskLevels = useMemo(() => filteredData.map(item => item.riskLevel === 'Low' ? 1 : item.riskLevel === 'Medium' ? 2 : 3), [filteredData]);
+  const riskLevels = useMemo(() => filteredData.map(item => item.riskLevel === t.low ? 1 : item.riskLevel === t.medium ? 2 : 3), [filteredData, t.low, t.medium, t.high]);
 
   const chartConfig = useMemo(() => ({
     backgroundGradientFrom: '#ffffff',
@@ -58,13 +60,13 @@ const ProgressScreen = () => {
   }), []);
 
   const sections = useMemo(() => [
-    { title: 'Time Range', data: [{ type: 'timeRange' }], key: 'timeRange' },
-    { title: 'Lifestyle Score Trend', data: [{ type: 'lifestyleChart' }], key: 'lifestyleChart' },
-    { title: 'Steps & Sleep Trend', data: [{ type: 'stepsSleepChart' }], key: 'stepsSleepChart' },
-    { title: 'Risk Level Trend', data: [{ type: 'riskChart' }], key: 'riskChart' },
-    { title: 'Top 5 Influencing Factors (SHAP)', data: shapRankings, key: 'shap' },
-    { title: 'Weekly Progress', data: filteredData, key: 'progress' },
-  ], [filteredData, shapRankings]);
+    { title: t.timeRange, data: [{ type: 'timeRange' }], key: 'timeRange' },
+    { title: t.lifestyleScoreTrend, data: [{ type: 'lifestyleChart' }], key: 'lifestyleChart' },
+    { title: t.stepsSleepTrend, data: [{ type: 'stepsSleepChart' }], key: 'stepsSleepChart' },
+    { title: t.riskLevelTrend, data: [{ type: 'riskChart' }], key: 'riskChart' },
+    { title: t.shapFactors, data: shapRankings, key: 'shap' },
+    { title: t.weeklyProgress, data: filteredData, key: 'progress' },
+  ], [filteredData, shapRankings, t.timeRange, t.lifestyleScoreTrend, t.stepsSleepTrend, t.riskLevelTrend, t.shapFactors, t.weeklyProgress]);
 
   const renderItem = useCallback(({ item, section }) => {
     if (!section) return null; 
@@ -76,13 +78,13 @@ const ProgressScreen = () => {
               style={[styles.timeRangeButton, timeRange === '7days' && styles.activeTimeRange]}
               onPress={() => setTimeRange('7days')}
             >
-              <Text style={[styles.timeRangeText, timeRange === '7days' && styles.activeTimeRangeText]}>7 Days</Text>
+              <Text style={[styles.timeRangeText, timeRange === '7days' && styles.activeTimeRangeText]}>{t.sevenDays}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.timeRangeButton, timeRange === '30days' && styles.activeTimeRange]}
               onPress={() => setTimeRange('30days')}
             >
-              <Text style={[styles.timeRangeText, timeRange === '30days' && styles.activeTimeRangeText]}>30 Days</Text>
+              <Text style={[styles.timeRangeText, timeRange === '30days' && styles.activeTimeRangeText]}>{t.thirtyDays}</Text>
             </TouchableOpacity>
           </View>
         );
@@ -92,7 +94,7 @@ const ProgressScreen = () => {
             data={{
               labels: filteredData.map(item => item.date.split('-').slice(1).join('/')).reverse(),
               datasets: [{ data: lifestyleScores.slice().reverse() }],
-              legend: ['Lifestyle Score'],
+              legend: [t.lifestyleScoreTrend],
             }}
             width={screenWidth - 48}
             height={200}
@@ -110,7 +112,7 @@ const ProgressScreen = () => {
                 { data: stepsData.slice().reverse(), color: () => `rgba(0, 128, 128, 1)`, strokeWidth: 2 },
                 { data: sleepData.slice().reverse(), color: () => `rgba(219, 112, 147, 1)`, strokeWidth: 2 },
               ],
-              legend: ['Steps', 'Sleep (hrs)'],
+              legend: [t.steps, `${t.sleep} (${t.hrs})`],
             }}
             width={screenWidth - 48}
             height={200}
@@ -125,13 +127,13 @@ const ProgressScreen = () => {
             data={{
               labels: filteredData.map(item => item.date.split('-').slice(1).join('/')).reverse(),
               datasets: [{ data: riskLevels.slice().reverse() }],
-              legend: ['Risk Level'],
+              legend: [t.riskLevelTrend],
             }}
             width={screenWidth - 48}
             height={200}
             chartConfig={{
               ...chartConfig,
-              formatYLabel: (value) => ['Low', 'Medium', 'High'][parseInt(value) - 1] || value,
+              formatYLabel: (value) => [t.low, t.medium, t.high][parseInt(value) - 1] || value,
             }}
             bezier
             style={styles.chart}
@@ -141,7 +143,7 @@ const ProgressScreen = () => {
         return (
           <View style={styles.shapItem}>
             <Text style={styles.shapFactor}>{item.factor}</Text>
-            <Text style={styles.shapValue}>Impact: {(item.value * 100).toFixed(1)}%</Text>
+            <Text style={styles.shapValue}>{t.impact}{(item.value * 100).toFixed(1)}%</Text>
           </View>
         );
       case 'progress':
@@ -149,18 +151,18 @@ const ProgressScreen = () => {
           <View style={styles.progressItem}>
             <Text style={styles.progressDate}>{item.date}</Text>
             <View style={styles.progressMetrics}>
-              <Text style={styles.progressMetric}>Steps: {item.steps}</Text>
-              <Text style={styles.progressMetric}>Sleep: {item.sleep} hrs</Text>
-              <Text style={styles.progressMetric}>Heart Rate: {item.heartRate} bpm</Text>
-              <Text style={styles.progressMetric}>BMI: {item.bmi}</Text>
-              <Text style={styles.progressMetric}>Risk: {item.riskLevel}</Text>
+              <Text style={styles.progressMetric}>{t.stepsLabel}{item.steps}</Text>
+              <Text style={styles.progressMetric}>{t.sleepLabel}{item.sleep} {t.hrs}</Text>
+              <Text style={styles.progressMetric}>{t.heartRateLabel}{item.heartRate} {t.bpm}</Text>
+              <Text style={styles.progressMetric}>{t.bmiLabel}{item.bmi}</Text>
+              <Text style={styles.progressMetric}>{t.riskLabel}{item.riskLevel}</Text>
             </View>
           </View>
         );
       default:
         return null;
     }
-  }, [timeRange, filteredData, lifestyleScores, stepsData, sleepData, riskLevels, chartConfig]);
+  }, [timeRange, filteredData, lifestyleScores, stepsData, sleepData, riskLevels, chartConfig, t.steps, t.sleep, t.hrs, t.low, t.medium, t.high, t.sevenDays, t.thirtyDays, t.lifestyleScoreTrend, t.stepsSleepTrend, t.riskLevelTrend, t.impact, t.stepsLabel, t.sleepLabel, t.heartRateLabel, t.bmiLabel, t.riskLabel]);
 
   const renderSectionHeader = useCallback(({ section }) => {
     if (!section || !section.title) return null;
@@ -197,8 +199,8 @@ const ProgressScreen = () => {
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
       <View style={styles.headerContainer}>
         <View style={styles.headerContent}>
-          <Text style={styles.appName}>Progress</Text>
-          <Text style={styles.appTagline}>Your health journey over time</Text>
+          <Text style={styles.appName}>{t.progressTitle}</Text>
+          <Text style={styles.appTagline}>{t.progressTagline}</Text>
         </View>
       </View>
       <SectionList

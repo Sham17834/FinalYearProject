@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import Svg, { Circle } from 'react-native-svg';
+import { LanguageContext } from './LanguageContext';
 
 const { width } = Dimensions.get('window');
 const isIOS = Platform.OS === 'ios';
@@ -120,13 +121,6 @@ const styles = StyleSheet.create({
     color: '#1D3557',
     marginBottom: 12,
     paddingLeft: 4,
-  },
-  metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginHorizontal: 8,
-    marginBottom: 12,
   },
   metricsGrid: {
     flexDirection: 'row',
@@ -287,6 +281,7 @@ const CustomProgressBar = ({ progress, color }) => {
 };
 
 const AnimatedProgressCircle = ({ percentage, size = 180, strokeWidth = 12 }) => {
+  const { t } = useContext(LanguageContext);
   const animatedValue = new Animated.Value(0);
   const circleRef = React.useRef();
   
@@ -357,13 +352,14 @@ const AnimatedProgressCircle = ({ percentage, size = 180, strokeWidth = 12 }) =>
       
       <View style={{ position: 'absolute', alignItems: 'center' }}>
         <Text style={styles.progressNumber}>{percentage}</Text>
-        <Text style={styles.progressSubtext}>out of 100</Text>
+        <Text style={styles.progressSubtext}>{t.outOf100}</Text>
       </View>
     </View>
   );
 };
 
 const HealthHomeScreen = () => {
+  const { t } = useContext(LanguageContext);
   const navigation = useNavigation();
   const [lifestyleScore] = useState(75);
   const fadeAnim = new Animated.Value(0);
@@ -427,38 +423,38 @@ const HealthHomeScreen = () => {
       case 'header':
         return (
           <Animated.View style={[styles.headerContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-            <Text style={styles.greeting}>Dashboard</Text>
-            <Text style={styles.appTagline}>Your health overview</Text>
+            <Text style={styles.greeting}>{t.homeTitle}</Text>
+            <Text style={styles.appTagline}>{t.homeTagline}</Text>
           </Animated.View>
         );
       case 'score':
         return (
           <Animated.View style={[styles.scoreContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
             <AnimatedProgressCircle percentage={lifestyleScore} />
-            <Text style={styles.progressLabel}>Your Lifestyle Score</Text>
+            <Text style={styles.progressLabel}>{t.yourLifestyleScore}</Text>
           </Animated.View>
         );
       case 'metrics':
         return (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Key Metrics</Text>
+            <Text style={styles.sectionTitle}>{t.keyMetrics}</Text>
             <View style={styles.metricsGrid}>
-              {renderMetricCard('BMI', '24.2', 'Normal', 'accessibility', '#34C759')}
-              {renderMetricCard('Steps', '8,542', 'Today', 'directions-walk', '#326db9ff')}
-              {renderMetricCard('Sleep', '6.5h', 'Last night', 'bed', '#8A2BE2')}
-              {renderMetricCard('Heart Rate', '72', 'bpm', 'favorite', '#FF3B30')}
+              {renderMetricCard(t.bmiLabel.replace(': ', ''), '24.2', t.normal, 'accessibility', '#34C759')}
+              {renderMetricCard(t.steps, '8,542', t.today, 'directions-walk', '#326db9ff')}
+              {renderMetricCard(t.sleep, '6.5h', t.lastNight, 'bed', '#8A2BE2')}
+              {renderMetricCard(t.heartRateLabel.replace(': ', ''), '72', t.bpm, 'favorite', '#FF3B30')}
             </View>
           </View>
         );
       case 'risks':
         return (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Chronic Disease Risk</Text>
+            <Text style={styles.sectionTitle}>{t.chronicDiseaseRisk}</Text>
             <FlatList
               data={[
-                { name: 'Obesity Risk', risk: 'Low', color: '#34C759', icon: 'scale', progress: 0.3 },
-                { name: 'Hypertension Risk', risk: 'Medium', color: '#FFD60A', icon: 'bloodtype', progress: 0.6 },
-                { name: 'Stroke Risk', risk: 'High', color: '#FF3B30', icon: 'monitor-heart', progress: 0.8 },
+                { name: t.obesityRisk, risk: t.low, color: '#34C759', icon: 'scale', progress: 0.3 },
+                { name: t.hypertensionRisk, risk: t.medium, color: '#FFD60A', icon: 'bloodtype', progress: 0.6 },
+                { name: t.strokeRisk, risk: t.high, color: '#FF3B30', icon: 'monitor-heart', progress: 0.8 },
               ]}
               renderItem={renderRiskCard}
               keyExtractor={(item) => item.name}
@@ -470,12 +466,12 @@ const HealthHomeScreen = () => {
       case 'tips':
         return (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Personalized Tips</Text>
+            <Text style={styles.sectionTitle}>{t.personalizedTips}</Text>
             <FlatList
               data={[
-                { text: 'Eat more vegetables', icon: 'local-dining' },
-                { text: 'Exercise at least 30 min daily', icon: 'directions-run' },
-                { text: 'Sleep 7-8 hours', icon: 'bed' },
+                { text: t.eatMoreVegetables, icon: 'local-dining' },
+                { text: t.exercise30MinDaily, icon: 'directions-run' },
+                { text: t.sleep78Hours, icon: 'bed' },
               ]}
               renderItem={renderTipCard}
               keyExtractor={(item) => item.text}
@@ -491,7 +487,7 @@ const HealthHomeScreen = () => {
               style={styles.recalculateButton}
               onPress={() => navigation.navigate('LifestyleDataInput')}
             >
-              <Text style={styles.recalculateButtonText}>Recalculate</Text>
+              <Text style={styles.recalculateButtonText}>{t.recalculate}</Text>
             </TouchableOpacity>
           </Animated.View>
         );

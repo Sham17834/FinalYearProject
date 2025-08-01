@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,12 @@ import {
   Switch,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; 
+import { Ionicons } from '@expo/vector-icons';
+import { LanguageContext } from './LanguageContext';
 import { styles } from './styles';
 
 const TrackScreen = () => {
+  const { t } = useContext(LanguageContext);
   const [steps, setSteps] = useState('');
   const [sleep, setSleep] = useState('');
   const [heartRate, setHeartRate] = useState('');
@@ -42,26 +44,17 @@ const TrackScreen = () => {
       
       <View style={styles.headerContainer}>
         <View style={styles.headerContent}>
-          <Text style={styles.appName}>Track Your Health</Text>
-          <Text style={styles.appTagline}>
-            {new Date().toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </Text>
+          <Text style={styles.appName}>{t.trackHealthTitle}</Text>
+          <Text style={styles.appTagline}>{t.trackTagline}</Text>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* 
-          Card-based section grouping for related metrics
-        */}
-        
+        {/* Physical Activity Section */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Ionicons name="fitness-outline" size={20} color="#008080" />
-            <Text style={styles.sectionTitle}>Physical Activity</Text>
+            <Text style={styles.sectionTitle}>{t.physicalActivity}</Text>
           </View>
 
           <View style={styles.inputGroup}>
@@ -69,7 +62,7 @@ const TrackScreen = () => {
               <Ionicons name="walk-outline" size={18} color="#6b7280" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Steps"
+                placeholder={t.steps}
                 placeholderTextColor="#9ca3af"
                 keyboardType="numeric"
                 value={steps}
@@ -79,7 +72,7 @@ const TrackScreen = () => {
 
             <View style={styles.switchContainer}>
               <Ionicons name="barbell-outline" size={18} color="#6b7280" style={styles.inputIcon} />
-              <Text style={styles.switchLabel}>Exercise Completed</Text>
+              <Text style={styles.switchLabel}>{t.exerciseCompleted}</Text>
               <Switch
                 value={exerciseCompleted}
                 onValueChange={setExerciseCompleted}
@@ -91,10 +84,11 @@ const TrackScreen = () => {
           </View>
         </View>
 
+        {/* Vital Signs Section */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Ionicons name="heart-outline" size={20} color="#008080" />
-            <Text style={styles.sectionTitle}>Vital Signs</Text>
+            <Text style={styles.sectionTitle}>{t.vitalSigns}</Text>
           </View>
 
           <View style={styles.inputGroup}>
@@ -102,7 +96,7 @@ const TrackScreen = () => {
               <Ionicons name="pulse-outline" size={18} color="#6b7280" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Heart Rate (bpm)"
+                placeholder={t.heartRateBpm}
                 placeholderTextColor="#9ca3af"
                 keyboardType="numeric"
                 value={heartRate}
@@ -114,7 +108,7 @@ const TrackScreen = () => {
               <Ionicons name="scale-outline" size={18} color="#6b7280" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Weight (kg)"
+                placeholder={t.weightKgInput}
                 placeholderTextColor="#9ca3af"
                 keyboardType="numeric"
                 value={weight}
@@ -124,10 +118,11 @@ const TrackScreen = () => {
           </View>
         </View>
 
+        {/* Nutrition Section */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Ionicons name="restaurant-outline" size={20} color="#008080" />
-            <Text style={styles.sectionTitle}>Nutrition</Text>
+            <Text style={styles.sectionTitle}>{t.nutrition}</Text>
           </View>
 
           <View style={styles.inputGroup}>
@@ -135,7 +130,7 @@ const TrackScreen = () => {
               <Ionicons name="leaf-outline" size={18} color="#6b7280" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Vegetable Servings"
+                placeholder={t.vegetableServings}
                 placeholderTextColor="#9ca3af"
                 keyboardType="numeric"
                 value={vegetableServings}
@@ -147,7 +142,7 @@ const TrackScreen = () => {
               <Ionicons name="apple-outline" size={18} color="#6b7280" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Fruit Servings"
+                placeholder={t.fruitServings}
                 placeholderTextColor="#9ca3af"
                 keyboardType="numeric"
                 value={fruitServings}
@@ -157,10 +152,11 @@ const TrackScreen = () => {
           </View>
         </View>
 
+        {/* Sleep Section */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Ionicons name="moon-outline" size={20} color="#008080" />
-            <Text style={styles.sectionTitle}>Sleep</Text>
+            <Text style={styles.sectionTitle}>{t.sleep}</Text>
           </View>
 
           <View style={styles.inputGroup}>
@@ -168,7 +164,7 @@ const TrackScreen = () => {
               <Ionicons name="bed-outline" size={18} color="#6b7280" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Hours Slept"
+                placeholder={t.hoursSlept}
                 placeholderTextColor="#9ca3af"
                 keyboardType="numeric"
                 value={sleep}
@@ -178,13 +174,14 @@ const TrackScreen = () => {
           </View>
         </View>
 
+        {/* Action Buttons */}
         <View style={styles.actionButtonContainer}>
           <TouchableOpacity
             style={styles.primaryActionButton}
             onPress={handleSubmit}
             activeOpacity={0.7}
           >
-            <Text style={styles.primaryActionText}>Save Metrics</Text>
+            <Text style={styles.primaryActionText}>{t.saveMetrics}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -193,7 +190,7 @@ const TrackScreen = () => {
             activeOpacity={0.7}
           >
             <Text style={[styles.primaryActionText, styles.secondaryActionText]}>
-              Sync to Lifestyle Score
+              {t.syncToLifestyle}
             </Text>
           </TouchableOpacity>
         </View>

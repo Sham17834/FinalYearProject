@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -11,13 +11,15 @@ import {
   StyleSheet,
   Platform
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker'; 
+import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
+import { LanguageContext } from './LanguageContext';
+import { formatString } from './translations';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc', 
+    backgroundColor: '#f8fafc',
   },
   header: {
     padding: 20,
@@ -29,12 +31,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 4,
-    backgroundColor: '#008080', 
+    backgroundColor: '#008080',
   },
   appName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#ffffff', 
+    color: '#ffffff',
     marginBottom: 4,
   },
   appTagline: {
@@ -181,6 +183,7 @@ const fakePredict = (data) => {
 };
 
 const LifestyleDataInputScreen = () => {
+  const { t } = useContext(LanguageContext);
   const navigation = useNavigation();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -202,6 +205,30 @@ const LifestyleDataInputScreen = () => {
   const [stressLevel, setStressLevel] = useState('');
   const [screenTimeHours, setScreenTimeHours] = useState('');
 
+  const genderOptions = [
+    { label: t.male, value: 'Male' },
+    { label: t.female, value: 'Female' },
+  ];
+
+  const chronicDiseaseOptions = [
+    { label: t.none, value: 'None' },
+    { label: t.stroke, value: 'Stroke' },
+    { label: t.hypertension, value: 'Hypertension' },
+    { label: t.obesity, value: 'Obesity' },
+  ];
+
+  const yesNoOptions = [
+    { label: t.yes, value: 'Yes' },
+    { label: t.no, value: 'No' },
+  ];
+
+  const dietQualityOptions = [
+    { label: t.excellent, value: 'Excellent' },
+    { label: t.good, value: 'Good' },
+    { label: t.average, value: 'Average' },
+    { label: t.poor, value: 'Poor' },
+  ];
+
   const calculateBMI = (height, weight) => {
     if (height && weight && !isNaN(height) && !isNaN(weight)) {
       const heightM = parseFloat(height) / 100;
@@ -215,41 +242,41 @@ const LifestyleDataInputScreen = () => {
   const validateStep = (step) => {
     if (step === 1) {
       if (!age || isNaN(age) || parseInt(age) < 18 || parseInt(age) > 120) {
-        Alert.alert('Error', 'Please enter a valid age (18-120)');
+        Alert.alert(t.error, t.errorAge);
         return false;
       }
       if (!heightCm || isNaN(heightCm) || parseFloat(heightCm) < 100 || parseFloat(heightCm) > 250) {
-        Alert.alert('Error', 'Please enter a valid height (100-250 cm)');
+        Alert.alert(t.error, t.errorHeight);
         return false;
       }
       if (!weightKg || isNaN(weightKg) || parseFloat(weightKg) < 30 || parseFloat(weightKg) > 300) {
-        Alert.alert('Error', 'Please enter a valid weight (30-300 kg)');
+        Alert.alert(t.error, t.errorWeight);
         return false;
       }
     } else if (step === 2) {
       if (!dailySteps || isNaN(dailySteps) || parseInt(dailySteps) < 0 || parseInt(dailySteps) > 50000) {
-        Alert.alert('Error', 'Please enter valid daily steps (0-50,000)');
+        Alert.alert(t.error, t.errorDailySteps);
         return false;
       }
       if (!exerciseFrequency || isNaN(exerciseFrequency) || parseInt(exerciseFrequency) < 0 || parseInt(exerciseFrequency) > 7) {
-        Alert.alert('Error', 'Please enter valid exercise frequency (0-7 days)');
+        Alert.alert(t.error, t.errorExerciseFrequency);
         return false;
       }
       if (!sleepHours || isNaN(sleepHours) || parseFloat(sleepHours) < 0 || parseFloat(sleepHours) > 24) {
-        Alert.alert('Error', 'Please enter valid sleep hours (0-24)');
+        Alert.alert(t.error, t.errorSleepHours);
         return false;
       }
     } else if (step === 3) {
       if (!fruitsVeggies || isNaN(fruitsVeggies) || parseInt(fruitsVeggies) < 0 || parseInt(fruitsVeggies) > 20) {
-        Alert.alert('Error', 'Please enter valid fruit/vegetable intake (0-20 servings)');
+        Alert.alert(t.error, t.errorFruitsVeggies);
         return false;
       }
       if (!stressLevel || isNaN(stressLevel) || parseInt(stressLevel) < 1 || parseInt(stressLevel) > 10) {
-        Alert.alert('Error', 'Please enter valid stress level (1-10)');
+        Alert.alert(t.error, t.errorStressLevel);
         return false;
       }
       if (!screenTimeHours || isNaN(screenTimeHours) || parseFloat(screenTimeHours) < 0 || parseFloat(screenTimeHours) > 24) {
-        Alert.alert('Error', 'Please enter valid screen time (0-24 hours)');
+        Alert.alert(t.error, t.errorScreenTime);
         return false;
       }
     }
@@ -308,7 +335,7 @@ const LifestyleDataInputScreen = () => {
     } catch (error) {
       console.error('Prediction error:', error);
       setIsSubmitting(false);
-      Alert.alert('Error', 'Failed to process data. Please try again.');
+      Alert.alert(t.error, t.errorSubmission);
     }
   };
 
@@ -316,8 +343,10 @@ const LifestyleDataInputScreen = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
       <View style={styles.header}>
-        <Text style={styles.appName}>Lifestyle Data</Text>
-        <Text style={styles.appTagline}>Step {currentStep} of {totalSteps}</Text>
+        <Text style={styles.appName}>{t.lifestyleDataTitle}</Text>
+        <Text style={styles.appTagline}>
+          {formatString(t.lifestyleDataTagline, { currentStep, totalSteps })}
+        </Text>
         <View style={styles.progressBarContainer}>
           <View style={[styles.progressBar, { width: `${(currentStep / totalSteps) * 100}%` }]} />
         </View>
@@ -327,31 +356,32 @@ const LifestyleDataInputScreen = () => {
           {currentStep === 1 && (
             <>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Age</Text>
+                <Text style={styles.inputLabel}>{t.age}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter your age (years)"
+                  placeholder={t.enterAge}
                   keyboardType="numeric"
                   value={age}
                   onChangeText={setAge}
                 />
               </View>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Gender</Text>
+                <Text style={styles.inputLabel}>{t.gender}</Text>
                 <Picker
                   selectedValue={gender}
                   style={styles.picker}
                   onValueChange={(itemValue) => setGender(itemValue)}
                 >
-                  <Picker.Item label="Male" value="Male" />
-                  <Picker.Item label="Female" value="Female" />
+                  {genderOptions.map((option) => (
+                    <Picker.Item key={option.value} label={option.label} value={option.value} />
+                  ))}
                 </Picker>
               </View>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Height (cm)</Text>
+                <Text style={styles.inputLabel}>{t.heightCm}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter your height in centimeters"
+                  placeholder={t.enterHeight}
                   keyboardType="numeric"
                   value={heightCm}
                   onChangeText={(text) => {
@@ -361,10 +391,10 @@ const LifestyleDataInputScreen = () => {
                 />
               </View>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Weight (kg)</Text>
+                <Text style={styles.inputLabel}>{t.weightKg}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter your weight in kilograms"
+                  placeholder={t.enterWeight}
                   keyboardType="numeric"
                   value={weightKg}
                   onChangeText={(text) => {
@@ -374,12 +404,12 @@ const LifestyleDataInputScreen = () => {
                 />
               </View>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>BMI (auto-calculated)</Text>
+                <Text style={styles.inputLabel}>{t.bmi}</Text>
                 <TextInput
                   style={[styles.input, { backgroundColor: '#f1f5f9' }]}
                   value={bmi}
                   editable={false}
-                  placeholder="BMI will be calculated"
+                  placeholder={t.bmiPlaceholder}
                 />
               </View>
             </>
@@ -387,57 +417,57 @@ const LifestyleDataInputScreen = () => {
           {currentStep === 2 && (
             <>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Chronic Disease</Text>
+                <Text style={styles.inputLabel}>{t.chronicDisease}</Text>
                 <Picker
                   selectedValue={chronicDisease}
                   style={styles.picker}
                   onValueChange={(itemValue) => setChronicDisease(itemValue)}
                 >
-                  <Picker.Item label="None" value="None" />
-                  <Picker.Item label="Stroke" value="Stroke" />
-                  <Picker.Item label="Hypertension" value="Hypertension" />
-                  <Picker.Item label="Obesity" value="Obesity" />
+                  {chronicDiseaseOptions.map((option) => (
+                    <Picker.Item key={option.value} label={option.label} value={option.value} />
+                  ))}
                 </Picker>
               </View>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Average Daily Steps</Text>
+                <Text style={styles.inputLabel}>{t.dailySteps}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter average daily steps"
+                  placeholder={t.enterDailySteps}
                   keyboardType="numeric"
                   value={dailySteps}
                   onChangeText={setDailySteps}
                 />
               </View>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Weekly Exercise Frequency (days)</Text>
+                <Text style={styles.inputLabel}>{t.exerciseFrequency}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter days per week (0-7)"
+                  placeholder={t.enterExerciseFrequency}
                   keyboardType="numeric"
                   value={exerciseFrequency}
                   onChangeText={setExerciseFrequency}
                 />
               </View>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Average Daily Sleep Hours</Text>
+                <Text style={styles.inputLabel}>{t.sleepHours}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter hours of sleep per day"
+                  placeholder={t.enterSleepHours}
                   keyboardType="numeric"
                   value={sleepHours}
                   onChangeText={setSleepHours}
                 />
               </View>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Alcohol Consumption</Text>
+                <Text style={styles.inputLabel}>{t.alcoholConsumption}</Text>
                 <Picker
                   selectedValue={alcoholConsumption}
                   style={styles.picker}
                   onValueChange={(itemValue) => setAlcoholConsumption(itemValue)}
                 >
-                  <Picker.Item label="No" value="No" />
-                  <Picker.Item label="Yes" value="Yes" />
+                  {yesNoOptions.map((option) => (
+                    <Picker.Item key={option.value} label={option.label} value={option.value} />
+                  ))}
                 </Picker>
               </View>
             </>
@@ -445,54 +475,54 @@ const LifestyleDataInputScreen = () => {
           {currentStep === 3 && (
             <>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Smoking Habit</Text>
+                <Text style={styles.inputLabel}>{t.smokingHabit}</Text>
                 <Picker
                   selectedValue={smokingHabit}
                   style={styles.picker}
                   onValueChange={(itemValue) => setSmokingHabit(itemValue)}
                 >
-                  <Picker.Item label="No" value="No" />
-                  <Picker.Item label="Yes" value="Yes" />
+                  {yesNoOptions.map((option) => (
+                    <Picker.Item key={option.value} label={option.label} value={option.value} />
+                  ))}
                 </Picker>
               </View>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Diet Quality</Text>
+                <Text style={styles.inputLabel}>{t.dietQuality}</Text>
                 <Picker
                   selectedValue={dietQuality}
                   style={styles.picker}
                   onValueChange={(itemValue) => setDietQuality(itemValue)}
                 >
-                  <Picker.Item label="Excellent" value="Excellent" />
-                  <Picker.Item label="Good" value="Good" />
-                  <Picker.Item label="Average" value="Average" />
-                  <Picker.Item label="Poor" value="Poor" />
+                  {dietQualityOptions.map((option) => (
+                    <Picker.Item key={option.value} label={option.label} value={option.value} />
+                  ))}
                 </Picker>
               </View>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Daily Fruit/Vegetable Consumption (servings)</Text>
+                <Text style={styles.inputLabel}>{t.fruitsVeggies}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter number of servings per day"
+                  placeholder={t.enterFruitsVeggies}
                   keyboardType="numeric"
                   value={fruitsVeggies}
                   onChangeText={setFruitsVeggies}
                 />
               </View>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Stress Level (1-10)</Text>
+                <Text style={styles.inputLabel}>{t.stressLevel}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter stress level (1-10)"
+                  placeholder={t.enterStressLevel}
                   keyboardType="numeric"
                   value={stressLevel}
                   onChangeText={setStressLevel}
                 />
               </View>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Daily Screen Time (hours)</Text>
+                <Text style={styles.inputLabel}>{t.screenTimeHours}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter hours of screen time per day"
+                  placeholder={t.enterScreenTime}
                   keyboardType="numeric"
                   value={screenTimeHours}
                   onChangeText={setScreenTimeHours}
@@ -507,7 +537,7 @@ const LifestyleDataInputScreen = () => {
                 onPress={handlePrevious}
                 disabled={isSubmitting}
               >
-                <Text style={styles.secondaryButtonText}>Previous</Text>
+                <Text style={styles.secondaryButtonText}>{t.previous}</Text>
               </TouchableOpacity>
             )}
             {currentStep < totalSteps ? (
@@ -516,7 +546,7 @@ const LifestyleDataInputScreen = () => {
                 onPress={handleNext}
                 disabled={isSubmitting}
               >
-                <Text style={styles.primaryButtonText}>Next</Text>
+                <Text style={styles.primaryButtonText}>{t.next}</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
@@ -529,7 +559,7 @@ const LifestyleDataInputScreen = () => {
                 disabled={isSubmitting}
               >
                 <Text style={styles.primaryButtonText}>
-                  {isSubmitting ? 'Processing...' : 'Save and Calculate'}
+                  {isSubmitting ? t.processing : t.saveAndCalculate}
                 </Text>
               </TouchableOpacity>
             )}
@@ -541,4 +571,3 @@ const LifestyleDataInputScreen = () => {
 };
 
 export default LifestyleDataInputScreen;
-    

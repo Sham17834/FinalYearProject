@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import {
   Platform,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { LanguageContext } from './LanguageContext';
 
 const { width, height } = Dimensions.get("window");
 const isIOS = Platform.OS === "ios";
@@ -49,6 +50,7 @@ const COLORS = {
 };
 
 const ProfileScreen = ({ navigation }) => {
+  const { t } = useContext(LanguageContext);
   const [name, setName] = useState('John Doe');
   const [email, setEmail] = useState('john.doe@example.com');
   const [age, setAge] = useState('30');
@@ -61,39 +63,39 @@ const ProfileScreen = ({ navigation }) => {
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
 
   const frequencyOptions = [
-    { label: 'Daily', value: 'daily' },
-    { label: 'Weekly', value: 'weekly' },
-    { label: 'Monthly', value: 'monthly' }
+    { label: t.daily, value: 'daily' },
+    { label: t.weekly, value: 'weekly' },
+    { label: t.monthly, value: 'monthly' }
   ];
 
   const genderOptions = [
-    { label: 'Male', value: 'Male' },
-    { label: 'Female', value: 'Female' },
+    { label: t.male, value: 'Male' },
+    { label: t.female, value: 'Female' },
   ];
 
   const handleSave = () => {
     Alert.alert(
-      'Profile Saved',
-      'Your profile has been updated successfully!',
-      [{ text: 'OK', style: 'default' }]
+      t.profileSaved,
+      t.profileSavedMsg,
+      [{ text: t.ok, style: 'default' }]
     );
     console.log('Saved:', { name, email, age, height, weight, gender, isOfflineMode, notificationsEnabled, notificationFrequency });
   };
 
   const handlePrivacyPolicy = () => {
     Linking.openURL('https://www.who.int/about/policies/privacy').catch(err => 
-      Alert.alert('Error', 'Unable to open privacy policy')
+      Alert.alert(t.error, t.errorPrivacyPolicy)
     );
   };
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      'Delete Account',
-      'Are you sure you want to delete your account? This action cannot be undone.',
+      t.deleteAccount,
+      t.deleteAccountConfirm,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         { 
-          text: 'Delete', 
+          text: t.delete, 
           style: 'destructive',
           onPress: () => console.log('Account deletion requested')
         }
@@ -103,16 +105,15 @@ const ProfileScreen = ({ navigation }) => {
 
   const handleLogout = () => {
     Alert.alert(
-      'Log Out',
-      'Are you sure you want to log out?',
+      t.logOut,
+      t.logOutConfirm,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         { 
-          text: 'Log Out', 
+          text: t.logOut, 
           style: 'default',
           onPress: () => {
             console.log('User logged out successfully');
-            
             navigation.reset({
               index: 0,
               routes: [{ name: 'Welcome' }]
@@ -145,22 +146,22 @@ const ProfileScreen = ({ navigation }) => {
       
       <View style={styles.headerContainer}>
         <View style={styles.headerContent}>
-          <Text style={styles.appName}>Profile</Text>
-          <Text style={styles.appTagline}>Manage your personal information</Text>
+          <Text style={styles.appName}>{t.profileTitle}</Text>
+          <Text style={styles.appTagline}>{t.profileTagline}</Text>
         </View>
       </View>
 
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
+        {/* Personal Information Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
+          <Text style={styles.sectionTitle}>{t.personalInfo}</Text>
           
           <View style={styles.formCard}>
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Full Name</Text>
+              <Text style={styles.inputLabel}>{t.fullName}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your full name"
+                placeholder={t.enterFullName}
                 placeholderTextColor="#9ca3af"
                 value={name}
                 onChangeText={setName}
@@ -168,10 +169,10 @@ const ProfileScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Email Address</Text>
+              <Text style={styles.inputLabel}>{t.emailAddress}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your email address"
+                placeholder={t.enterEmail}
                 placeholderTextColor="#9ca3af"
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -182,10 +183,10 @@ const ProfileScreen = ({ navigation }) => {
 
             <View style={styles.inputRow}>
               <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
-                <Text style={styles.inputLabel}>Age</Text>
+                <Text style={styles.inputLabel}>{t.age}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Age"
+                  placeholder={t.age}
                   placeholderTextColor="#9ca3af"
                   keyboardType="numeric"
                   value={age}
@@ -194,7 +195,7 @@ const ProfileScreen = ({ navigation }) => {
               </View>
 
               <View style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}>
-                <Text style={styles.inputLabel}>Gender</Text>
+                <Text style={styles.inputLabel}>{t.gender}</Text>
                 <View style={styles.pickerContainer}>
                   <Picker
                     selectedValue={gender}
@@ -218,10 +219,10 @@ const ProfileScreen = ({ navigation }) => {
 
             <View style={styles.inputRow}>
               <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
-                <Text style={styles.inputLabel}>Height (cm)</Text>
+                <Text style={styles.inputLabel}>{t.heightCm}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="175"
+                  placeholder={t.heightPlaceholder}
                   placeholderTextColor="#9ca3af"
                   keyboardType="numeric"
                   value={height}
@@ -230,10 +231,10 @@ const ProfileScreen = ({ navigation }) => {
               </View>
 
               <View style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}>
-                <Text style={styles.inputLabel}>Weight (kg)</Text>
+                <Text style={styles.inputLabel}>{t.weightKg}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="70"
+                  placeholder={t.weightPlaceholder}
                   placeholderTextColor="#9ca3af"
                   keyboardType="numeric"
                   value={weight}
@@ -244,13 +245,14 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
 
+        {/* Preferences Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
+          <Text style={styles.sectionTitle}>{t.preferences}</Text>
           
           <View style={styles.settingsCard}>
             <SwitchRow
-              label="Offline Mode"
-              description="Use the app without internet connection"
+              label={t.offlineMode}
+              description={t.offlineModeDesc}
               value={isOfflineMode}
               onValueChange={setIsOfflineMode}
             />
@@ -258,8 +260,8 @@ const ProfileScreen = ({ navigation }) => {
             <View style={styles.divider} />
 
             <SwitchRow
-              label="Push Notifications"
-              description="Receive updates about your progress"
+              label={t.pushNotifications}
+              description={t.notificationsDesc}
               value={notificationsEnabled}
               onValueChange={setNotificationsEnabled}
             />
@@ -268,7 +270,7 @@ const ProfileScreen = ({ navigation }) => {
               <>
                 <View style={styles.divider} />
                 <View style={styles.pickerSection}>
-                  <Text style={styles.inputLabel}>Notification Frequency</Text>
+                  <Text style={styles.inputLabel}>{t.notificationFrequency}</Text>
                   <TouchableOpacity
                     style={styles.pickerButton}
                     onPress={() => setShowFrequencyModal(true)}
@@ -284,8 +286,9 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
 
+        {/* Security & Privacy Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Security & Privacy</Text>
+          <Text style={styles.sectionTitle}>{t.securityPrivacy}</Text>
           
           <View style={styles.securityCard}>
             <View style={styles.securityItem}>
@@ -293,11 +296,11 @@ const ProfileScreen = ({ navigation }) => {
                 <Text style={styles.securityIconText}>🔒</Text>
               </View>
               <View style={styles.securityContent}>
-                <Text style={styles.securityTitle}>Data Encryption</Text>
-                <Text style={styles.securityDescription}>End-to-end encryption enabled</Text>
+                <Text style={styles.securityTitle}>{t.dataEncryption}</Text>
+                <Text style={styles.securityDescription}>{t.encryptionDesc}</Text>
               </View>
               <View style={styles.securityStatus}>
-                <Text style={styles.activeStatus}>Active</Text>
+                <Text style={styles.activeStatus}>{t.active}</Text>
               </View>
             </View>
           </View>
@@ -306,37 +309,38 @@ const ProfileScreen = ({ navigation }) => {
             style={styles.secondaryButton}
             onPress={handlePrivacyPolicy}
           >
-            <Text style={styles.secondaryButtonText}>Review Privacy Policy</Text>
+            <Text style={styles.secondaryButtonText}>{t.reviewPrivacyPolicy}</Text>
           </TouchableOpacity>
         </View>
 
+        {/* Action Buttons */}
         <View style={styles.actionSection}>
           <TouchableOpacity
             style={styles.primaryButton}
             onPress={handleSave}
           >
-            <Text style={styles.primaryButtonText}>Save Changes</Text>
+            <Text style={styles.primaryButtonText}>{t.saveChanges}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.dangerButton}
             onPress={handleDeleteAccount}
           >
-            <Text style={styles.dangerButtonText}>Delete Account</Text>
+            <Text style={styles.dangerButtonText}>{t.deleteAccount}</Text>
           </TouchableOpacity>
 
-          {/* Logout Button */}
           <TouchableOpacity
             style={styles.secondaryButton}
             onPress={handleLogout}
           >
-            <Text style={styles.secondaryButtonText}>Log Out</Text>
+            <Text style={styles.secondaryButtonText}>{t.logOut}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>
 
+      {/* Notification Frequency Modal */}
       <Modal
         visible={showFrequencyModal}
         transparent={true}
@@ -349,7 +353,7 @@ const ProfileScreen = ({ navigation }) => {
           onPress={() => setShowFrequencyModal(false)}
         >
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select Frequency</Text>
+            <Text style={styles.modalTitle}>{t.selectFrequency}</Text>
             {frequencyOptions.map((option) => (
               <TouchableOpacity
                 key={option.value}
