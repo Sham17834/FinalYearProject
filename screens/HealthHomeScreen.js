@@ -7,67 +7,370 @@ import {
   StatusBar,
   TouchableOpacity,
   Animated,
-  Image,
+  StyleSheet,
+  Dimensions,
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { styles } from './styles';
+import { useNavigation } from '@react-navigation/native';
+import Svg, { Circle } from 'react-native-svg';
+
+const { width } = Dimensions.get('window');
+const isIOS = Platform.OS === 'ios';
+
+const FONT_FAMILY = {
+  regular: isIOS ? 'SF Pro Display' : 'Roboto',
+  medium: isIOS ? 'SF Pro Display' : 'Roboto-Medium',
+  bold: isIOS ? 'SF Pro Display' : 'Roboto-Bold',
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F7FA',
+  },
+  scrollContainer: {
+    paddingBottom: 20,
+  },
+  headerContainer: {
+    backgroundColor: '#008080',
+    paddingBottom: 20,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+    marginBottom: 8,
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  appTagline: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
+  },
+  scoreContainer: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    marginHorizontal: 16,
+    marginVertical: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  progressCircleContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  progressCircleOuter: {
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  progressNumber: {
+    fontSize: 36,
+    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
+    color: '#1D3557',
+  },
+  progressSubtext: {
+    fontSize: 14,
+    color: '#457B9D',
+    marginTop: 4,
+  },
+  progressLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    fontFamily: FONT_FAMILY.medium,
+    color: '#457B9D',
+    marginTop: 16,
+  },
+  section: {
+    marginHorizontal: 16,
+    marginVertical: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
+    color: '#1D3557',
+    marginBottom: 12,
+    paddingLeft: 4,
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginHorizontal: 8,
+    marginBottom: 12,
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  metricCard: {
+    width: (width - 48) / 2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  metricTitle: {
+    fontSize: 14,
+    fontFamily: FONT_FAMILY.medium,
+    color: '#457B9D',
+    marginBottom: 4,
+  },
+  metricValue: {
+    fontSize: 22,
+    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
+    color: '#1D3557',
+  },
+  metricSubtext: {
+    fontSize: 12,
+    fontFamily: FONT_FAMILY.regular,
+    color: '#457B9D',
+    marginTop: 4,
+  },
+  metricIcon: {
+    position: 'absolute',
+    right: 14,
+    top: 14,
+  },
+  riskCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  riskCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  riskIcon: {
+    marginRight: 12,
+  },
+  riskTextContainer: {
+    flex: 1,
+  },
+  riskTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: FONT_FAMILY.medium,
+    color: '#1D3557',
+    marginBottom: 4,
+  },
+  riskStatus: {
+    fontSize: 14,
+    fontWeight: '500',
+    fontFamily: FONT_FAMILY.regular,
+  },
+  riskProgressBar: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#E6F0FA',
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  tipCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  tipIcon: {
+    marginRight: 12,
+  },
+  tipText: {
+    fontSize: 16,
+    fontFamily: FONT_FAMILY.regular,
+    color: '#1D3557',
+    flex: 1,
+  },
+  recalculateContainer: {
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginVertical: 12,
+  },
+  recalculateButton: {
+    backgroundColor: '#326db9ff',
+    borderRadius: 16,
+    paddingVertical: 16,
+    width: width - 32,
+    alignItems: 'center',
+    shadowColor: '#326db9ff',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  recalculateButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
+    color: '#FFFFFF',
+  },
+});
+
+const CustomProgressBar = ({ progress, color }) => {
+  const animatedWidth = new Animated.Value(0);
+
+  useEffect(() => {
+    Animated.timing(animatedWidth, {
+      toValue: progress,
+      duration: 800,
+      useNativeDriver: false,
+    }).start();
+  }, [progress]);
+
+  return (
+    <View style={styles.riskProgressBar}>
+      <Animated.View
+        style={[
+          styles.progressBarFill,
+          {
+            width: animatedWidth.interpolate({
+              inputRange: [0, 1],
+              outputRange: ['0%', '100%'],
+            }),
+            backgroundColor: color,
+          },
+        ]}
+      />
+    </View>
+  );
+};
+
+const AnimatedProgressCircle = ({ percentage, size = 180, strokeWidth = 12 }) => {
+  const animatedValue = new Animated.Value(0);
+  const circleRef = React.useRef();
+  
+  const halfSize = size / 2;
+  const radius = halfSize - strokeWidth;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (circumference * percentage) / 100;
+
+  useEffect(() => {
+    Animated.spring(animatedValue, {
+      toValue: 1,
+      duration: 1500,
+      useNativeDriver: true,
+      bounciness: 10,
+    }).start();
+    
+    animatedValue.addListener((v) => {
+      if (circleRef?.current) {
+        const offset = circumference - (circumference * percentage * v.value) / 100;
+        circleRef.current.setNativeProps({
+          strokeDashoffset: offset
+        });
+      }
+    });
+    
+    return () => {
+      animatedValue.removeAllListeners();
+    };
+  }, [percentage]);
+
+  const getScoreColor = (score) => {
+    if (score >= 80) return '#34C759';
+    if (score >= 60) return '#FFD60A';
+    return '#FF3B30';
+  };
+
+  const color = getScoreColor(percentage);
+
+  return (
+    <View style={[styles.progressCircleContainer, { width: size, height: size }]}>
+      {/* Background circle */}
+      <View style={[
+        styles.progressCircleOuter, 
+        { 
+          width: size, 
+          height: size, 
+          borderRadius: size / 2,
+          borderColor: '#E6F0FA',
+          position: 'absolute',
+        }
+      ]} />
+      
+      {/* Animated circle */}
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <Circle
+          cx={halfSize}
+          cy={halfSize}
+          r={radius}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference}
+          fill="none"
+          ref={circleRef}
+          rotation="-90"
+          origin={`${halfSize}, ${halfSize}`}
+        />
+      </Svg>
+      
+      {/* Score text */}
+      <View style={{ position: 'absolute', alignItems: 'center' }}>
+        <Text style={styles.progressNumber}>{percentage}</Text>
+        <Text style={styles.progressSubtext}>out of 100</Text>
+      </View>
+    </View>
+  );
+};
 
 const HealthHomeScreen = () => {
-  const route = useRoute();
   const navigation = useNavigation();
-  const [userName] = useState('John');
-  const [lifestyleScore, setLifestyleScore] = useState(85);
-  const [riskLevel, setRiskLevel] = useState('Low');
+  const [lifestyleScore] = useState(75);
   const fadeAnim = new Animated.Value(0);
   const slideAnim = new Animated.Value(50);
-
-  const [healthMetrics, setHealthMetrics] = useState([
-    {
-      title: 'BMI',
-      value: '22.4',
-      unit: 'kg/m²',
-      status: 'Normal',
-      color: '#10b981',
-      bgColor: '#f8fafc',
-      materialIcon: 'scale',
-      trend: '+0.2',
-      trendUp: false,
-    },
-    {
-      title: 'Steps',
-      value: '8,234',
-      unit: 'steps',
-      status: '82% of goal',
-      color: '#3b82f6',
-      bgColor: '#f8fafc',
-      materialIcon: 'directions-walk',
-      trend: '+1,234',
-      trendUp: true,
-    },
-    {
-      title: 'Sleep',
-      value: '7.2',
-      unit: 'hours',
-      status: 'Good quality',
-      color: '#3b82f6',
-      bgColor: '#f8fafc',
-      materialIcon: 'bed',
-      trend: '+0.5',
-      trendUp: true,
-    },
-    {
-      title: 'Heart Rate',
-      value: '72',
-      unit: 'bpm',
-      status: 'Resting',
-      color: '#ef4444',
-      bgColor: '#f8fafc',
-      materialIcon: 'favorite',
-      trend: '-2',
-      trendUp: false,
-    },
-  ]);
 
   useEffect(() => {
     Animated.parallel([
@@ -82,77 +385,34 @@ const HealthHomeScreen = () => {
         useNativeDriver: true,
       }),
     ]).start();
+  }, []);
 
-    if (route.params?.lifestyleData) {
-      const { bmi, dailySteps, sleepDuration, score, risk } = route.params.lifestyleData;
-      setLifestyleScore(score || 85);
-      setRiskLevel(risk || 'Low');
-      setHealthMetrics((prev) =>
-        prev.map((metric) => {
-          if (metric.title === 'BMI') {
-            return { ...metric, value: bmi.toString(), status: bmi < 25 ? 'Normal' : 'Overweight' };
-          }
-          if (metric.title === 'Steps') {
-            return { ...metric, value: dailySteps.toString(), status: `${Math.round((dailySteps / 10000) * 100)}% of goal` };
-          }
-          if (metric.title === 'Sleep') {
-            return { ...metric, value: sleepDuration.toString(), status: sleepDuration >= 7 ? 'Good quality' : 'Needs improvement' };
-          }
-          return metric;
-        })
-      );
-    }
-  }, [route.params?.lifestyleData]);
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
-
-  const getScoreColor = (score) => {
-    if (score >= 80) return '#10b981';
-    if (score >= 60) return '#f59e0b';
-    return '#ef4444';
-  };
-
-  const ProgressRing = ({ percentage }) => (
-    <View style={styles.progressRingContainer}>
-      <View style={styles.progressRingOuter}>
-        <View style={[styles.progressRingInner, { 
-          borderTopColor: getScoreColor(percentage),
-          borderRightColor: getScoreColor(percentage),
-          transform: [{ rotate: `${(percentage / 100) * 360}deg` }]
-        }]} />
-        <View style={styles.progressRingContent}>
-          <Text style={styles.progressNumber}>{percentage}</Text>
-          <Text style={styles.progressLabel}>Score</Text>
-        </View>
-      </View>
-    </View>
+  const renderMetricCard = (title, value, subtext, iconName, iconColor = '#457B9D') => (
+    <Animated.View style={[styles.metricCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+      <Text style={styles.metricTitle}>{title}</Text>
+      <Text style={styles.metricValue}>{value}</Text>
+      <Text style={styles.metricSubtext}>{subtext}</Text>
+      <Icon name={iconName} size={20} color={iconColor} style={styles.metricIcon} />
+    </Animated.View>
   );
 
-  const renderMetricCard = ({ item }) => (
-    <Animated.View 
-      style={[styles.metricCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }], flex: 1 }]}
-    >
-      <View style={styles.metricCardHeader}>
-        <View style={[styles.metricIcon, { backgroundColor: item.bgColor }]}>
-          <Icon name={item.materialIcon} size={20} color={item.color} />
-        </View>
-        <View style={[styles.trendIndicator, { backgroundColor: item.trendUp ? '#ECFDF5' : '#FEF2F2' }]}>
-          <Text style={[styles.trendText, { color: item.trendUp ? '#10b981' : '#ef4444' }]}>
-            {item.trendUp ? '↗' : '↘'} {item.trend}
-          </Text>
+  const renderRiskCard = ({ item }) => (
+    <Animated.View style={[styles.riskCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+      <View style={styles.riskCardContent}>
+        <Icon name={item.icon} size={24} color={item.color} style={styles.riskIcon} />
+        <View style={styles.riskTextContainer}>
+          <Text style={styles.riskTitle}>{item.name}</Text>
+          <Text style={[styles.riskStatus, { color: item.color }]}>{item.risk}</Text>
         </View>
       </View>
-      <Text style={styles.metricTitle}>{item.title}</Text>
-      <View style={styles.metricValue}>
-        <Text style={styles.metricNumber}>{item.value}</Text>
-        <Text style={styles.metricUnit}>{item.unit}</Text>
-      </View>
-      <Text style={[styles.metricStatus, { color: item.color }]}>{item.status}</Text>
+      <CustomProgressBar progress={item.progress} color={item.color} />
+    </Animated.View>
+  );
+
+  const renderTipCard = ({ item }) => (
+    <Animated.View style={[styles.tipCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+      <Icon name={item.icon} size={24} color="#34C759" style={styles.tipIcon} />
+      <Text style={styles.tipText}>{item.text}</Text>
     </Animated.View>
   );
 
@@ -161,118 +421,81 @@ const HealthHomeScreen = () => {
     { type: 'score', key: 'score' },
     { type: 'metrics', key: 'metrics' },
     { type: 'risks', key: 'risks' },
-    { type: 'recommendations', key: 'recommendations' },
+    { type: 'tips', key: 'tips' },
+    { type: 'recalculate', key: 'recalculate' },
   ];
 
   const renderItem = ({ item }) => {
     switch (item.type) {
       case 'header':
         return (
-          <View style={styles.headerGradient}>
-            <View style={styles.headerContent}>
-              <Text style={styles.greeting}>{getGreeting()}, {userName}!</Text>
-              <Text style={styles.appTagline}>Your health at a glance</Text>
-            </View>
-          </View>
+          <Animated.View style={[styles.headerContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+            <Text style={styles.greeting}>Dashboard</Text>
+            <Text style={styles.appTagline}>Your health overview</Text>
+          </Animated.View>
         );
       case 'score':
         return (
-          <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-            <View style={[styles.scoreCard, { backgroundColor: '#008080' }]}>
-              <ProgressRing percentage={lifestyleScore} />
-              <Text style={[styles.scoreTitle, { color: '#ffffff', textAlign: 'center' }]}>
-                Wellness Score
-              </Text>
-              <Text style={[styles.scoreMessage, { color: '#ffffff', textAlign: 'center' }]}>
-                {riskLevel === 'Low' ? "You're doing great!" : 
-                 riskLevel === 'Medium' ? "Keep it up!" : 
-                 "Let's improve your health!"}
-              </Text>
-              <View style={styles.secondaryButtonsRow}>
-                <TouchableOpacity 
-                  style={styles.secondaryActionButton}
-                  onPress={() => navigation.navigate("HealthInsights")}
-                >
-                  <Text style={styles.secondaryActionText}>Insights</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.secondaryActionButton}
-                  onPress={() => navigation.navigate("LifestyleDataInput")}
-                >
-                  <Text style={styles.secondaryActionText}>Update</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+          <Animated.View style={[styles.scoreContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+            <AnimatedProgressCircle percentage={lifestyleScore} />
+            <Text style={styles.progressLabel}>Your Lifestyle Score</Text>
           </Animated.View>
         );
       case 'metrics':
         return (
-          <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Vital Metrics</Text>
-              <FlatList
-                data={healthMetrics}
-                renderItem={renderMetricCard}
-                keyExtractor={(item) => item.title}
-                numColumns={2}
-                contentContainerStyle={{ paddingHorizontal: 10 }}
-              />
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Key Metrics</Text>
+            <View style={styles.metricsGrid}>
+              {renderMetricCard('BMI', '24.2', 'Normal', 'accessibility', '#34C759')}
+              {renderMetricCard('Steps', '8,542', 'Today', 'directions-walk', '#326db9ff')}
+              {renderMetricCard('Sleep', '6.5h', 'Last night', 'bed', '#8A2BE2')}
+              {renderMetricCard('Heart Rate', '72', 'bpm', 'favorite', '#FF3B30')}
             </View>
-          </Animated.View>
+          </View>
         );
       case 'risks':
         return (
-          <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Health Risks</Text>
-              <View style={styles.suggestionsContainer}>
-                {[
-                  { name: 'Obesity', risk: 'Low', color: '#10b981', icon: require("../assets/obesity.png") },
-                  { name: 'Hypertension', risk: 'Moderate', color: '#f59e0b', icon: require("../assets/hypertension.png") },
-                  { name: 'Diabetes', risk: 'High', color: '#ef4444', icon: require("../assets/diabetes.png") },
-                ].map((item, index) => (
-                  <View key={index} style={styles.riskPredictionItem}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Image source={item.icon} style={styles.diseaseIcon} />
-                      <View style={{ marginLeft: 12 }}>
-                        <Text style={[styles.riskPredictionText, { fontWeight: '600' }]}>{item.name} Risk</Text>
-                        <Text style={[styles.riskPredictionText, { color: item.color }]}>{item.risk} probability</Text>
-                      </View>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            </View>
-          </Animated.View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Chronic Disease Risk</Text>
+            <FlatList
+              data={[
+                { name: 'Obesity Risk', risk: 'Low', color: '#34C759', icon: 'scale', progress: 0.3 },
+                { name: 'Hypertension Risk', risk: 'Medium', color: '#FFD60A', icon: 'bloodtype', progress: 0.6 },
+                { name: 'Stroke Risk', risk: 'High', color: '#FF3B30', icon: 'monitor-heart', progress: 0.8 },
+              ]}
+              renderItem={renderRiskCard}
+              keyExtractor={(item) => item.name}
+              contentContainerStyle={{ paddingHorizontal: 0 }}
+              ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+            />
+          </View>
         );
-      case 'recommendations':
+      case 'tips':
         return (
-          <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Recommendations</Text>
-              <View style={styles.suggestionsContainer}>
-                {[
-                  { text: 'Increase vegetable intake to 5 servings/day', icon: 'restaurant', color: '#10b981' },
-                  { text: 'Aim for 10,000 steps daily', icon: 'directions-run', color: '#3b82f6' },
-                  { text: 'Reduce sodium intake', icon: 'warning', color: '#ef4444' },
-                ].map((item, index) => (
-                  <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                    <View style={{ 
-                      width: 24, 
-                      height: 24, 
-                      borderRadius: 12, 
-                      backgroundColor: '#f8fafc', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      marginRight: 12 
-                    }}>
-                      <Icon name={item.icon} size={14} color={item.color} />
-                    </View>
-                    <Text style={[styles.suggestionText, { flex: 1 }]}>{item.text}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Personalized Tips</Text>
+            <FlatList
+              data={[
+                { text: 'Eat more vegetables', icon: 'local-dining' },
+                { text: 'Exercise at least 30 min daily', icon: 'directions-run' },
+                { text: 'Sleep 7-8 hours', icon: 'bed' },
+              ]}
+              renderItem={renderTipCard}
+              keyExtractor={(item) => item.text}
+              contentContainerStyle={{ paddingHorizontal: 0 }}
+              ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+            />
+          </View>
+        );
+      case 'recalculate':
+        return (
+          <Animated.View style={[styles.recalculateContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+            <TouchableOpacity
+              style={styles.recalculateButton}
+              onPress={() => navigation.navigate('LifestyleDataInput')}
+            >
+              <Text style={styles.recalculateButtonText}>Recalculate</Text>
+            </TouchableOpacity>
           </Animated.View>
         );
       default:
@@ -282,12 +505,13 @@ const HealthHomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#008080" />
+      <StatusBar barStyle="dark-content" backgroundColor="#F5F7FA" />
       <FlatList
         data={data}
         renderItem={renderItem}
         keyExtractor={(item) => item.key}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContainer}
       />
     </SafeAreaView>
   );
