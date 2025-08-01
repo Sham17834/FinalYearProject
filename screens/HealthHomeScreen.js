@@ -327,7 +327,6 @@ const AnimatedProgressCircle = ({ percentage, size = 180, strokeWidth = 12 }) =>
 
   return (
     <View style={[styles.progressCircleContainer, { width: size, height: size }]}>
-      {/* Background circle */}
       <View style={[
         styles.progressCircleOuter, 
         { 
@@ -339,7 +338,6 @@ const AnimatedProgressCircle = ({ percentage, size = 180, strokeWidth = 12 }) =>
         }
       ]} />
       
-      {/* Animated circle */}
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <Circle
           cx={halfSize}

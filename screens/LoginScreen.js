@@ -66,7 +66,6 @@ const LoginScreen = () => {
         </View>
 
         <View style={styles.form}>
-          {/* Email Input */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>{t.email}</Text>
             <View style={[
@@ -85,7 +84,6 @@ const LoginScreen = () => {
               />
             </View>
           </View>
-          {/* Password Input */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>{t.password}</Text>
             <View style={[
@@ -107,14 +105,12 @@ const LoginScreen = () => {
               </TouchableOpacity>
             </View>
           </View>
-          {/* Forgot Password */}
           <TouchableOpacity
             style={styles.helpLink}
             onPress={() => Alert.alert(t.help || 'Help', 'Having trouble signing in?')}
           >
             <Text style={styles.linkText}>{t.forgotPassword}</Text>
           </TouchableOpacity>
-          {/* Sign In Button */}
           <TouchableOpacity
             style={styles.loginButton}
             onPress={handleLogin}
@@ -122,13 +118,11 @@ const LoginScreen = () => {
           >
             <Text style={styles.loginButtonText}>{t.signIn}</Text>
           </TouchableOpacity>
-          {/* Divider */}
           <View style={styles.dividerContainer}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>or</Text>
             <View style={styles.dividerLine} />
           </View>
-          {/* Google Sign In Button */}
           <TouchableOpacity
             style={styles.googleButton}
             onPress={handleGoogleSignIn}
@@ -137,7 +131,6 @@ const LoginScreen = () => {
             <Icon name="google" size={20} color="#DB4437" style={styles.googleIcon} />
             <Text style={styles.googleButtonText}>Continue with Google</Text>
           </TouchableOpacity>
-          {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>{t.noAccount} </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>

@@ -53,8 +53,6 @@ export const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  // ===============================
-  // 🔹 📊 分析屏（例如 SHAP、指标对比）
   scrollContent: {
     paddingHorizontal: 16,
     paddingVertical: 16,

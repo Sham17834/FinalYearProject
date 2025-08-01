@@ -67,7 +67,7 @@ const ProgressScreen = () => {
   ], [filteredData, shapRankings]);
 
   const renderItem = useCallback(({ item, section }) => {
-    if (!section) return null; // Guard against undefined section
+    if (!section) return null; 
     switch (section.key) {
       case 'timeRange':
         return (
@@ -163,7 +163,7 @@ const ProgressScreen = () => {
   }, [timeRange, filteredData, lifestyleScores, stepsData, sleepData, riskLevels, chartConfig]);
 
   const renderSectionHeader = useCallback(({ section }) => {
-    if (!section || !section.title) return null; // Guard against undefined section or title
+    if (!section || !section.title) return null;
     return (
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{section.title}</Text>
@@ -178,8 +178,7 @@ const ProgressScreen = () => {
     let currentIndex = 0;
 
     for (let section of data) {
-      // Section header height
-      offset += 50; // Approximate height for section header
+      offset += 50; 
       for (let i = 0; i < section.data.length; i++) {
         if (currentIndex === index) {
           const length = section.key.includes('Chart') ? 240 : section.key === 'timeRange' ? 60 : section.key === 'shap' ? 60 : 140;
@@ -190,7 +189,7 @@ const ProgressScreen = () => {
       }
     }
 
-    return { length: 0, offset: 0, index }; // Fallback
+    return { length: 0, offset: 0, index };
   }, []);
 
   return (

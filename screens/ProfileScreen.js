@@ -27,7 +27,6 @@ const FONT_FAMILY = {
   light: isIOS ? "SF Pro Display" : "Roboto-Light",
 };
 
-// Color Palette
 const COLORS = {
   primary: '#008080',
   primaryDark: '#006666',
@@ -122,7 +121,6 @@ const ProfileScreen = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
       
-      {/* Header */}
       <View style={styles.headerContainer}>
         <View style={styles.headerContent}>
           <Text style={styles.appName}>Profile</Text>
@@ -132,7 +130,6 @@ const ProfileScreen = () => {
 
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* Personal Information Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Personal Information</Text>
           
@@ -225,7 +222,6 @@ const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* Settings Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Preferences</Text>
           
@@ -266,7 +262,6 @@ const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* Security & Privacy Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Security & Privacy</Text>
           
@@ -293,7 +288,6 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Action Buttons */}
         <View style={styles.actionSection}>
           <TouchableOpacity
             style={styles.primaryButton}
@@ -313,7 +307,6 @@ const ProfileScreen = () => {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Frequency Selection Modal */}
       <Modal
         visible={showFrequencyModal}
         transparent={true}
@@ -363,7 +356,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
 
-  // Header Styles
   headerContainer: {
     backgroundColor: COLORS.primary,
     paddingBottom: 24,
@@ -401,7 +393,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // Content Styles
   scrollContent: {
     flex: 1,
     paddingHorizontal: 20,
@@ -421,7 +412,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
 
-  // Card Styles
   formCard: {
     backgroundColor: COLORS.surface,
     borderRadius: 16,
@@ -462,7 +452,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderLight,
   },
 
-  // Input Styles
   inputContainer: {
     marginBottom: 20,
   },
@@ -495,7 +484,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'center',
   },
 
-  // Picker Styles
   pickerContainer: {
     backgroundColor: COLORS.background,
     borderRadius: 12,
@@ -518,7 +506,6 @@ const styles = StyleSheet.create({
     color: COLORS.text,
   },
 
-  // Switch Styles
   switchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -553,7 +540,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
   },
 
-  // Picker Button Styles
   pickerSection: {
     paddingHorizontal: 20,
     paddingVertical: 16,
@@ -583,7 +569,6 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
   },
 
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -646,7 +631,6 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
 
-  // Security Item Styles
   securityItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -700,7 +684,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // Button Styles
   actionSection: {
     marginTop: 8,
   },
