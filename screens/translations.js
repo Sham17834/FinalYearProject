@@ -1,11 +1,11 @@
-
 const translations = {
   English: {
     // Common
     appName: "HealthTrack",
     tagline: "Your personal health companion",
     welcome: "Welcome!",
-    welcomeDescription: "Track your health metrics and improve your lifestyle with personalized insights.",
+    welcomeDescription:
+      "Track your health metrics and improve your lifestyle with personalized insights.",
     chooseLanguage: "Choose Language",
     agreeTerms: "I agree to the",
     termsOfService: "Terms of Service",
@@ -27,10 +27,9 @@ const translations = {
     low: "Low",
     medium: "Medium",
     high: "High",
-
     // Home Screen
     homeTitle: "Dashboard",
-    homeTagline: "Your health overview", 
+    homeTagline: "Your health overview",
     todaySummary: "Today's Summary",
     yourLifestyleScore: "Your Lifestyle Score",
     viewDetails: "View Details",
@@ -53,14 +52,38 @@ const translations = {
     strokeRisk: "Stroke Risk",
     normal: "Normal",
     today: "Today",
-    recalculate: "Recalculate",
-    keyMetrics: "Key Metrics", 
-    chronicDiseaseRisk: "Chronic Disease Risk", 
-    personalizedTips: "Personalized Tips", 
-    eatMoreVegetables: "Eat more vegetables", 
-    exercise30MinDaily: "Exercise at least 30 min daily", 
-    sleep78Hours: "Sleep 7-8 hours", 
-
+    recalculate: "Update Lifestyle Data",
+    keyMetrics: "Key Metrics",
+    chronicDiseaseRisk: "Chronic Disease Risk",
+    personalizedTips: "Personalized Tips",
+    eatMoreVegetables: "Eat more vegetables",
+    exercise30MinDaily: "Exercise at least 30 min daily",
+    sleep78Hours: "Sleep 7-8 hours",
+    // Health status terms for metrics
+    underweight: "Underweight",
+    overweight: "Overweight",
+    obese: "Obese",
+    veryActive: "Very Active",
+    active: "Active",
+    lightlyActive: "Lightly Active",
+    inactive: "Inactive",
+    optimal: "Optimal",
+    good: "Good",
+    needsImprovement: "Needs Improvement",
+    unknown: "Unknown",
+    // Risk assessment terms
+    overallHealthRisk: "Overall Health Risk",
+    lifestyleRisk: "Lifestyle Risk",
+    // Personalized tips
+    maintainHealthyWeight: "Focus on maintaining a healthy weight",
+    increasePhysicalActivity: "Try to exercise 3+ days/week",
+    improvesSleepQuality: "Aim for 7-9 hours of sleep nightly",
+    eatMoreFruitsVeggies: "Eat 5+ servings of fruits/veggies daily",
+    increaseWalkingSteps: "Walk 8000+ steps daily for better health",
+    manageStressLevels: "Practice meditation to reduce stress",
+    reduceScreenTime: "Limit screen time to 6 hours/day",
+    quitSmoking: "Consider quitting smoking for better health",
+    limitAlcohol: "Limit alcohol consumption",
     // Login Screen
     loginTitle: "Welcome Back",
     loginSubtitle: "Sign in to your account",
@@ -68,7 +91,6 @@ const translations = {
     password: "Password",
     or: "or",
     "Continue with Google": "Continue with Google",
-
     // Register Screen
     registerTitle: "Create Account",
     registerSubtitle: "Fill in your details to begin",
@@ -81,7 +103,6 @@ const translations = {
     registrationSuccess: "Registration successful",
     registerButton: "Register",
     haveAccount: "Already have an account?",
-
     // Profile Screen
     profileTitle: "Profile",
     profileTagline: "Manage your personal information",
@@ -111,17 +132,17 @@ const translations = {
     logOut: "Log Out",
     profileSaved: "Profile Saved",
     profileSavedMsg: "Your profile has been updated successfully!",
-    deleteAccountConfirm: "Are you sure you want to delete your account? This action cannot be undone.",
+    deleteAccountConfirm:
+      "Are you sure you want to delete your account? This action cannot be undone.",
     delete: "Delete",
     logOutConfirm: "Are you sure you want to log out?",
     selectFrequency: "Select Frequency",
     daily: "Daily",
     weekly: "Weekly",
     monthly: "Monthly",
-    male: "Male", 
-    female: "Female", 
-    errorPrivacyPolicy: "Unable to open privacy policy", 
-
+    male: "Male",
+    female: "Female",
+    errorPrivacyPolicy: "Unable to open privacy policy",
     // Track Screen
     trackHealthTitle: "Track Your Health",
     physicalActivity: "Physical Activity",
@@ -139,7 +160,6 @@ const translations = {
     syncToLifestyle: "Sync to Lifestyle Score",
     hide: "Hide",
     show: "Show",
-
     // Progress Screen
     progressTitle: "Progress",
     progressTagline: "Your health journey over time",
@@ -159,7 +179,6 @@ const translations = {
     bpm: "bpm",
     bmiLabel: "BMI: ",
     riskLabel: "Risk: ",
-
     // Lifestyle Data Input Screen
     lifestyleDataTitle: "Lifestyle Data",
     lifestyleDataTagline: "Step {currentStep} of {totalSteps}",
@@ -174,7 +193,7 @@ const translations = {
     enterWeight: "Enter your weight in kilograms",
     bmi: "BMI (auto-calculated)",
     bmiPlaceholder: "BMI will be calculated",
-    chronicDisease: "Chronic Disease",
+    chronicDisease: "Family History",
     none: "None",
     stroke: "Stroke",
     hypertension: "Hypertension",
@@ -210,12 +229,12 @@ const translations = {
     errorDailySteps: "Please enter valid daily steps (0-50,000)",
     errorExerciseFrequency: "Please enter valid exercise frequency (0-7 days)",
     errorSleepHours: "Please enter valid sleep hours (0-24)",
-    errorFruitsVeggies: "Please enter valid fruit/vegetable intake (0-20 servings)",
+    errorFruitsVeggies:
+      "Please enter valid fruit/vegetable intake (0-20 servings)",
     errorStressLevel: "Please enter valid stress level (1-10)",
     errorScreenTime: "Please enter valid screen time (0-24 hours)",
-    errorSubmission: "Failed to process data. Please try again."
+    errorSubmission: "Failed to process data. Please try again.",
   },
-
   Chinese: {
     // Common
     appName: "健康追踪",
@@ -243,10 +262,9 @@ const translations = {
     low: "低",
     medium: "中",
     high: "高",
-
     // Home Screen
     homeTitle: "仪表盘",
-    homeTagline: "您的健康概览", 
+    homeTagline: "您的健康概览",
     todaySummary: "今日摘要",
     yourLifestyleScore: "您的生活方式评分",
     viewDetails: "查看详情",
@@ -269,14 +287,38 @@ const translations = {
     strokeRisk: "中风风险",
     normal: "正常",
     today: "今天",
-    recalculate: "重新计算",
-    keyMetrics: "关键指标", 
-    chronicDiseaseRisk: "慢性疾病风险", 
-    personalizedTips: "个性化提示", 
-    eatMoreVegetables: "多吃蔬菜", 
-    exercise30MinDaily: "每天至少锻炼30分钟", 
-    sleep78Hours: "睡眠7-8小时", 
-
+    recalculate: "更新生活方式数据",
+    keyMetrics: "关键指标",
+    chronicDiseaseRisk: "慢性疾病风险",
+    personalizedTips: "个性化提示",
+    eatMoreVegetables: "多吃蔬菜",
+    exercise30MinDaily: "每天至少锻炼30分钟",
+    sleep78Hours: "睡眠7-8小时",
+    // Health status terms for metrics
+    underweight: "体重过轻",
+    overweight: "超重",
+    obese: "肥胖",
+    veryActive: "非常活跃",
+    active: "活跃",
+    lightlyActive: "轻度活跃",
+    inactive: "不活跃",
+    optimal: "最佳",
+    good: "良好",
+    needsImprovement: "需要改善",
+    unknown: "未知",
+    // Risk assessment terms
+    overallHealthRisk: "总体健康风险",
+    lifestyleRisk: "生活方式风险",
+    // Personalized tips
+    maintainHealthyWeight: "注重保持健康体重",
+    increasePhysicalActivity: "尝试每周锻炼3天以上",
+    improvesSleepQuality: "争取每晚睡眠7-9小时",
+    eatMoreFruitsVeggies: "每天摄入5份以上水果和蔬菜",
+    increaseWalkingSteps: "每天步行8000步以上有益健康",
+    manageStressLevels: "通过冥想减轻压力",
+    reduceScreenTime: "将屏幕时间限制在6小时以内",
+    quitSmoking: "考虑戒烟以改善健康",
+    limitAlcohol: "限制饮酒量",
     // Login Screen
     loginTitle: "欢迎回来",
     loginSubtitle: "登录您的账户",
@@ -284,7 +326,6 @@ const translations = {
     password: "密码",
     or: "或",
     "Continue with Google": "使用谷歌登录",
-
     // Register Screen
     registerTitle: "创建账户",
     registerSubtitle: "填写您的详细信息开始使用",
@@ -297,7 +338,6 @@ const translations = {
     registrationSuccess: "注册成功",
     registerButton: "注册",
     haveAccount: "已有账户？",
-
     // Profile Screen
     profileTitle: "个人资料",
     profileTagline: "管理您的个人信息",
@@ -334,10 +374,9 @@ const translations = {
     daily: "每天",
     weekly: "每周",
     monthly: "每月",
-    male: "男", 
-    female: "女", 
-    errorPrivacyPolicy: "无法打开隐私政策", 
-
+    male: "男",
+    female: "女",
+    errorPrivacyPolicy: "无法打开隐私政策",
     // Track Screen
     trackHealthTitle: "追踪您的健康",
     physicalActivity: "身体活动",
@@ -355,7 +394,6 @@ const translations = {
     syncToLifestyle: "同步至生活方式评分",
     hide: "隐藏",
     show: "显示",
-
     // Progress Screen
     progressTitle: "进度",
     progressTagline: "您的健康之旅",
@@ -375,7 +413,6 @@ const translations = {
     bpm: "次/分钟",
     bmiLabel: "BMI: ",
     riskLabel: "风险: ",
-
     // Lifestyle Data Input Screen
     lifestyleDataTitle: "生活方式数据",
     lifestyleDataTagline: "步骤 {currentStep} 共 {totalSteps}",
@@ -390,7 +427,7 @@ const translations = {
     enterWeight: "输入您的体重（千克）",
     bmi: "BMI（自动计算）",
     bmiPlaceholder: "BMI 将被计算",
-    chronicDisease: "慢性疾病",
+    chronicDisease: "家族病史",
     none: "无",
     stroke: "中风",
     hypertension: "高血压",
@@ -429,22 +466,23 @@ const translations = {
     errorFruitsVeggies: "请输入有效水果/蔬菜摄入量（0-20份）",
     errorStressLevel: "请输入有效压力水平（1-10）",
     errorScreenTime: "请输入有效屏幕时间（0-24小时）",
-    errorSubmission: "无法处理数据，请重试。"
+    errorSubmission: "无法处理数据，请重试。",
   },
-
   Malay: {
     // Common
     appName: "KesihatanTrack",
     tagline: "Penyelia kesihatan peribadi anda",
     welcome: "Selamat datang!",
-    welcomeDescription: "Lacak metrik kesihatan anda dan tingkatkan gaya hidup anda dengan panduan khusus.",
+    welcomeDescription:
+      "Lacak metrik kesihatan anda dan tingkatkan gaya hidup anda dengan panduan khusus.",
     chooseLanguage: "Pilih Bahasa",
     agreeTerms: "Saya bersetuju dengan",
     termsOfService: "Terma Perkhidmatan",
     and: "dan",
     privacyPolicy: "Dasar Privasi",
     getStarted: "Mula",
-    footerText: "Dengan meneruskan, anda bersetuju dengan terma dan dasar privasi kami",
+    footerText:
+      "Dengan meneruskan, anda bersetuju dengan terma dan dasar privasi kami",
     error: "Ralat",
     errorPleaseAgree: "Sila setuju dengan terma dan syarat",
     success: "Berjaya",
@@ -459,10 +497,9 @@ const translations = {
     low: "Rendah",
     medium: "Sederhana",
     high: "Tinggi",
-
     // Home Screen
     homeTitle: "Papan Pemuka",
-    homeTagline: "Gambaran kesihatan anda", 
+    homeTagline: "Gambaran kesihatan anda",
     todaySummary: "Ringkasan Hari Ini",
     yourLifestyleScore: "Skor Gaya Hidup Anda",
     viewDetails: "Lihat Butiran",
@@ -470,7 +507,8 @@ const translations = {
     logActivity: "Log Aktiviti",
     checkIn: "Pengecekan Harian",
     healthInsights: "Pandangan Kesihatan",
-    insight1: "Anda telah mencapai matlamat langkah selama 3 hari berturut-turut!",
+    insight1:
+      "Anda telah mencapai matlamat langkah selama 3 hari berturut-turut!",
     insight2: "Kualiti tidur anda meningkat 15% minggu ini",
     sleepTip: "Cuba tidur 7-8 jam setiap malam",
     upcomingReminders: "Pengingat Akan Datang",
@@ -485,14 +523,41 @@ const translations = {
     strokeRisk: "Risiko Strok",
     normal: "Normal",
     today: "Hari ini",
-    recalculate: "Kira Semula",
-    keyMetrics: "Metrik Utama", 
-    chronicDiseaseRisk: "Risiko Penyakit Kronik", 
-    personalizedTips: "Petua Diperibadikan", 
-    eatMoreVegetables: "Makan lebih banyak sayur-sayuran", 
-    exercise30MinDaily: "Bersenam sekurang-kurangnya 30 minit setiap hari", 
-    sleep78Hours: "Tidur 7-8 jam", 
-
+    recalculate: "Kemas kini Data Gaya Hidup",
+    keyMetrics: "Metrik Utama",
+    chronicDiseaseRisk: "Risiko Penyakit Kronik",
+    personalizedTips: "Petua Diperibadikan",
+    eatMoreVegetables: "Makan lebih banyak sayur-sayuran",
+    exercise30MinDaily: "Bersenam sekurang-kurangnya 30 minit setiap hari",
+    sleep78Hours: "Tidur 7-8 jam",
+    // Health status terms for metrics
+    underweight: "Kurang Berat Badan",
+    overweight: "Berat Lebih",
+    obese: "Obesiti",
+    veryActive: "Sangat Aktif",
+    active: "Aktif",
+    lightlyActive: "Secara Ringan Aktif",
+    inactive: "Tidak Aktif",
+    optimal: "Optimum",
+    good: "Baik",
+    needsImprovement: "Perlu Penambahbaikan",
+    unknown: "Tidak Diketahui",
+    // Risk assessment terms
+    overallHealthRisk: "Risiko Kesihatan Keseluruhan",
+    lifestyleRisk: "Risiko Gaya Hidup",
+    // Personalized tips
+    maintainHealthyWeight: "Fokus pada mengekalkan berat badan sihat",
+    increasePhysicalActivity:
+      "Cuba bersenam sekurang-kurangnya 3 hari seminggu",
+    improvesSleepQuality: "Cuba tidur 7-9 jam setiap malam",
+    eatMoreFruitsVeggies: "Makan sekurang-kurangnya 5 sajian buah/sayur sehari",
+    increaseWalkingSteps:
+      "Berjalan lebih 8000 langkah sehari untuk kesihatan yang lebih baik",
+    manageStressLevels: "Amalkan meditasi untuk mengurangkan tekanan",
+    reduceScreenTime: "Hadkan masa skrin kepada 6 jam sehari",
+    quitSmoking:
+      "Pertimbangkan berhenti merokok untuk kesihatan yang lebih baik",
+    limitAlcohol: "Hadkan pengambilan alkohol",
     // Login Screen
     loginTitle: "Selamat Datang Kembali",
     loginSubtitle: "Log masuk ke akaun anda",
@@ -500,7 +565,6 @@ const translations = {
     password: "Katalaluan",
     or: "atau",
     "Continue with Google": "Teruskan dengan Google",
-
     // Register Screen
     registerTitle: "Cipta Akaun",
     registerSubtitle: "Isi butiran anda untuk memulakan",
@@ -513,7 +577,6 @@ const translations = {
     registrationSuccess: "Pendaftaran berjaya",
     registerButton: "Daftar",
     haveAccount: "Sudah mempunyai akaun?",
-
     // Profile Screen
     profileTitle: "Profil",
     profileTagline: "Uruskan maklumat peribadi anda",
@@ -543,17 +606,17 @@ const translations = {
     logOut: "Log Keluar",
     profileSaved: "Profil Disimpan",
     profileSavedMsg: "Profil anda telah dikemaskini dengan berjaya!",
-    deleteAccountConfirm: "Adakah anda pasti mahu memadam akaun anda? Tindakan ini tidak boleh dibatalkan.",
+    deleteAccountConfirm:
+      "Adakah anda pasti mahu memadam akaun anda? Tindakan ini tidak boleh dibatalkan.",
     delete: "Padam",
     logOutConfirm: "Adakah anda pasti mahu log keluar?",
     selectFrequency: "Pilih Kekerapan",
     daily: "Harian",
     weekly: "Mingguan",
     monthly: "Bulanan",
-    male: "Lelaki", 
-    female: "Perempuan", 
-    errorPrivacyPolicy: "Tidak dapat membuka dasar privasi", 
-
+    male: "Lelaki",
+    female: "Perempuan",
+    errorPrivacyPolicy: "Tidak dapat membuka dasar privasi",
     // Track Screen
     trackHealthTitle: "Lacak Kesihatan Anda",
     physicalActivity: "Aktiviti Fizikal",
@@ -571,7 +634,6 @@ const translations = {
     syncToLifestyle: "Sinkronkan ke Skor Gaya Hidup",
     hide: "Sembunyikan",
     show: "Tunjukkan",
-
     // Progress Screen
     progressTitle: "Kemajuan",
     progressTagline: "Perjalanan kesihatan anda dari masa ke masa",
@@ -591,7 +653,6 @@ const translations = {
     bpm: "bpm",
     bmiLabel: "BMI: ",
     riskLabel: "Risiko: ",
-
     // Lifestyle Data Input Screen
     lifestyleDataTitle: "Data Gaya Hidup",
     lifestyleDataTagline: "Langkah {currentStep} daripada {totalSteps}",
@@ -606,7 +667,7 @@ const translations = {
     enterWeight: "Masukkan berat anda dalam kilogram",
     bmi: "BMI (dikira secara automatik)",
     bmiPlaceholder: "BMI akan dikira",
-    chronicDisease: "Penyakit Kronik",
+    chronicDisease: "Sejarah Keluarga",
     none: "Tiada",
     stroke: "Strok",
     hypertension: "Hipertensi",
@@ -640,13 +701,15 @@ const translations = {
     errorHeight: "Sila masukkan tinggi yang sah (100-250 cm)",
     errorWeight: "Sila masukkan berat yang sah (30-300 kg)",
     errorDailySteps: "Sila masukkan langkah harian yang sah (0-50,000)",
-    errorExerciseFrequency: "Sila masukkan kekerapan senaman yang sah (0-7 hari)",
+    errorExerciseFrequency:
+      "Sila masukkan kekerapan senaman yang sah (0-7 hari)",
     errorSleepHours: "Sila masukkan jam tidur yang sah (0-24 jam)",
-    errorFruitsVeggies: "Sila masukkan pengambilan buah/sayur yang sah (0-20 sajian)",
+    errorFruitsVeggies:
+      "Sila masukkan pengambilan buah/sayur yang sah (0-20 sajian)",
     errorStressLevel: "Sila masukkan tahap stres yang sah (1-10)",
     errorScreenTime: "Sila masukkan masa skrin yang sah (0-24 jam)",
-    errorSubmission: "Gagal memproses data. Sila cuba lagi."
-  }
+    errorSubmission: "Gagal memproses data. Sila cuba lagi.",
+  },
 };
 
 export const getTranslations = (language) => {
