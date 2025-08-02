@@ -290,7 +290,7 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <View style={styles.errorContainer}>
+        <View style={styles.error.errorContainer}>
           <Text style={styles.errorText}>Something went wrong: {this.state.error?.message || 'Unknown error'}</Text>
         </View>
       );
@@ -412,7 +412,11 @@ const HealthHomeScreen = () => {
   const route = useRoute();
   const [lifestyleData, setLifestyleData] = useState(null);
   const [localScore, setLocalScore] = useState(75);
-  const [localRisk, setLocalRisk] = useState('Medium');
+  const [diseaseRisks, setDiseaseRisks] = useState({
+    obesity: 'Low',
+    hypertension: 'Low',
+    stroke: 'Low'
+  });
   const fadeAnim = new Animated.Value(0.8);
   const slideAnim = new Animated.Value(10);
 
@@ -422,7 +426,7 @@ const HealthHomeScreen = () => {
     if (data) {
       setLifestyleData(data);
       calculateLocalScore(data);
-      calculateLocalRisk(data);
+      calculateDiseaseRisks(data);
     }
 
     Animated.parallel([
@@ -442,68 +446,117 @@ const HealthHomeScreen = () => {
     });
   }, [route.params]);
 
+  // 100-point scoring system based on evidence-based health metrics
   const calculateLocalScore = (data) => {
-    let score = 0;
     if (!data) return setLocalScore(0);
+    let score = 0;
 
-    if (data.bmi >= 18.5 && data.bmi < 25) score += 20;
-    else if (data.bmi < 18.5 || data.bmi < 30) score += 15;
-    else score += 10;
+    // 1. BMI (15 points) - WHO healthy range: 18.5-24.9
+    if (data.bmi >= 18.5 && data.bmi < 25) score += 15;
+    else if (data.bmi < 18.5 || data.bmi < 30) score += 8; // Underweight or overweight
+    else score += 3; // Obese
 
-    if (data.daily_steps >= 8000) score += 15;
-    else if (data.daily_steps >= 5000) score += 10;
-    else score += 5;
+    // 2. Daily Steps (10 points) - CDC recommends 10,000 steps/day
+    if (data.daily_steps >= 10000) score += 10;
+    else if (data.daily_steps >= 7000) score += 7;
+    else if (data.daily_steps >= 5000) score += 4;
+    else score += 1;
 
+    // 3. Exercise Frequency (15 points) - WHO: 150+ mins/week = ~5 days
     if (data.exercise_frequency >= 5) score += 15;
     else if (data.exercise_frequency >= 3) score += 10;
     else if (data.exercise_frequency >= 1) score += 5;
+    else score += 1;
 
+    // 4. Sleep Hours (15 points) - CDC: 7-9 hours for adults
     if (data.sleep_hours >= 7 && data.sleep_hours <= 9) score += 15;
     else if (data.sleep_hours === 6 || data.sleep_hours === 10) score += 10;
     else score += 5;
 
+    // 5. Fruits/Vegetables (10 points) - WHO: 5+ servings/day
     if (data.fruits_veggies >= 5) score += 10;
     else if (data.fruits_veggies >= 3) score += 7;
-    else score += 3;
+    else if (data.fruits_veggies >= 1) score += 3;
+    else score += 0;
 
-    const isHealthyHabits = data.smoking_habit === 'No' && data.alcohol_consumption === 'No';
-    const hasOneBadHabit = data.smoking_habit === 'Yes' ^ data.alcohol_consumption === 'Yes';
-    if (isHealthyHabits) score += 15;
-    else if (hasOneBadHabit) score += 7;
+    // 6. Healthy Habits (10 points) - No smoking/alcohol
+    const isNonSmoker = data.smoking_habit === 'No';
+    const isLowAlcohol = data.alcohol_consumption === 'No';
+    if (isNonSmoker && isLowAlcohol) score += 10;
+    else if (isNonSmoker || isLowAlcohol) score += 5;
+    else score += 0;
 
-    if (data.screen_time_hours < 4) score += 10;
-    else if (data.screen_time_hours <= 6) score += 5;
+    // 7. Screen Time (5 points) - American Heart Association: <2 hours/day
+    if (data.screen_time_hours < 2) score += 5;
+    else if (data.screen_time_hours <= 4) score += 3;
+    else if (data.screen_time_hours <= 6) score += 1;
+    else score += 0;
 
+    // 8. Diet Quality (10 points) - Based on nutritional diversity
     if (data.diet_quality === 'Excellent') score += 10;
     else if (data.diet_quality === 'Good') score += 7;
-    else if (data.diet_quality === 'Average') score += 3;
+    else if (data.diet_quality === 'Average') score += 4;
+    else score += 1;
 
-    if (data.stress_level <= 3) score += 10;
-    else if (data.stress_level <= 6) score += 5;
+    // 9. Stress Level (5 points) - Lower stress = better health
+    if (data.stress_level <= 3) score += 5;
+    else if (data.stress_level <= 6) score += 3;
+    else score += 1;
 
-    if (data.chronic_disease === 'None') score += 10;
+    // 10. Chronic Disease (5 points) - No chronic conditions
+    if (data.chronic_disease === 'None') score += 5;
+    else score += 0;
 
-    setLocalScore(Math.round(score));
+    // Ensure score never exceeds 100
+    const finalScore = Math.min(Math.round(score), 100);
+    setLocalScore(finalScore);
   };
 
-  const calculateLocalRisk = (data) => {
-    let riskFactors = 0;
-    if (!data) return setLocalRisk('Unknown');
+  // Calculate specific disease risks (only obesity, hypertension, stroke)
+  const calculateDiseaseRisks = (data) => {
+    if (!data) return;
+    
+    const newRisks = {
+      obesity: 'Low',
+      hypertension: 'Low',
+      stroke: 'Low'
+    };
 
-    if (data.bmi >= 30) riskFactors += 1;
-    if (data.exercise_frequency < 2) riskFactors += 1;
-    if (data.sleep_hours < 6 || data.sleep_hours > 10) riskFactors += 1;
-    if (data.smoking_habit === 'Yes') riskFactors += 1;
-    if (data.stress_level > 7) riskFactors += 1;
-    if (data.chronic_disease !== 'None') riskFactors += 1;
-    if (data.diet_quality === 'Poor' || data.diet_quality === 'Average') riskFactors += 1;
-    if (data.fruits_veggies < 3) riskFactors += 1;
-    if (data.screen_time_hours > 6) riskFactors += 1;
-    if (data.alcohol_consumption === 'Yes') riskFactors += 1;
+    // Obesity risk calculation
+    if (data.bmi >= 30) {
+      newRisks.obesity = 'High';
+    } else if (data.bmi >= 25) {
+      newRisks.obesity = 'Medium';
+    }
 
-    if (riskFactors >= 4) setLocalRisk('High');
-    else if (riskFactors >= 2) setLocalRisk('Medium');
-    else setLocalRisk('Low');
+    // Hypertension risk calculation
+    let hypertensionFactors = 0;
+    if (data.bmi >= 25) hypertensionFactors++;
+    if (data.daily_steps < 5000) hypertensionFactors++;
+    if (data.salt_intake?.toUpperCase() === 'HIGH') hypertensionFactors++; // If available in data
+    if (data.alcohol_consumption === 'Yes') hypertensionFactors++;
+    
+    if (hypertensionFactors >= 3) {
+      newRisks.hypertension = 'High';
+    } else if (hypertensionFactors >= 1) {
+      newRisks.hypertension = 'Medium';
+    }
+
+    // Stroke risk calculation
+    let strokeFactors = 0;
+    if (data.bmi >= 25) strokeFactors++;
+    if (data.smoking_habit === 'Yes') strokeFactors++;
+    if (data.alcohol_consumption === 'Yes') strokeFactors++;
+    if (data.chronic_disease === 'Hypertension') strokeFactors += 2;
+    if (data.stress_level > 7) strokeFactors++;
+    
+    if (strokeFactors >= 3) {
+      newRisks.stroke = 'High';
+    } else if (strokeFactors >= 1) {
+      newRisks.stroke = 'Medium';
+    }
+
+    setDiseaseRisks(newRisks);
   };
 
   const formatNumber = (num) => {
@@ -556,6 +609,24 @@ const HealthHomeScreen = () => {
     return '#FF3B30';
   };
 
+  // Get appropriate color for risk level
+  const getRiskColor = (riskLevel) => {
+    switch(riskLevel) {
+      case 'High': return '#FF3B30';
+      case 'Medium': return '#FFD60A';
+      default: return '#34C759';
+    }
+  };
+
+  // Get progress value for risk visualization
+  const getRiskProgress = (riskLevel) => {
+    switch(riskLevel) {
+      case 'High': return 0.8;
+      case 'Medium': return 0.5;
+      default: return 0.2;
+    }
+  };
+
   const generatePersonalizedTips = () => {
     const tips = [];
     if (!lifestyleData) return [
@@ -564,57 +635,35 @@ const HealthHomeScreen = () => {
       { text: t.sleep78Hours || 'Sleep 7-8 hours nightly', icon: 'bed' },
     ];
 
-    if (lifestyleData.bmi >= 25) {
-      tips.push({ text: t.maintainHealthyWeight || 'Focus on maintaining a healthy weight', icon: 'scale' });
-    } else if (lifestyleData.bmi < 18.5) {
-      tips.push({ text: t.gainWeightHealthy || 'Consider healthy weight gain strategies', icon: 'scale' });
+    // Add tips based on specific disease risks
+    if (diseaseRisks.obesity === 'High' || diseaseRisks.obesity === 'Medium') {
+      tips.push({ text: t.manageWeightTips || 'Maintain a calorie deficit to reduce weight', icon: 'scale' });
     }
 
-    if (lifestyleData.exercise_frequency < 3) {
-      tips.push({ text: t.increasePhysicalActivity || 'Try to exercise 3+ days/week', icon: 'directions-run' });
+    if (diseaseRisks.hypertension === 'High' || diseaseRisks.hypertension === 'Medium') {
+      tips.push({ text: t.lowerSodiumTips || 'Reduce sodium intake to lower blood pressure', icon: 'water-drop' });
     }
 
-    if (lifestyleData.sleep_hours < 7 || lifestyleData.sleep_hours > 9) {
-      tips.push({ text: t.improvesSleepQuality || 'Aim for 7-9 hours of sleep nightly', icon: 'bed' });
+    if (diseaseRisks.stroke === 'High' || diseaseRisks.stroke === 'Medium') {
+      tips.push({ text: t.strokePreventionTips || 'Regular exercise helps reduce stroke risk', icon: 'favorite' });
     }
 
-    if (lifestyleData.fruits_veggies < 5) {
-      tips.push({ text: t.eatMoreFruitsVeggies || 'Eat 5+ servings of fruits/veggies daily', icon: 'local-dining' });
-    } else if (lifestyleData.diet_quality === 'Poor' || lifestyleData.diet_quality === 'Average') {
-      tips.push({ text: t.improveDietQuality || 'Focus on improving your diet quality', icon: 'restaurant' });
+    // Add general health tips if specific risk tips are insufficient
+    if (tips.length < 3) {
+      if (lifestyleData.exercise_frequency < 3) {
+        tips.push({ text: t.increasePhysicalActivity || 'Try to exercise 3+ days/week', icon: 'directions-run' });
+      }
+
+      if (lifestyleData.sleep_hours < 7 || lifestyleData.sleep_hours > 9) {
+        tips.push({ text: t.improvesSleepQuality || 'Aim for 7-9 hours of sleep nightly', icon: 'bed' });
+      }
+
+      if (lifestyleData.fruits_veggies < 5) {
+        tips.push({ text: t.eatMoreFruitsVeggies || 'Eat 5+ servings of fruits/veggies daily', icon: 'local-dining' });
+      }
     }
 
-    if (lifestyleData.daily_steps < 8000) {
-      tips.push({ text: t.increaseWalkingSteps || 'Walk 8000+ steps daily for better health', icon: 'directions-walk' });
-    }
-
-    if (lifestyleData.stress_level > 6) {
-      tips.push({ text: t.manageStressLevels || 'Practice meditation to reduce stress', icon: 'spa' });
-    }
-
-    if (lifestyleData.screen_time_hours > 6) {
-      tips.push({ text: t.reduceScreenTime || 'Limit screen time to 6 hours/day', icon: 'phone' });
-    }
-
-    if (lifestyleData.smoking_habit === 'Yes') {
-      tips.push({ text: t.quitSmoking || 'Consider quitting smoking for better health', icon: 'do-not-disturb' });
-    }
-    if (lifestyleData.alcohol_consumption === 'Yes') {
-      tips.push({ text: t.limitAlcohol || 'Limit alcohol consumption', icon: 'local-bar' });
-    }
-
-    if (lifestyleData.chronic_disease !== 'None') {
-      tips.push({ 
-        text: t.manageChronicCondition || `Manage your ${lifestyleData.chronic_disease} condition`, 
-        icon: 'medical-services' 
-      });
-    }
-
-    return tips.slice(0, 3).length > 0 ? tips.slice(0, 3) : [
-      { text: t.eatMoreVegetables || 'Eat more vegetables', icon: 'local-dining' },
-      { text: t.exercise30MinDaily || 'Exercise 30 minutes daily', icon: 'directions-run' },
-      { text: t.sleep78Hours || 'Sleep 7-8 hours nightly', icon: 'bed' },
-    ];
+    return tips.slice(0, 3);
   };
 
   const renderMetricCard = (title, value, subtext, iconName, iconColor = '#457B9D') => (
@@ -636,20 +685,9 @@ const HealthHomeScreen = () => {
   );
 
   const renderRiskCard = ({ item }) => {
-    let progress = 0;
-    let color = '#E6F0FA';
-    let riskStatus = localRisk || 'Unknown';
-
-    if (localRisk === 'High') {
-      progress = 0.8;
-      color = '#FF3B30';
-    } else if (localRisk === 'Medium') {
-      progress = 0.6;
-      color = '#FFD60A';
-    } else {
-      progress = 0.3;
-      color = '#34C759';
-    }
+    const riskLevel = diseaseRisks[item.key];
+    const color = getRiskColor(riskLevel);
+    const progress = getRiskProgress(riskLevel);
 
     return (
       <Animated.View style={[styles.riskCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
@@ -657,7 +695,7 @@ const HealthHomeScreen = () => {
           <Icon name={item.icon} size={24} color={color} style={styles.riskIcon} />
           <View style={styles.riskTextContainer}>
             <Text style={styles.riskTitle}>{item.name}</Text>
-            <Text style={[styles.riskStatus, { color }]}>{riskStatus}</Text>
+            <Text style={[styles.riskStatus, { color }]}>{riskLevel}</Text>
           </View>
         </View>
         <CustomProgressBar progress={progress} color={color} />
@@ -672,10 +710,17 @@ const HealthHomeScreen = () => {
     </Animated.View>
   );
 
-  const getRiskStatusColor = () => {
-    if (localRisk === 'High') return '#FF3B30';
-    if (localRisk === 'Medium') return '#FFD60A';
-    return '#34C759';
+  const getOverallRiskLevel = () => {
+    const highRiskCount = Object.values(diseaseRisks).filter(risk => risk === 'High').length;
+    const mediumRiskCount = Object.values(diseaseRisks).filter(risk => risk === 'Medium').length;
+    
+    if (highRiskCount > 0) return 'High';
+    if (mediumRiskCount > 0) return 'Medium';
+    return 'Low';
+  };
+
+  const getOverallRiskColor = () => {
+    return getRiskColor(getOverallRiskLevel());
   };
 
   const data = [
@@ -702,8 +747,8 @@ const HealthHomeScreen = () => {
           <Animated.View style={[styles.scoreContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
             <AnimatedProgressCircle percentage={localScore} />
             <Text style={styles.progressLabel}>{t.yourLifestyleScore || 'Your Lifestyle Score'}</Text>
-            <Text style={[styles.riskStatusText, { color: getRiskStatusColor() }]}>
-              {localRisk || 'Unknown'} {t.risk || 'Risk'}
+            <Text style={[styles.riskStatusText, { color: getOverallRiskColor() }]}>
+              {getOverallRiskLevel()} {t.overallRisk || 'Overall Risk'}
             </Text>
           </Animated.View>
         );
@@ -780,15 +825,27 @@ const HealthHomeScreen = () => {
       case 'risks':
         return (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t.chronicDiseaseRisk || 'Health Risk Assessment'}</Text>
+            <Text style={styles.sectionTitle}>{t.chronicDiseaseRisk || 'Chronic Disease Risk'}</Text>
             <FlatList
               data={[
-                { name: t.overallHealthRisk || 'Overall Health Risk', icon: 'favorite' },
-                { name: t.lifestyleRisk || 'Lifestyle Risk', icon: 'trending-up' },
-                { name: t.chronicDiseaseRisk || 'Chronic Disease Risk', icon: 'local-hospital' },
+                { 
+                  key: 'obesity',
+                  name: t.obesity || 'Obesity', 
+                  icon: 'monitor-weight' 
+                },
+                { 
+                  key: 'hypertension',
+                  name: t.hypertension || 'Hypertension', 
+                  icon: 'favorite' 
+                },
+                { 
+                  key: 'stroke',
+                  name: t.stroke || 'Stroke', 
+                  icon: 'local-hospital' 
+                },
               ]}
               renderItem={renderRiskCard}
-              keyExtractor={(item) => item.name}
+              keyExtractor={(item) => item.key}
               contentContainerStyle={{ paddingHorizontal: 0 }}
               ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
             />
