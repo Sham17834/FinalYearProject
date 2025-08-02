@@ -155,7 +155,6 @@ const LifestyleDataInputScreen = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 3;
 
-  // Form state variables
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('Male');
   const [heightCm, setHeightCm] = useState('');
@@ -172,7 +171,6 @@ const LifestyleDataInputScreen = () => {
   const [stressLevel, setStressLevel] = useState('');
   const [screenTimeHours, setScreenTimeHours] = useState('');
 
-  // Dropdown options
   const genderOptions = [
     { label: t.male || 'Male', value: 'Male' },
     { label: t.female || 'Female', value: 'Female' },
@@ -197,7 +195,6 @@ const LifestyleDataInputScreen = () => {
     { label: t.poor || 'Poor', value: 'Poor' },
   ];
 
-  // BMI calculation function
   const calculateBMI = (height, weight) => {
     if (height && weight && !isNaN(height) && !isNaN(weight)) {
       const heightM = parseFloat(height) / 100;
@@ -208,7 +205,6 @@ const LifestyleDataInputScreen = () => {
     }
   };
 
-  // Validation function
   const validateStep = (step) => {
     if (step === 1) {
       if (!age || isNaN(age) || parseInt(age) < 18 || parseInt(age) > 120) {
@@ -253,7 +249,6 @@ const LifestyleDataInputScreen = () => {
     return true;
   };
 
-  // Navigation functions
   const handleNext = () => {
     if (validateStep(currentStep)) {
       if (currentStep < totalSteps) {
@@ -268,7 +263,6 @@ const LifestyleDataInputScreen = () => {
     }
   };
 
-  // Submit function
   const handleSubmit = () => {
     if (!validateStep(currentStep)) {
       return;
@@ -320,7 +314,6 @@ const LifestyleDataInputScreen = () => {
 
       <ScrollView style={styles.content}>
         <View style={styles.section}>
-          {/* Step 1: Basic Information */}
           {currentStep === 1 && (
             <>
               <View style={styles.inputContainer}>
@@ -387,7 +380,6 @@ const LifestyleDataInputScreen = () => {
             </>
           )}
 
-          {/* Step 2: Activity and Health */}
           {currentStep === 2 && (
             <>
               <View style={styles.inputContainer}>
@@ -451,7 +443,6 @@ const LifestyleDataInputScreen = () => {
             </>
           )}
 
-          {/* Step 3: Lifestyle Factors */}
           {currentStep === 3 && (
             <>
               <View style={styles.inputContainer}>
@@ -515,7 +506,6 @@ const LifestyleDataInputScreen = () => {
             </>
           )}
 
-          {/* Navigation buttons */}
           <View style={styles.buttonContainer}>
             {currentStep > 1 && (
               <TouchableOpacity
