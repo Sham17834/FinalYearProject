@@ -42,17 +42,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   greeting: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "700",
-    fontFamily: isIOS ? "SF Pro Display" : "Roboto-Bold",
     color: "#ffffff",
     marginBottom: 4,
   },
   appTagline: {
-    fontSize: 13,
+    fontSize: 14,
     color: "rgba(255, 255, 255, 0.8)",
     fontWeight: "500",
-    fontFamily: isIOS ? "SF Pro Display" : "Roboto-Medium",
   },
   scoreContainer: {
     alignItems: "center",
