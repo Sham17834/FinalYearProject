@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,14 +12,12 @@ import {
   Alert,
   Modal,
   StyleSheet,
-  Dimensions,
   Platform,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
-
-const { width, height } = Dimensions.get("window");
-const isIOS = Platform.OS === "ios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const COLORS = {
   primary: "#008080",
@@ -42,21 +40,81 @@ const COLORS = {
   shadow: "rgba(0, 0, 0, 0.08)",
 };
 
-const ProfileScreen = ({ navigation }) => {
+const ProfileScreen = () => {
   const { language, changeLanguage, t } = useContext(LanguageContext);
-  const [name, setName] = useState("John Doe");
+  const navigation = useNavigation();
+  const route = useRoute();
+  const [name, setName] = useState("Sample User");
   const [email, setEmail] = useState("john.doe@example.com");
   const [age, setAge] = useState("30");
   const [height, setHeight] = useState("175");
   const [weight, setWeight] = useState("70");
   const [gender, setGender] = useState("Male");
+  const [chronicDisease, setChronicDisease] = useState("None");
+  const [dailySteps, setDailySteps] = useState("5000");
+  const [exerciseFrequency, setExerciseFrequency] = useState("3");
+  const [sleepHours, setSleepHours] = useState("7");
+  const [alcoholConsumption, setAlcoholConsumption] = useState(false);
+  const [smokingHabit, setSmokingHabit] = useState(false);
+  const [dietQuality, setDietQuality] = useState("Good");
+  const [fruitsVeggies, setFruitsVeggies] = useState("5");
+  const [stressLevel, setStressLevel] = useState("5");
+  const [screenTimeHours, setScreenTimeHours] = useState("4");
   const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notificationFrequency, setNotificationFrequency] = useState("daily");
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
 
-  // Available languages - customize based on your translations
+  useEffect(() => {
+    const loadProfileData = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem("userProfileData");
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          setEmail(parsedData.email || "john.doe@example.com");
+          setAge(parsedData.age?.toString() || "30");
+          setGender(parsedData.gender || "Male");
+          setHeight(parsedData.height_cm?.toString() || "175");
+          setWeight(parsedData.weight_kg?.toString() || "70");
+          setChronicDisease(parsedData.chronic_disease || "None");
+          setDailySteps(parsedData.daily_steps?.toString() || "5000");
+          setExerciseFrequency(parsedData.exercise_frequency?.toString() || "3");
+          setSleepHours(parsedData.sleep_hours?.toString() || "7");
+          setAlcoholConsumption(parsedData.alcohol_consumption === "Yes");
+          setSmokingHabit(parsedData.smoking_habit === "Yes");
+          setDietQuality(parsedData.diet_quality || "Good");
+          setFruitsVeggies(parsedData.fruits_veggies?.toString() || "5");
+          setStressLevel(parsedData.stress_level?.toString() || "5");
+          setScreenTimeHours(parsedData.screen_time_hours?.toString() || "4");
+        }
+      } catch (error) {
+        console.error("Error loading profile data:", error);
+      }
+
+      if (route.params?.userData) {
+        const data = route.params.userData;
+        setEmail(data.email || email);
+        setAge(data.age?.toString() || age);
+        setGender(data.gender || gender);
+        setHeight(data.height_cm?.toString() || height);
+        setWeight(data.weight_kg?.toString() || weight);
+        setChronicDisease(data.chronic_disease || chronicDisease);
+        setDailySteps(data.daily_steps?.toString() || dailySteps);
+        setExerciseFrequency(data.exercise_frequency?.toString() || exerciseFrequency);
+        setSleepHours(data.sleep_hours?.toString() || sleepHours);
+        setAlcoholConsumption(data.alcohol_consumption === "Yes");
+        setSmokingHabit(data.smoking_habit === "Yes");
+        setDietQuality(data.diet_quality || dietQuality);
+        setFruitsVeggies(data.fruits_veggies?.toString() || fruitsVeggies);
+        setStressLevel(data.stress_level?.toString() || stressLevel);
+        setScreenTimeHours(data.screen_time_hours?.toString() || screenTimeHours);
+      }
+    };
+
+    loadProfileData();
+  }, [route.params]);
+
   const availableLanguages = [
     { code: "English", name: "English", nativeName: "English" },
     { code: "Malay", name: "Malay", nativeName: "Bahasa Melayu" },
@@ -64,25 +122,23 @@ const ProfileScreen = ({ navigation }) => {
   ];
 
   const frequencyOptions = [
-    { label: t.daily, value: "daily" },
-    { label: t.weekly, value: "weekly" },
-    { label: t.monthly, value: "monthly" },
+    { label: t.daily || "Daily", value: "daily" },
+    { label: t.weekly || "Weekly", value: "weekly" },
+    { label: t.monthly || "Monthly", value: "monthly" },
   ];
 
   const genderOptions = [
-    { label: t.male, value: "Male" },
-    { label: t.female, value: "Female" },
+    { label: t.male || "Male", value: "Male" },
+    { label: t.female || "Female", value: "Female" },
   ];
 
   const handleLanguageSelect = async (selectedLanguage) => {
     try {
       await changeLanguage(selectedLanguage.code);
       setShowLanguageModal(false);
-      // Show success message
       Alert.alert(
         t.languageChanged || "Language Changed",
-        t.languageChangedMsg ||
-          "The app language has been updated successfully.",
+        t.languageChangedMsg || "The app language has been updated successfully.",
         [{ text: t.ok || "OK", style: "default" }]
       );
     } catch (error) {
@@ -102,22 +158,39 @@ const ProfileScreen = ({ navigation }) => {
     return currentLang ? currentLang.nativeName : language;
   };
 
-  const handleSave = () => {
-    Alert.alert(t.profileSaved, t.profileSavedMsg, [
-      { text: t.ok, style: "default" },
-    ]);
-    console.log("Saved:", {
-      name,
+  const handleSave = async () => {
+    const data = {
       email,
-      age,
-      height,
-      weight,
+      age: parseInt(age) || 30,
       gender,
+      height_cm: parseFloat(height) || 175,
+      weight_kg: parseFloat(weight) || 70,
+      chronic_disease: chronicDisease,
+      daily_steps: parseInt(dailySteps) || 5000,
+      exercise_frequency: parseInt(exerciseFrequency) || 3,
+      sleep_hours: parseFloat(sleepHours) || 7,
+      alcohol_consumption: alcoholConsumption ? "Yes" : "No",
+      smoking_habit: smokingHabit ? "Yes" : "No",
+      diet_quality: dietQuality,
+      fruits_veggies: parseInt(fruitsVeggies) || 5,
+      stress_level: parseInt(stressLevel) || 5,
+      screen_time_hours: parseFloat(screenTimeHours) || 4,
       isOfflineMode,
       notificationsEnabled,
       notificationFrequency,
       language,
-    });
+    };
+
+    try {
+      await AsyncStorage.setItem("userProfileData", JSON.stringify(data));
+      Alert.alert(t.profileSaved, t.profileSavedMsg, [
+        { text: t.ok, style: "default" },
+      ]);
+      console.log("Saved:", data);
+    } catch (error) {
+      console.error("Error saving profile data:", error);
+      Alert.alert(t.error || "Error", "Failed to save profile data.");
+    }
   };
 
   const handlePrivacyPolicy = () => {
@@ -126,29 +199,47 @@ const ProfileScreen = ({ navigation }) => {
     );
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     Alert.alert(t.deleteAccount, t.deleteAccountConfirm, [
       { text: t.cancel, style: "cancel" },
       {
         text: t.delete,
         style: "destructive",
-        onPress: () => console.log("Account deletion requested"),
+        onPress: async () => {
+          try {
+            await AsyncStorage.removeItem("userProfileData");
+            console.log("Account deletion requested");
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "Welcome" }],
+            });
+          } catch (error) {
+            console.error("Error deleting account:", error);
+            Alert.alert(t.error || "Error", "Failed to delete account.");
+          }
+        },
       },
     ]);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(t.logOut, t.logOutConfirm, [
       { text: t.cancel, style: "cancel" },
       {
         text: t.logOut,
         style: "default",
-        onPress: () => {
-          console.log("User logged out successfully");
-          navigation.reset({
-            index: 0,
-            routes: [{ name: "Welcome" }],
-          });
+        onPress: async () => {
+          try {
+            await AsyncStorage.removeItem("userProfileData");
+            console.log("User logged out successfully");
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "Welcome" }],
+            });
+          } catch (error) {
+            console.error("Error during logout:", error);
+            Alert.alert(t.error || "Error", "Failed to log out.");
+          }
         },
       },
     ]);
@@ -176,9 +267,7 @@ const ProfileScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
 
-      {/* Added outer ScrollView to make header scrollable */}
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-        {/* Header is now inside ScrollView */}
         <View style={styles.headerContainer}>
           <View style={styles.headerContent}>
             <Text style={styles.appName}>{t.profileTitle}</Text>
@@ -769,7 +858,6 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
 
-  // New styles for language selection
   languageOptionContent: {
     flex: 1,
   },

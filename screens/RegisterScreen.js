@@ -12,7 +12,6 @@ import {
   Platform,
   StyleSheet,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 

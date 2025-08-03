@@ -10,7 +10,6 @@ import {
   Alert,
   StyleSheet,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import * as Google from "expo-google-app-auth";
@@ -35,7 +34,7 @@ const LoginScreen = () => {
       t.success,
       t.dataSubmitted.replace("{score}", "N/A").replace("{risk}", "N/A")
     );
-    navigation.navigate("LifestyleDataInput"); // Changed from LifestyleDataInputScreen
+    navigation.navigate("LifestyleDataInput", { email }); 
   };
 
   const handleGoogleSignIn = async () => {
@@ -47,9 +46,10 @@ const LoginScreen = () => {
       });
 
       if (result.type === "success") {
+        const userEmail = result.user.email || "";
         console.log("Google Sign-In successful:", result);
         Alert.alert(t.success, "Google sign-in successful");
-        navigation.navigate("LifestyleDataInput"); // Changed from LifestyleDataInputScreen
+        navigation.navigate("LifestyleDataInput", { email: userEmail }); 
       } else {
         console.log("Google Sign-In cancelled");
       }
