@@ -3,54 +3,48 @@ import { StyleSheet, Dimensions, Platform } from "react-native";
 const { width, height } = Dimensions.get("window");
 const isIOS = Platform.OS === "ios";
 
-const FONT_FAMILY = {
-  regular: isIOS ? "SF Pro Display" : "Roboto",
-  medium: isIOS ? "SF Pro Display" : "Roboto-Medium",
-  bold: isIOS ? "SF Pro Display" : "Roboto-Bold",
-  light: isIOS ? "SF Pro Display" : "Roboto-Light",
-};
-
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8fafc",
   },
 
+  scrollContainer: {
+    paddingBottom: 20,
+  },
+
   headerContainer: {
     backgroundColor: "#008080",
-    paddingBottom: 16,
+    paddingBottom: 20,
     paddingHorizontal: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-    marginBottom: 12,
-    paddingTop: isIOS ? 44 : 32,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+    marginBottom: 8,
+    paddingTop: Platform.OS === "ios" ? 50 : 20,
     alignItems: "center",
     justifyContent: "center",
   },
 
   headerContent: {
-    marginBottom: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
   },
 
   appName: {
-    fontSize: 28,
-    fontWeight: "bold",
-    fontFamily: FONT_FAMILY.bold,
+    fontSize: 24,
+    fontWeight: "700",
     color: "#ffffff",
-    textAlign: "center",
-    lineHeight: 34,
+    marginBottom: 4,
   },
 
   appTagline: {
     fontSize: 14,
-    color: "rgba(255, 255, 255, 0.9)",
+    color: "rgba(255, 255, 255, 0.8)",
     fontWeight: "500",
-    fontFamily: FONT_FAMILY.medium,
-    textAlign: "center",
-    lineHeight: 20,
   },
 
   scrollContent: {
@@ -84,7 +78,6 @@ export const styles = StyleSheet.create({
   timeRangeText: {
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: FONT_FAMILY.medium,
     color: "#1f2937",
   },
 
@@ -100,7 +93,6 @@ export const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
-    fontFamily: FONT_FAMILY.medium,
     color: "#1f2937",
     lineHeight: 24,
   },
@@ -125,20 +117,17 @@ export const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 1,
     borderColor: "#e5e7eb",
-  
   },
 
   shapFactor: {
     fontSize: 16,
     fontWeight: "500",
-    fontFamily: FONT_FAMILY.medium,
     color: "#1f2937",
   },
 
   shapValue: {
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: FONT_FAMILY.medium,
     color: "#008080",
   },
 
@@ -154,7 +143,6 @@ export const styles = StyleSheet.create({
   progressDate: {
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: FONT_FAMILY.bold,
     color: "#1f2937",
     marginBottom: 8,
     lineHeight: 22,
@@ -166,7 +154,6 @@ export const styles = StyleSheet.create({
 
   progressMetric: {
     fontSize: 14,
-    fontFamily: FONT_FAMILY.regular,
     color: "#6b7280",
     marginBottom: 4,
     lineHeight: 20,
@@ -186,7 +173,6 @@ export const styles = StyleSheet.create({
   primaryActionText: {
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: FONT_FAMILY.bold,
     color: "#ffffff",
     letterSpacing: 0.5,
   },
@@ -219,7 +205,6 @@ export const styles = StyleSheet.create({
   welcomeAppName: {
     fontSize: 28,
     fontWeight: "bold",
-    fontFamily: FONT_FAMILY.bold,
     color: "#ffffff",
     marginBottom: 6,
     letterSpacing: 1,
@@ -229,7 +214,6 @@ export const styles = StyleSheet.create({
 
   welcomeTagline: {
     fontSize: 14,
-    fontFamily: FONT_FAMILY.regular,
     color: "rgba(255, 255, 255, 0.9)",
     textAlign: "center",
     fontWeight: "400",
@@ -252,7 +236,6 @@ export const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    fontFamily: FONT_FAMILY.bold,
     color: "#1f2937",
     marginBottom: 10,
     textAlign: "center",
@@ -261,7 +244,6 @@ export const styles = StyleSheet.create({
 
   welcomeDescription: {
     fontSize: 14,
-    fontFamily: FONT_FAMILY.regular,
     color: "#6b7280",
     textAlign: "center",
     lineHeight: 20,
@@ -275,7 +257,6 @@ export const styles = StyleSheet.create({
   welcomeSectionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: FONT_FAMILY.medium,
     color: "#1f2937",
     marginBottom: 14,
     textAlign: "center",
@@ -292,7 +273,6 @@ export const styles = StyleSheet.create({
   welcomePicker: {
     height: 54,
     paddingHorizontal: 14,
-    fontFamily: FONT_FAMILY.regular,
   },
 
   privacyContainer: {
@@ -327,12 +307,10 @@ export const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 12,
     fontWeight: "bold",
-    fontFamily: FONT_FAMILY.bold,
   },
 
   privacyText: {
     fontSize: 12,
-    fontFamily: FONT_FAMILY.regular,
     color: "#6b7280",
     lineHeight: 30,
     flex: 1,
@@ -341,7 +319,6 @@ export const styles = StyleSheet.create({
   linkText: {
     color: "#3b82f6",
     fontWeight: "600",
-    fontFamily: FONT_FAMILY.medium,
   },
 
   getStartedButton: {
@@ -365,7 +342,6 @@ export const styles = StyleSheet.create({
   getStartedButtonText: {
     fontSize: 16,
     fontWeight: "bold",
-    fontFamily: FONT_FAMILY.bold,
     color: "#ffffff",
     letterSpacing: 0.5,
     textAlign: "center",
@@ -374,12 +350,10 @@ export const styles = StyleSheet.create({
 
   disabledButtonText: {
     color: "#6b7280",
-    fontFamily: FONT_FAMILY.medium,
   },
 
   footerText: {
     fontSize: 13,
-    fontFamily: FONT_FAMILY.regular,
     color: "#6b7280",
     textAlign: "center",
     fontStyle: "italic",
@@ -390,7 +364,6 @@ export const styles = StyleSheet.create({
   authTitle: {
     fontSize: 22,
     fontWeight: "bold",
-    fontFamily: FONT_FAMILY.bold,
     color: "#1f2937",
     marginBottom: 14,
     textAlign: "center",
@@ -399,7 +372,6 @@ export const styles = StyleSheet.create({
 
   authDescription: {
     fontSize: 14,
-    fontFamily: FONT_FAMILY.regular,
     color: "#6b7280",
     textAlign: "center",
     marginBottom: 28,
@@ -451,7 +423,6 @@ export const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    fontFamily: FONT_FAMILY.regular,
     color: "#1f2937",
     paddingVertical: 0,
   },
@@ -466,10 +437,9 @@ export const styles = StyleSheet.create({
 
   switchLabel: {
     fontSize: 16,
-    fontFamily: FONT_FAMILY.regular,
     color: "#1f2937",
     flex: 1,
-    marginLeft: 10, 
+    marginLeft: 10,
   },
 
   actionButtonContainer: {

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -7,12 +7,12 @@ import {
   StatusBar,
   Alert,
   Image,
-  ScrollView, 
-} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { useNavigation } from '@react-navigation/native';
-import { LanguageContext } from './LanguageContext';
-import { styles } from './styles';
+  ScrollView,
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { useNavigation } from "@react-navigation/native";
+import { LanguageContext } from "./LanguageContext";
+import { styles } from "./styles";
 
 const WelcomeScreen = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -21,10 +21,10 @@ const WelcomeScreen = () => {
 
   const handleGetStarted = () => {
     if (!agreedToTerms) {
-      Alert.alert('Error', t.errorPleaseAgree);
+      Alert.alert("Error", t.errorPleaseAgree);
       return;
     }
-    navigation.navigate('Login');
+    navigation.navigate("Login");
   };
 
   return (
@@ -35,7 +35,7 @@ const WelcomeScreen = () => {
           <View style={styles.logoContainer}>
             <View style={styles.illustrationContainer}>
               <Image
-                source={require('../assets/Healthy lifestyle-cuate.png')}
+                source={require("../assets/Healthy lifestyle-cuate.png")}
                 style={styles.headerIllustration}
                 resizeMode="contain"
               />
@@ -70,29 +70,39 @@ const WelcomeScreen = () => {
               style={styles.checkboxRow}
               onPress={() => setAgreedToTerms(!agreedToTerms)}
             >
-              <View style={[styles.modernCheckbox, agreedToTerms && styles.modernCheckboxChecked]}>
+              <View
+                style={[
+                  styles.modernCheckbox,
+                  agreedToTerms && styles.modernCheckboxChecked,
+                ]}
+              >
                 {agreedToTerms && <Text style={styles.checkmarkIcon}>✓</Text>}
               </View>
               <Text style={styles.privacyText}>
-                {t.agreeTerms}{' '}
-                <Text style={styles.linkText}>{t.termsOfService}</Text>
-                {' '}{t.and}{' '}
+                {t.agreeTerms}{" "}
+                <Text style={styles.linkText}>{t.termsOfService}</Text> {t.and}{" "}
                 <Text style={styles.linkText}>{t.privacyPolicy}</Text>
               </Text>
             </TouchableOpacity>
           </View>
           <TouchableOpacity
-            style={[styles.getStartedButton, !agreedToTerms && styles.disabledButton]}
+            style={[
+              styles.getStartedButton,
+              !agreedToTerms && styles.disabledButton,
+            ]}
             onPress={handleGetStarted}
             disabled={!agreedToTerms}
           >
-            <Text style={[styles.getStartedButtonText, !agreedToTerms && styles.disabledButtonText]}>
+            <Text
+              style={[
+                styles.getStartedButtonText,
+                !agreedToTerms && styles.disabledButtonText,
+              ]}
+            >
               {t.getStarted}
             </Text>
           </TouchableOpacity>
-          <Text style={styles.footerText}>
-            {t.footerText}
-          </Text>
+          <Text style={styles.footerText}>{t.footerText}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

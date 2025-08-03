@@ -1,198 +1,639 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
-  ScrollView,
   TextInput,
   TouchableOpacity,
+  ScrollView,
   SafeAreaView,
   StatusBar,
   Switch,
   Platform,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { LanguageContext } from './LanguageContext';
-import { styles } from './styles';
+  Alert,
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import Slider from "@react-native-community/slider";
+import { useNavigation } from "@react-navigation/native";
+import { LanguageContext } from "./LanguageContext";
+import { mockStorage } from "../storage.js";
+
+const getCurrentDate = () => {
+  const today = new Date();
+  return today.toISOString().split("T")[0];
+};
+
+const styles = {
+  container: {
+    flex: 1,
+    backgroundColor: "#f8fafc",
+  },
+  header: {
+    backgroundColor: "#008080",
+    paddingBottom: 4,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+    marginBottom: 8,
+    paddingTop: Platform.OS === "ios" ? 50 : 20,
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "all 0.2s ease",
+  },
+  appName: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#ffffff",
+    marginBottom: 4,
+  },
+  appTagline: {
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.9)",
+    marginBottom: 16,
+  },
+  content: {
+    flex: 1,
+  },
+  section: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    borderColor: "#e5e7eb",
+    borderWidth: 1,
+    marginHorizontal: 20,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 15,
+    color: "#1f2937",
+    marginBottom: 8,
+    fontWeight: "500",
+    paddingLeft: 4,
+  },
+  input: {
+    height: 50,
+    borderColor: "#e5e7eb",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontSize: 15,
+    color: "#1f2937",
+    backgroundColor: "#ffffff",
+  },
+  picker: {
+    height: 50,
+    width: "100%",
+    color: "#1f2937",
+    backgroundColor: "#ffffff",
+    fontSize: 15,
+  },
+  buttonContainer: {
+    marginTop: 20,
+  },
+  primaryButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#10b981",
+  },
+  primaryButtonText: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  disabledButton: {
+    backgroundColor: "#d1d5db",
+  },
+  sliderContainer: {
+    marginBottom: 20,
+    paddingVertical: 10,
+  },
+  slider: {
+    width: "100%",
+    height: 40,
+  },
+  sliderValue: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#008080",
+    textAlign: "center",
+    marginTop: 8,
+  },
+  sliderLabelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  sliderMinMaxLabel: {
+    fontSize: 11,
+    color: "#6b7280",
+  },
+  switchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+  },
+  switchLabel: {
+    fontSize: 15,
+    color: "#1f2937",
+  },
+  stressLevelIndicator: {
+    flexDirection: "row",
+    height: 8,
+    borderRadius: 4,
+    marginVertical: 8,
+    overflow: "hidden",
+  },
+  stressLevelColor: {
+    flex: 1,
+  },
+};
 
 const TrackScreen = () => {
-  const { t } = useContext(LanguageContext);
-  const [steps, setSteps] = useState('');
-  const [sleep, setSleep] = useState('');
-  const [heartRate, setHeartRate] = useState('');
-  const [weight, setWeight] = useState('');
-  const [vegetableServings, setVegetableServings] = useState('');
-  const [fruitServings, setFruitServings] = useState('');
-  const [exerciseCompleted, setExerciseCompleted] = useState(false);
+  const { t = {} } = useContext(LanguageContext);
+  const navigation = useNavigation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
 
-  const handleSubmit = () => {
-    console.log('Submitted:', { 
-      steps, sleep, heartRate, weight, 
-      vegetableServings, fruitServings, exerciseCompleted 
-    });
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("Male");
+  const [heightCm, setHeightCm] = useState("");
+  const [weightKg, setWeightKg] = useState("");
+  const [bmi, setBmi] = useState("");
+  const [chronicDisease, setChronicDisease] = useState("None");
+  const [dailySteps, setDailySteps] = useState(5000);
+  const [exerciseFrequency, setExerciseFrequency] = useState(3);
+  const [sleepHours, setSleepHours] = useState(7);
+  const [alcoholConsumption, setAlcoholConsumption] = useState(false);
+  const [smokingHabit, setSmokingHabit] = useState(false);
+  const [dietQuality, setDietQuality] = useState("Good");
+  const [fruitsVeggies, setFruitsVeggies] = useState(5);
+  const [stressLevel, setStressLevel] = useState(5);
+  const [screenTimeHours, setScreenTimeHours] = useState(4);
+
+  const genderOptions = [
+    { label: t.male || "Male", value: "Male" },
+    { label: t.female || "Female", value: "Female" },
+  ];
+
+  const chronicDiseaseOptions = [
+    { label: t.none || "None", value: "None" },
+    { label: t.stroke || "Stroke", value: "Stroke" },
+    { label: t.hypertension || "Hypertension", value: "Hypertension" },
+    { label: t.obesity || "Obesity", value: "Obesity" },
+  ];
+
+  const dietQualityOptions = [
+    { label: t.excellent || "Excellent", value: "Excellent" },
+    { label: t.good || "Good", value: "Good" },
+    { label: t.average || "Average", value: "Average" },
+    { label: t.poor || "Poor", value: "Poor" },
+  ];
+
+  const calculateBMI = (height, weight) => {
+    if (height && weight && !isNaN(height) && !isNaN(weight)) {
+      const heightM = parseFloat(height) / 100;
+      const bmiValue = (parseFloat(weight) / (heightM * heightM)).toFixed(1);
+      setBmi(bmiValue);
+    } else {
+      setBmi("");
+    }
   };
 
-  const handleSyncLifestyleScore = () => {
-    console.log('Syncing to Lifestyle Score:', { 
-      steps, sleep, heartRate, weight, 
-      vegetableServings, fruitServings, exerciseCompleted 
+  const validateForm = () => {
+    if (!age || isNaN(age) || parseInt(age) < 18 || parseInt(age) > 120) {
+      Alert.alert(
+        t.error || "Error",
+        t.errorAge || "Please enter a valid age (18 - 120)"
+      );
+      return false;
+    }
+    if (
+      !heightCm ||
+      isNaN(heightCm) ||
+      parseFloat(heightCm) < 100 ||
+      parseFloat(heightCm) > 250
+    ) {
+      Alert.alert(
+        t.error || "Error",
+        t.errorHeight || "Please enter a valid height (100 - 250 cm)"
+      );
+      return false;
+    }
+    if (
+      !weightKg ||
+      isNaN(weightKg) ||
+      parseFloat(weightKg) < 30 ||
+      parseFloat(weightKg) > 300
+    ) {
+      Alert.alert(
+        t.error || "Error",
+        t.errorWeight || "Please enter a valid weight (30 - 300 kg)"
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const data = {
+      date: getCurrentDate(),
+      steps: dailySteps,
+      sleep: sleepHours,
+      heartRate: null,
+      bmi: parseFloat(bmi) || null,
+      riskLevel: "Unknown",
+      age: parseInt(age),
+      gender,
+      height_cm: parseFloat(heightCm),
+      weight_kg: parseFloat(weightKg),
+      chronic_disease: chronicDisease,
+      exercise_frequency: exerciseFrequency,
+      alcohol_consumption: alcoholConsumption ? "Yes" : "No",
+      smoking_habit: smokingHabit ? "Yes" : "No",
+      diet_quality: dietQuality,
+      fruits_veggies: fruitsVeggies,
+      stress_level: stressLevel,
+      screen_time_hours: screenTimeHours,
+    };
+
+    mockStorage.push(data);
+    console.log("Saved to mockStorage:", data);
+
+    navigation.navigate("MainApp", {
+      screen: "Progress",
+      params: { lifestyleData: data },
     });
+    setIsSubmitting(false);
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
-      
-      <View style={styles.headerContainer}>
-        <View style={styles.headerContent}>
-          <Text style={styles.appName}>{t.trackHealthTitle}</Text>
-          <Text style={styles.appTagline}>{t.trackTagline}</Text>
-        </View>
-      </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Physical Activity Section */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="fitness-outline" size={20} color="#008080" />
-            <Text style={styles.sectionTitle}>{t.physicalActivity}</Text>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <View style={styles.inputContainer}>
-              <Ionicons name="walk-outline" size={18} color="#6b7280" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder={t.steps}
-                placeholderTextColor="#9ca3af"
-                keyboardType="numeric"
-                value={steps}
-                onChangeText={setSteps}
-              />
-            </View>
-
-            <View style={styles.switchContainer}>
-              <Ionicons name="barbell-outline" size={18} color="#6b7280" style={styles.inputIcon} />
-              <Text style={styles.switchLabel}>{t.exerciseCompleted}</Text>
-              <Switch
-                value={exerciseCompleted}
-                onValueChange={setExerciseCompleted}
-                trackColor={{ false: '#d1d5db', true: '#008080' }}
-                thumbColor={exerciseCompleted ? '#ffffff' : '#f4f3f4'}
-                ios_backgroundColor="#d1d5db"
-              />
-            </View>
-          </View>
+      <ScrollView
+        style={styles.content}
+        onScroll={(e) => setScrollY(e.nativeEvent.contentOffset.y)}
+        scrollEventThrottle={16}
+      >
+        <View
+          style={[
+            styles.header,
+            {
+              paddingTop:
+                Platform.OS === "ios"
+                  ? Math.max(50 - scrollY / 3, 20)
+                  : Math.max(20 - scrollY / 3, 10),
+              opacity: Math.max(1 - scrollY / 200, 0.7),
+              transform: [{ scale: Math.max(1 - scrollY / 1000, 0.9) }],
+            },
+          ]}
+        >
+          <Text style={styles.appName}>
+            {t.trackHealthTitle || "Track Lifestyle"}
+          </Text>
+          <Text style={styles.appTagline}>
+            {t.trackTagline || "Record your health metrics"}
+          </Text>
         </View>
 
-        {/* Vital Signs Section */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="heart-outline" size={20} color="#008080" />
-            <Text style={styles.sectionTitle}>{t.vitalSigns}</Text>
+        <View style={styles.section}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>{t.age || "Age"}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={t.enterAge || "Enter your age"}
+              keyboardType="numeric"
+              value={age}
+              onChangeText={setAge}
+            />
           </View>
 
-          <View style={styles.inputGroup}>
-            <View style={styles.inputContainer}>
-              <Ionicons name="pulse-outline" size={18} color="#6b7280" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder={t.heartRateBpm}
-                placeholderTextColor="#9ca3af"
-                keyboardType="numeric"
-                value={heartRate}
-                onChangeText={setHeartRate}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Ionicons name="scale-outline" size={18} color="#6b7280" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder={t.weightKgInput}
-                placeholderTextColor="#9ca3af"
-                keyboardType="numeric"
-                value={weight}
-                onChangeText={setWeight}
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Nutrition Section */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="restaurant-outline" size={20} color="#008080" />
-            <Text style={styles.sectionTitle}>{t.nutrition}</Text>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>{t.gender || "Gender"}</Text>
+            <Picker
+              selectedValue={gender}
+              style={styles.picker}
+              onValueChange={(itemValue) => setGender(itemValue)}
+            >
+              {genderOptions.map((option) => (
+                <Picker.Item
+                  key={option.value}
+                  label={option.label}
+                  value={option.value}
+                />
+              ))}
+            </Picker>
           </View>
 
-          <View style={styles.inputGroup}>
-            <View style={styles.inputContainer}>
-              <Ionicons name="leaf-outline" size={18} color="#6b7280" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder={t.vegetableServings}
-                placeholderTextColor="#9ca3af"
-                keyboardType="numeric"
-                value={vegetableServings}
-                onChangeText={setVegetableServings}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Ionicons name="apple-outline" size={18} color="#6b7280" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder={t.fruitServings}
-                placeholderTextColor="#9ca3af"
-                keyboardType="numeric"
-                value={fruitServings}
-                onChangeText={setFruitServings}
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Sleep Section */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="moon-outline" size={20} color="#008080" />
-            <Text style={styles.sectionTitle}>{t.sleep}</Text>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>{t.heightCm || "Height (cm)"}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={t.enterHeight || "Enter your height in cm"}
+              keyboardType="numeric"
+              value={heightCm}
+              onChangeText={(text) => {
+                setHeightCm(text);
+                if (text && weightKg) calculateBMI(text, weightKg);
+              }}
+            />
           </View>
 
-          <View style={styles.inputGroup}>
-            <View style={styles.inputContainer}>
-              <Ionicons name="bed-outline" size={18} color="#6b7280" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder={t.hoursSlept}
-                placeholderTextColor="#9ca3af"
-                keyboardType="numeric"
-                value={sleep}
-                onChangeText={setSleep}
-              />
-            </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>{t.weightKg || "Weight (kg)"}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={t.enterWeight || "Enter your weight in kg"}
+              keyboardType="numeric"
+              value={weightKg}
+              onChangeText={(text) => {
+                setWeightKg(text);
+                if (heightCm && text) calculateBMI(heightCm, text);
+              }}
+            />
           </View>
-        </View>
 
-        {/* Action Buttons */}
-        <View style={styles.actionButtonContainer}>
-          <TouchableOpacity
-            style={styles.primaryActionButton}
-            onPress={handleSubmit}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.primaryActionText}>{t.saveMetrics}</Text>
-          </TouchableOpacity>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>{t.bmi || "BMI"}</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: "#f1f5f9" }]}
+              value={bmi}
+              editable={false}
+              placeholder={t.bmiPlaceholder || "Calculated automatically"}
+            />
+          </View>
 
-          <TouchableOpacity
-            style={[styles.primaryActionButton, styles.secondaryActionButton]}
-            onPress={handleSyncLifestyleScore}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.primaryActionText, styles.secondaryActionText]}>
-              {t.syncToLifestyle}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>
+              {t.chronicDisease || "Chronic Disease"}
             </Text>
-          </TouchableOpacity>
+            <Picker
+              selectedValue={chronicDisease}
+              style={styles.picker}
+              onValueChange={(itemValue) => setChronicDisease(itemValue)}
+            >
+              {chronicDiseaseOptions.map((option) => (
+                <Picker.Item
+                  key={option.value}
+                  label={option.label}
+                  value={option.value}
+                />
+              ))}
+            </Picker>
+          </View>
+
+          <View style={styles.sliderContainer}>
+            <Text style={styles.inputLabel}>
+              {t.dailySteps || "Daily Steps"}
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={50000}
+              step={100}
+              value={dailySteps}
+              minimumTrackTintColor="#008080"
+              maximumTrackTintColor="#e5e7eb"
+              onValueChange={(value) => setDailySteps(value)}
+            />
+            <View style={styles.sliderLabelRow}>
+              <Text style={styles.sliderMinMaxLabel}>0</Text>
+              <Text style={styles.sliderMinMaxLabel}>50,000+</Text>
+            </View>
+            <Text style={styles.sliderValue}>
+              {Math.round(dailySteps).toLocaleString()}
+            </Text>
+          </View>
+
+          <View style={styles.sliderContainer}>
+            <Text style={styles.inputLabel}>
+              {t.exerciseFrequency || "Exercise Frequency (days/week)"}
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={7}
+              step={1}
+              value={exerciseFrequency}
+              minimumTrackTintColor="#008080"
+              maximumTrackTintColor="#e5e7eb"
+              onValueChange={(value) => setExerciseFrequency(value)}
+            />
+            <View style={styles.sliderLabelRow}>
+              <Text style={styles.sliderMinMaxLabel}>
+                {t.sedentary || "Sedentary"}
+              </Text>
+              <Text style={styles.sliderMinMaxLabel}>{t.daily || "Daily"}</Text>
+            </View>
+            <Text style={styles.sliderValue}>
+              {exerciseFrequency === 1
+                ? `${exerciseFrequency} ${t.day || "day"}`
+                : `${exerciseFrequency} ${t.days || "days"}`}
+            </Text>
+          </View>
+
+          <View style={styles.sliderContainer}>
+            <Text style={styles.inputLabel}>
+              {t.sleepHours || "Sleep Hours"}
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={24}
+              step={0.5}
+              value={sleepHours}
+              minimumTrackTintColor="#008080"
+              maximumTrackTintColor="#e5e7eb"
+              onValueChange={(value) => setSleepHours(value)}
+            />
+            <View style={styles.sliderLabelRow}>
+              <Text style={styles.sliderMinMaxLabel}>{t.poor || "Poor"}</Text>
+              <Text style={styles.sliderMinMaxLabel}>
+                {t.excessive || "Excessive"}
+              </Text>
+            </View>
+            <Text style={styles.sliderValue}>
+              {sleepHours} {t.hours || "hours"}
+            </Text>
+          </View>
+
+          <View style={styles.switchContainer}>
+            <Text style={styles.switchLabel}>
+              {t.alcoholConsumption || "Alcohol Consumption"}
+            </Text>
+            <Switch
+              value={alcoholConsumption}
+              onValueChange={(value) => setAlcoholConsumption(value)}
+              trackColor={{ false: "#e5e7eb", true: "#008080" }}
+              thumbColor={alcoholConsumption ? "#ffffff" : "#ffffff"}
+            />
+          </View>
+
+          <View style={styles.switchContainer}>
+            <Text style={styles.switchLabel}>
+              {t.smokingHabit || "Smoking Habit"}
+            </Text>
+            <Switch
+              value={smokingHabit}
+              onValueChange={(value) => setSmokingHabit(value)}
+              trackColor={{ false: "#e5e7eb", true: "#008080" }}
+              thumbColor={smokingHabit ? "#ffffff" : "#ffffff"}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>
+              {t.dietQuality || "Diet Quality"}
+            </Text>
+            <Picker
+              selectedValue={dietQuality}
+              style={styles.picker}
+              onValueChange={(itemValue) => setDietQuality(itemValue)}
+            >
+              {dietQualityOptions.map((option) => (
+                <Picker.Item
+                  key={option.value}
+                  label={option.label}
+                  value={option.value}
+                />
+              ))}
+            </Picker>
+          </View>
+
+          <View style={styles.sliderContainer}>
+            <Text style={styles.inputLabel}>
+              {t.fruitsVeggies || "Fruits & Vegetables (servings/day)"}
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={20}
+              step={1}
+              value={fruitsVeggies}
+              minimumTrackTintColor="#008080"
+              maximumTrackTintColor="#e5e7eb"
+              onValueChange={(value) => setFruitsVeggies(value)}
+            />
+            <View style={styles.sliderLabelRow}>
+              <Text style={styles.sliderMinMaxLabel}>{t.low || "Low"}</Text>
+              <Text style={styles.sliderMinMaxLabel}>{t.high || "High"}</Text>
+            </View>
+            <Text style={styles.sliderValue}>
+              {fruitsVeggies === 1
+                ? `${fruitsVeggies} ${t.serving || "serving"}`
+                : `${fruitsVeggies} ${t.servings || "servings"}`}
+            </Text>
+          </View>
+
+          <View style={styles.sliderContainer}>
+            <Text style={styles.inputLabel}>
+              {t.stressLevel || "Stress Level (1-10)"}
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={1}
+              maximumValue={10}
+              step={1}
+              value={stressLevel}
+              minimumTrackTintColor="#10b981"
+              maximumTrackTintColor="#ef4444"
+              onValueChange={(value) => setStressLevel(value)}
+            />
+            <View style={styles.stressLevelIndicator}>
+              <View
+                style={[
+                  styles.stressLevelColor,
+                  { backgroundColor: "#10b981" },
+                ]}
+              />
+              <View
+                style={[
+                  styles.stressLevelColor,
+                  { backgroundColor: "#a3e635" },
+                ]}
+              />
+              <View
+                style={[
+                  styles.stressLevelColor,
+                  { backgroundColor: "#f59e0b" },
+                ]}
+              />
+              <View
+                style={[
+                  styles.stressLevelColor,
+                  { backgroundColor: "#ef4444" },
+                ]}
+              />
+            </View>
+            <View style={styles.sliderLabelRow}>
+              <Text style={styles.sliderMinMaxLabel}>{t.low || "Low"}</Text>
+              <Text style={styles.sliderMinMaxLabel}>{t.high || "High"}</Text>
+            </View>
+            <Text style={styles.sliderValue}>{stressLevel}</Text>
+          </View>
+
+          <View style={styles.sliderContainer}>
+            <Text style={styles.inputLabel}>
+              {t.screenTimeHours || "Screen Time (hours/day)"}
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={24}
+              step={0.5}
+              value={screenTimeHours}
+              minimumTrackTintColor="#008080"
+              maximumTrackTintColor="#e5e7eb"
+              onValueChange={(value) => setScreenTimeHours(value)}
+            />
+            <View style={styles.sliderLabelRow}>
+              <Text style={styles.sliderMinMaxLabel}>
+                {t.minimal || "Minimal"}
+              </Text>
+              <Text style={styles.sliderMinMaxLabel}>
+                {t.extensive || "Extensive"}
+              </Text>
+            </View>
+            <Text style={styles.sliderValue}>
+              {screenTimeHours} {t.hours || "hours"}
+            </Text>
+          </View>
+
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[
+                styles.primaryButton,
+                isSubmitting && styles.disabledButton,
+              ]}
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+            >
+              <Text style={styles.primaryButtonText}>
+                {isSubmitting
+                  ? t.processing || "Processing..."
+                  : t.saveAndCalculate || "Save Data"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
