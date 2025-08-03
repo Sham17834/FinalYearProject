@@ -35,7 +35,7 @@ const LoginScreen = () => {
       t.success,
       t.dataSubmitted.replace("{score}", "N/A").replace("{risk}", "N/A")
     );
-    navigation.navigate("MainApp");
+    navigation.navigate("LifestyleDataInput"); // Changed from LifestyleDataInputScreen
   };
 
   const handleGoogleSignIn = async () => {
@@ -49,7 +49,7 @@ const LoginScreen = () => {
       if (result.type === "success") {
         console.log("Google Sign-In successful:", result);
         Alert.alert(t.success, "Google sign-in successful");
-        navigation.navigate("MainApp");
+        navigation.navigate("LifestyleDataInput"); // Changed from LifestyleDataInputScreen
       } else {
         console.log("Google Sign-In cancelled");
       }
