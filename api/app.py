@@ -1,102 +1,89 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import numpy as np
 import joblib
-import pandas as pd
-import time
-import os
 
-app = FastAPI()
+# -----------------------------
+# ✅ Load pre-trained artifacts
+rf_model = joblib.load('rf_model.pkl')
+scaler = joblib.load('scaler_rf.pkl')
+label_encoders = joblib.load('label_encoders_rf.pkl')
+selected_features = joblib.load('selected_features_rf.pkl')
 
-# Enable CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  
-    allow_credentials=True,
-    allow_methods=["*"],  
-    allow_headers=["*"],  
+# -----------------------------
+# ✅ FastAPI app
+app = FastAPI(
+    title="Multi-label Random Forest API (with Probability)",
+    description="Predict Obesity, Hypertension, Stroke risk with probability.",
+    version="1.0"
 )
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-
-# Load model and preprocessing components using absolute paths
-try:
-    model = joblib.load(os.path.join(current_dir, 'xgb_model.pkl'))
-    scaler = joblib.load(os.path.join(current_dir, 'scaler.pkl'))
-    selector = joblib.load(os.path.join(current_dir, 'selector.pkl'))
-    target_encoder = joblib.load(os.path.join(current_dir, 'target_encoder.pkl'))
-    label_encoders = joblib.load(os.path.join(current_dir, 'label_encoders.pkl'))
-    selected_features = joblib.load(os.path.join(current_dir, 'selected_features.pkl'))
-    shap_summary = joblib.load(os.path.join(current_dir, 'shap_summary.pkl'))
-except FileNotFoundError as e:
-    raise Exception(f"Model or preprocessor file missing: {e}")
-
-# Define input data model containing 14 lifestyle features
-class LifestyleInput(BaseModel):
+# -----------------------------
+# ✅ Input schema
+class InputData(BaseModel):
     Age: int
     Gender: str
     Height_cm: float
     Weight_kg: float
     BMI: float
-    Daily_Steps: int
-    Exercise_Frequency: int
+    Chronic_Disease: str
+    Daily_Steps: float
+    Exercise_Frequency: float
     Sleep_Hours: float
     Alcohol_Consumption: str
     Smoking_Habit: str
     Diet_Quality: str
-    Stress_Level: int
-    FRUITS_VEGGIES: int
+    Stress_Level: float
+    FRUITS_VEGGIES: float
     Screen_Time_Hours: float
 
+# -----------------------------
+# ✅ Predict endpoint
 @app.post("/predict")
-async def predict_risk(input_data: LifestyleInput):
+async def predict(data: InputData):
     try:
-        start_time = time.time()
-        data = pd.DataFrame([input_data.dict()])
+        # -----------------------------
+        # Convert to dict & DataFrame
+        input_data = data.dict()
+        input_df = {}
 
-        # Validate input data
-        if not all(feat in data.columns for feat in selected_features):
-            missing = [feat for feat in selected_features if feat not in data.columns]
-            raise HTTPException(status_code=400, detail=f"Missing features: {missing}")
+        for col in selected_features:
+            value = input_data[col]
+            if col in label_encoders:
+                encoder = label_encoders[col]
+                value = encoder.transform([value])[0]
+            input_df[col] = [value]
 
-        # Validate and encode categorical variables
-        for column in label_encoders:
-            if column in data.columns:
-                valid_values = list(label_encoders[column].classes_)
-                if data[column].iloc[0] not in valid_values:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"Invalid value for {column}: {data[column].iloc[0]}. Valid values: {valid_values}"
-                    )
-                data[column] = label_encoders[column].transform(data[column])
+        # -----------------------------
+        # Scale
+        X = np.array([list(input_df.values())])
+        X_scaled = scaler.transform(X)
 
-        # Ensure only model-required features are used
-        data = data[selected_features]
+        # -----------------------------
+        # Predict
+        pred = rf_model.predict(X_scaled)[0].tolist()
 
-        # Standardize and select features
-        X_scaled = scaler.transform(data)
-        X_selected = selector.transform(X_scaled)
+        # -----------------------------
+        # Probability for each label
+        proba = []
+        for estimator in rf_model.estimators_:
+            prob = estimator.predict_proba(X_scaled)[0][1]  # Prob of class 1
+            proba.append(float(prob))
 
-        # Generate prediction
-        prediction = model.predict(X_selected)[0]
-        risk_level = target_encoder.inverse_transform([prediction])[0]
-
-        # Calculate inference time
-        inference_time = time.time() - start_time
-        if inference_time > 5:
-            print(f"Warning: Inference time {inference_time:.2f} seconds exceeds 5 seconds requirement")
-
-        # Return results
         return {
-            "risk_level": risk_level,
-            "shap_explanations": {k: float(v) for k, v in shap_summary.items()},
-            "inference_time": inference_time,
-            "status": "success"
+            "Obesity_Flag": {
+                "prediction": bool(pred[0]),
+                "probability": proba[0]
+            },
+            "Hypertension_Flag": {
+                "prediction": bool(pred[1]),
+                "probability": proba[1]
+            },
+            "Stroke_Flag": {
+                "prediction": bool(pred[2]),
+                "probability": proba[2]
+            }
         }
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Prediction failed: {str(e)}")
 
-@app.get("/health")
-async def health_check():
-    """Verify if the API is running properly"""
-    return {"status": "API is running"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

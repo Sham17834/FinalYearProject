@@ -14,9 +14,10 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import Slider from "@react-native-community/slider";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import { formatString } from "./translations";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const styles = StyleSheet.create({
   container: {
@@ -26,8 +27,6 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     paddingTop: Platform.OS === "ios" ? 40 : 20,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -197,6 +196,7 @@ const styles = StyleSheet.create({
 const LifestyleDataInputScreen = () => {
   const { t = {} } = useContext(LanguageContext);
   const navigation = useNavigation();
+  const route = useRoute();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 3;
@@ -297,7 +297,7 @@ const LifestyleDataInputScreen = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateStep(currentStep)) {
       return;
     }
@@ -305,6 +305,7 @@ const LifestyleDataInputScreen = () => {
     setIsSubmitting(true);
 
     const data = {
+      email: route.params?.email || "",
       age: parseInt(age),
       gender,
       height_cm: parseFloat(heightCm),
@@ -322,12 +323,21 @@ const LifestyleDataInputScreen = () => {
       screen_time_hours: screenTimeHours,
     };
 
-    console.log("Submitting form data:", data);
-    navigation.navigate("MainApp", {
-      screen: "Home",
-      params: { lifestyleData: data },
-    });
-    setIsSubmitting(false);
+    try {
+      // Save the lifestyle data to AsyncStorage
+      await AsyncStorage.setItem("userProfileData", JSON.stringify(data));
+
+      console.log("Submitting form data:", data);
+      navigation.navigate("MainApp", {
+        screen: "Home",
+        params: { lifestyleData: data },
+      });
+    } catch (error) {
+      console.error("Error saving profile data:", error);
+      Alert.alert(t.error || "Error", "Failed to save profile data.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

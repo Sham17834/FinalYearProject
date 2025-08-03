@@ -14,6 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import * as Google from "expo-google-app-auth";
 import Icon from "react-native-vector-icons/FontAwesome";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -24,17 +25,22 @@ const LoginScreen = () => {
   const navigation = useNavigation();
   const { t } = useContext(LanguageContext);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert(t.error, t.errorPleaseAgree);
       return;
     }
-    console.log("Login:", { email, password });
-    Alert.alert(
-      t.success,
-      t.dataSubmitted.replace("{score}", "N/A").replace("{risk}", "N/A")
-    );
-    navigation.navigate("LifestyleDataInput", { email }); 
+    
+    try {
+      // Save email to AsyncStorage
+      await AsyncStorage.setItem("userEmail", email);
+      
+      console.log("Login:", { email, password });
+      navigation.navigate("LifestyleDataInput", { email });
+    } catch (error) {
+      console.error("Error saving email:", error);
+      Alert.alert(t.error, "Failed to save user data");
+    }
   };
 
   const handleGoogleSignIn = async () => {
@@ -47,9 +53,13 @@ const LoginScreen = () => {
 
       if (result.type === "success") {
         const userEmail = result.user.email || "";
+        
+        // Save email to AsyncStorage
+        await AsyncStorage.setItem("userEmail", userEmail);
+        
         console.log("Google Sign-In successful:", result);
         Alert.alert(t.success, "Google sign-in successful");
-        navigation.navigate("LifestyleDataInput", { email: userEmail }); 
+        navigation.navigate("LifestyleDataInput", { email: userEmail });
       } else {
         console.log("Google Sign-In cancelled");
       }

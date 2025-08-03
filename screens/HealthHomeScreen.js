@@ -297,8 +297,10 @@ const CustomProgressBar = ({ progress, color }) => {
   const animatedWidth = new Animated.Value(0);
 
   useEffect(() => {
+    // Clamp progress to [0, 1]
+    const clampedProgress = Math.max(0, Math.min(1, progress));
     Animated.timing(animatedWidth, {
-      toValue: progress,
+      toValue: clampedProgress,
       duration: 800,
       useNativeDriver: false,
     }).start();
@@ -416,9 +418,9 @@ const HealthHomeScreen = () => {
   const [lifestyleData, setLifestyleData] = useState(null);
   const [localScore, setLocalScore] = useState(75);
   const [diseaseRisks, setDiseaseRisks] = useState({
-    obesity: "low",
-    hypertension: "low",
-    stroke: "low",
+    obesity: 1,
+    hypertension: 1,
+    stroke: 1,
   });
   const fadeAnim = new Animated.Value(0.8);
   const slideAnim = new Animated.Value(10);
@@ -455,7 +457,7 @@ const HealthHomeScreen = () => {
 
     if (data.bmi >= 18.5 && data.bmi < 25) score += 15;
     else if (data.bmi < 18.5 || data.bmi < 30) score += 8;
-    else score += 3; // Obese
+    else score += 3;
 
     if (data.daily_steps >= 10000) score += 10;
     else if (data.daily_steps >= 7000) score += 7;
@@ -499,50 +501,78 @@ const HealthHomeScreen = () => {
     if (data.chronic_disease === "None") score += 5;
     else score += 0;
 
-    // Ensure score never exceeds 100
     const finalScore = Math.min(Math.round(score), 100);
     setLocalScore(finalScore);
   };
 
   const calculateDiseaseRisks = (data) => {
-    if (!data) return;
+    if (!data) {
+      setDiseaseRisks({ obesity: 1, hypertension: 1, stroke: 1 });
+      return;
+    }
 
     const newRisks = {
-      obesity: "low",
-      hypertension: "low",
-      stroke: "low",
+      obesity: 1,
+      hypertension: 1,
+      stroke: 1,
     };
 
-    if (data.bmi >= 30) {
-      newRisks.obesity = "high";
-    } else if (data.bmi >= 25) {
-      newRisks.obesity = "medium";
-    }
+    // Obesity risk: Based on BMI, diet quality, and exercise
+    let obesityScore = 0;
+    if (data.bmi >= 30) obesityScore += 50;
+    else if (data.bmi >= 25) obesityScore += 30;
+    else if (data.bmi < 18.5) obesityScore += 10;
+    else obesityScore += 0;
 
-    let hypertensionFactors = 0;
-    if (data.bmi >= 25) hypertensionFactors++;
-    if (data.daily_steps < 5000) hypertensionFactors++;
-    if (data.salt_intake?.toUpperCase() === "HIGH") hypertensionFactors++;
-    if (data.alcohol_consumption === "Yes") hypertensionFactors++;
+    if (data.fruits_veggies < 3) obesityScore += 20;
+    else if (data.fruits_veggies < 5) obesityScore += 10;
 
-    if (hypertensionFactors >= 3) {
-      newRisks.hypertension = "high";
-    } else if (hypertensionFactors >= 1) {
-      newRisks.hypertension = "medium";
-    }
+    if (data.exercise_frequency < 1) obesityScore += 20;
+    else if (data.exercise_frequency < 3) obesityScore += 10;
 
-    let strokeFactors = 0;
-    if (data.bmi >= 25) strokeFactors++;
-    if (data.smoking_habit === "Yes") strokeFactors++;
-    if (data.alcohol_consumption === "Yes") strokeFactors++;
-    if (data.chronic_disease === "Hypertension") strokeFactors += 2;
-    if (data.stress_level > 7) strokeFactors++;
+    if (data.diet_quality === "Poor") obesityScore += 20;
+    else if (data.diet_quality === "Average") obesityScore += 10;
 
-    if (strokeFactors >= 3) {
-      newRisks.stroke = "high";
-    } else if (strokeFactors >= 1) {
-      newRisks.stroke = "medium";
-    }
+    newRisks.obesity = Math.max(1, Math.min(100, Math.round(obesityScore)));
+
+    // Hypertension risk: Based on BMI, steps, salt intake, alcohol, stress
+    let hypertensionScore = 0;
+    if (data.bmi >= 30) hypertensionScore += 30;
+    else if (data.bmi >= 25) hypertensionScore += 15;
+
+    if (data.daily_steps < 5000) hypertensionScore += 20;
+    else if (data.daily_steps < 7000) hypertensionScore += 10;
+
+    if (data.salt_intake?.toUpperCase() === "HIGH") hypertensionScore += 20;
+    else if (data.salt_intake?.toUpperCase() === "MODERATE")
+      hypertensionScore += 10;
+
+    if (data.alcohol_consumption === "Yes") hypertensionScore += 15;
+
+    if (data.stress_level > 7) hypertensionScore += 20;
+    else if (data.stress_level > 3) hypertensionScore += 10;
+
+    newRisks.hypertension = Math.max(
+      1,
+      Math.min(100, Math.round(hypertensionScore))
+    );
+
+    // Stroke risk: Based on BMI, smoking, alcohol, chronic disease, stress
+    let strokeScore = 0;
+    if (data.bmi >= 30) strokeScore += 25;
+    else if (data.bmi >= 25) strokeScore += 15;
+
+    if (data.smoking_habit === "Yes") strokeScore += 25;
+
+    if (data.alcohol_consumption === "Yes") strokeScore += 15;
+
+    if (data.chronic_disease === "Hypertension") strokeScore += 25;
+    else if (data.chronic_disease !== "None") strokeScore += 10;
+
+    if (data.stress_level > 7) strokeScore += 20;
+    else if (data.stress_level > 3) strokeScore += 10;
+
+    newRisks.stroke = Math.max(1, Math.min(100, Math.round(strokeScore)));
 
     setDiseaseRisks(newRisks);
   };
@@ -597,26 +627,14 @@ const HealthHomeScreen = () => {
     return "#FF3B30";
   };
 
-  const getRiskColor = (riskLevel) => {
-    switch (riskLevel) {
-      case "high":
-        return "#FF3B30";
-      case "medium":
-        return "#FFD60A";
-      default:
-        return "#34C759";
-    }
+  const getRiskColor = (riskPercentage) => {
+    if (riskPercentage >= 67) return "#FF3B30"; // High
+    if (riskPercentage >= 34) return "#FFD60A"; // Medium
+    return "#34C759"; // Low
   };
 
-  const getRiskProgress = (riskLevel) => {
-    switch (riskLevel) {
-      case "high":
-        return 0.8;
-      case "medium":
-        return 0.5;
-      default:
-        return 0.2;
-    }
+  const getRiskProgress = (riskPercentage) => {
+    return Math.max(0, Math.min(1, riskPercentage / 100));
   };
 
   const generatePersonalizedTips = () => {
@@ -634,8 +652,7 @@ const HealthHomeScreen = () => {
         { text: t.sleep78Hours || "Sleep 7-8 hours nightly", icon: "bed" },
       ];
 
-    // Add tips based on specific disease risks
-    if (diseaseRisks.obesity === "high" || diseaseRisks.obesity === "medium") {
+    if (diseaseRisks.obesity >= 50) {
       tips.push({
         text:
           t.manageWeightTips || "Maintain a calorie deficit to reduce weight",
@@ -643,10 +660,7 @@ const HealthHomeScreen = () => {
       });
     }
 
-    if (
-      diseaseRisks.hypertension === "high" ||
-      diseaseRisks.hypertension === "medium"
-    ) {
+    if (diseaseRisks.hypertension >= 50) {
       tips.push({
         text:
           t.lowerSodiumTips || "Reduce sodium intake to lower blood pressure",
@@ -654,7 +668,7 @@ const HealthHomeScreen = () => {
       });
     }
 
-    if (diseaseRisks.stroke === "high" || diseaseRisks.stroke === "medium") {
+    if (diseaseRisks.stroke >= 50) {
       tips.push({
         text:
           t.strokePreventionTips || "Regular exercise helps reduce stroke risk",
@@ -748,12 +762,9 @@ const HealthHomeScreen = () => {
   );
 
   const renderRiskCard = ({ item }) => {
-    const riskLevel = diseaseRisks[item.key];
-    // Get translated risk level
-    const translatedRisk =
-      riskLevel === "high" ? t.high : riskLevel === "medium" ? t.medium : t.low;
-    const color = getRiskColor(riskLevel);
-    const progress = getRiskProgress(riskLevel);
+    const riskPercentage = diseaseRisks[item.key];
+    const color = getRiskColor(riskPercentage);
+    const progress = getRiskProgress(riskPercentage);
 
     return (
       <Animated.View
@@ -771,7 +782,9 @@ const HealthHomeScreen = () => {
           />
           <View style={styles.riskTextContainer}>
             <Text style={styles.riskTitle}>{item.name}</Text>
-            <Text style={[styles.riskStatus, { color }]}>{translatedRisk}</Text>
+            <Text style={[styles.riskStatus, { color }]}>
+              {riskPercentage}% {t.risk || "Risk"}
+            </Text>
           </View>
         </View>
         <CustomProgressBar progress={progress} color={color} />
@@ -792,25 +805,15 @@ const HealthHomeScreen = () => {
   );
 
   const getOverallRiskLevel = () => {
-    const highRiskCount = Object.values(diseaseRisks).filter(
-      (risk) => risk === "high"
-    ).length;
-    const mediumRiskCount = Object.values(diseaseRisks).filter(
-      (risk) => risk === "medium"
-    ).length;
-
-    if (highRiskCount > 0) return t.high || "High";
-    if (mediumRiskCount > 0) return t.medium || "Medium";
+    const maxRisk = Math.max(...Object.values(diseaseRisks));
+    if (maxRisk >= 67) return t.high || "High";
+    if (maxRisk >= 34) return t.medium || "Medium";
     return t.low || "Low";
   };
 
   const getOverallRiskColor = () => {
-    const level = Object.values(diseaseRisks).some((risk) => risk === "high")
-      ? "high"
-      : Object.values(diseaseRisks).some((risk) => risk === "medium")
-      ? "medium"
-      : "low";
-    return getRiskColor(level);
+    const maxRisk = Math.max(...Object.values(diseaseRisks));
+    return getRiskColor(maxRisk);
   };
 
   const data = [
