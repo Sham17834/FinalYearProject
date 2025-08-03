@@ -11,10 +11,10 @@ app = FastAPI()
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=["*"],  
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],  
+    allow_headers=["*"],  
 )
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -52,10 +52,9 @@ class LifestyleInput(BaseModel):
 async def predict_risk(input_data: LifestyleInput):
     try:
         start_time = time.time()
-        # Convert input data to DataFrame
         data = pd.DataFrame([input_data.dict()])
 
-        # Verify all required features exist
+        # Validate input data
         if not all(feat in data.columns for feat in selected_features):
             missing = [feat for feat in selected_features if feat not in data.columns]
             raise HTTPException(status_code=400, detail=f"Missing features: {missing}")
