@@ -18,7 +18,7 @@ import {
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { LanguageContext } from "./LanguageContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SQLite from "expo-sqlite"; // Import expo-sqlite
 import { useRoute } from "@react-navigation/native";
 
 const screenWidth = Dimensions.get("window").width;
@@ -395,68 +395,47 @@ const ProgressScreen = () => {
     setError(null);
 
     try {
+      // Open the database
+      const db = await SQLite.openDatabaseAsync("userprofile.db");
+
       // Get data from navigation params (same as HealthHomeScreen)
       const navLifestyleData = route.params?.lifestyleData;
       const navPredictionData = route.params?.predictionData;
-
-      // Get stored data from AsyncStorage (same as HealthHomeScreen)
-      const storedProfileData = await AsyncStorage.getItem("userProfileData");
-      const storedPredictionData = await AsyncStorage.getItem("predictionData");
-      const storedHistoricalData = await AsyncStorage.getItem(
-        "historicalHealthData"
-      );
-
-      // Use navigation params first, then stored data as fallback
-      const currentLifestyleData =
-        navLifestyleData ||
-        (storedProfileData ? JSON.parse(storedProfileData) : null);
-      const currentPredictionData =
-        navPredictionData ||
-        (storedPredictionData ? JSON.parse(storedPredictionData) : null);
-
-      console.log(
-        "Progress Screen - Current lifestyle data:",
-        currentLifestyleData
-      );
-      console.log(
-        "Progress Screen - Current prediction data:",
-        currentPredictionData
-      );
 
       // Create current day entry from lifestyle data
       const today = new Date().toISOString().split("T")[0];
       let currentDayData = null;
 
-      if (currentLifestyleData) {
+      if (navLifestyleData) {
         currentDayData = {
           date: today,
-          daily_steps: Number(currentLifestyleData.Daily_Steps) || 0,
-          sleep_hours: Number(currentLifestyleData.Sleep_Hours) || 0,
-          bmi: Number(currentLifestyleData.BMI) || null,
-          age: Number(currentLifestyleData.Age) || null,
-          gender: currentLifestyleData.Gender || "Unknown",
-          height_cm: Number(currentLifestyleData.Height_cm) || null,
-          weight_kg: Number(currentLifestyleData.Weight_kg) || null,
-          chronic_disease: currentLifestyleData.Chronic_Disease || "None",
-          exercise_frequency:
-            Number(currentLifestyleData.Exercise_Frequency) || 0,
-          alcohol_consumption: currentLifestyleData.Alcohol_Consumption || "No",
-          smoking_habit: currentLifestyleData.Smoking_Habit || "No",
-          diet_quality: currentLifestyleData.Diet_Quality || "Average",
-          fruits_veggies: Number(currentLifestyleData.FRUITS_VEGGIES) || 0,
-          stress_level: Number(currentLifestyleData.Stress_Level) || 1,
-          screen_time_hours:
-            Number(currentLifestyleData.Screen_Time_Hours) || 0,
-          salt_intake: currentLifestyleData.Salt_Intake || "Moderate",
+          daily_steps: Number(navLifestyleData.Daily_Steps) || 0,
+          sleep_hours: Number(navLifestyleData.Sleep_Hours) || 0,
+          bmi: Number(navLifestyleData.BMI) || null,
+          age: Number(navLifestyleData.Age) || null,
+          gender: navLifestyleData.Gender || "Unknown",
+          height_cm: Number(navLifestyleData.Height_cm) || null,
+          weight_kg: Number(navLifestyleData.Weight_kg) || null,
+          chronic_disease: navLifestyleData.Chronic_Disease || "None",
+          exercise_frequency: Number(navLifestyleData.Exercise_Frequency) || 0,
+          alcohol_consumption: navLifestyleData.Alcohol_Consumption || "No",
+          smoking_habit: navLifestyleData.Smoking_Habit || "No",
+          diet_quality: navLifestyleData.Diet_Quality || "Average",
+          fruits_veggies: Number(navLifestyleData.FRUITS_VEGGIES) || 0,
+          stress_level: Number(navLifestyleData.Stress_Level) || 1,
+          screen_time_hours: Number(navLifestyleData.Screen_Time_Hours) || 0,
+          salt_intake: "Moderate", // Note: Salt intake not in input screen, defaulting to "Moderate"
         };
       }
 
-      // Get historical data
-      const parsedHistoricalData = storedHistoricalData
-        ? JSON.parse(storedHistoricalData)
-        : [];
-      const historicalData = parsedHistoricalData.map((item) => ({
-        date: item.date || new Date().toISOString().split("T")[0],
+      // Fetch historical data from UserProfile table
+      const historicalData = await db.getAllAsync(
+        "SELECT * FROM UserProfile ORDER BY id DESC"
+      );
+
+      // Transform historical data
+      const transformedHistoricalData = historicalData.map((item) => ({
+        date: new Date().toISOString().split("T")[0], // Assuming date is not stored; use current date as fallback
         daily_steps: Number(item.Daily_Steps) || 0,
         sleep_hours: Number(item.Sleep_Hours) || 0,
         bmi: Number(item.BMI) || null,
@@ -472,14 +451,14 @@ const ProgressScreen = () => {
         fruits_veggies: Number(item.FRUITS_VEGGIES) || 0,
         stress_level: Number(item.Stress_Level) || 1,
         screen_time_hours: Number(item.Screen_Time_Hours) || 0,
-        salt_intake: item.Salt_Intake || "Moderate",
+        salt_intake: "Moderate", // Note: Salt intake not in input screen, defaulting to "Moderate"
       }));
 
       // Combine all data sources: fallback + historical + current
       const allData = [...fallbackData];
 
       // Add historical data
-      historicalData.forEach((item) => {
+      transformedHistoricalData.forEach((item) => {
         const existingIndex = allData.findIndex(
           (existing) => existing.date === item.date
         );
@@ -507,7 +486,7 @@ const ProgressScreen = () => {
       );
     } catch (error) {
       console.error("Error fetching progress data:", error);
-      setError("Failed to load data");
+      setError("Failed to load data from database");
       setProgressData(fallbackData);
     } finally {
       setIsLoading(false);

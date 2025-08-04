@@ -17,6 +17,7 @@ import Slider from "@react-native-community/slider";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import { formatString } from "./translations";
+import * as SQLite from "expo-sqlite"; // Import expo-sqlite
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const styles = StyleSheet.create({
@@ -323,14 +324,40 @@ const LifestyleDataInputScreen = () => {
     };
 
     try {
+      // Open or create the database
+      const db = await SQLite.openDatabaseAsync("userprofile.db");
+      await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS UserProfile (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          Age INTEGER,
+          Gender TEXT,
+          Height_cm REAL,
+          Weight_kg REAL,
+          BMI REAL,
+          Chronic_Disease TEXT,
+          Daily_Steps REAL,
+          Exercise_Frequency REAL,
+          Sleep_Hours REAL,
+          Alcohol_Consumption TEXT,
+          Smoking_Habit TEXT,
+          Diet_Quality TEXT,
+          Stress_Level REAL,
+          FRUITS_VEGGIES REAL,
+          Screen_Time_Hours REAL
+        );
+        CREATE TABLE IF NOT EXISTS PredictionData (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          prediction TEXT
+        );
+      `);
+
       // Save to SQLite
-      const db = await openDB();
-      await db.executeSql(
+      await db.runAsync(
         `INSERT INTO UserProfile (
-        Age, Gender, Height_cm, Weight_kg, BMI, Chronic_Disease, 
-        Daily_Steps, Exercise_Frequency, Sleep_Hours, Alcohol_Consumption, 
-        Smoking_Habit, Diet_Quality, Stress_Level, FRUITS_VEGGIES, Screen_Time_Hours
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          Age, Gender, Height_cm, Weight_kg, BMI, Chronic_Disease, 
+          Daily_Steps, Exercise_Frequency, Sleep_Hours, Alcohol_Consumption, 
+          Smoking_Habit, Diet_Quality, Stress_Level, FRUITS_VEGGIES, Screen_Time_Hours
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           data.Age,
           data.Gender,
@@ -352,7 +379,7 @@ const LifestyleDataInputScreen = () => {
 
       // Make POST request to FastAPI
       const response = await fetch(
-        "https://https://lifestyle-api-zv69.onrender.com/predict",
+        "https://finalyearproject-c5hy.onrender.com/predict",
         {
           method: "POST",
           headers: {
@@ -372,11 +399,10 @@ const LifestyleDataInputScreen = () => {
 
       const predictionData = await response.json();
 
-      // Save prediction data to AsyncStorage
-      await db.executeSql(
-        `INSERT INTO PredictionData (prediction) VALUES (?)`,
-        [JSON.stringify(predictionData)]
-      );
+      // Save prediction data to SQLite
+      await db.runAsync(`INSERT INTO PredictionData (prediction) VALUES (?)`, [
+        JSON.stringify(predictionData),
+      ]);
 
       console.log("Submitting form data:", data);
       console.log("Prediction response:", predictionData);
