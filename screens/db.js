@@ -4,11 +4,10 @@ import * as SQLite from 'expo-sqlite';
 let db;
 
 export const getDb = async () => {
-  if (db) return db;            // reuse handle
+  if (db) return db;            
 
   db = await SQLite.openDatabaseAsync('userprofile.db');
 
-  // 1️⃣  Keep existing UserProfile (unchanged)
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS UserProfile (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +31,6 @@ export const getDb = async () => {
     );
   `);
 
-  // 2️⃣  NEW table for daily health records
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS HealthRecords (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

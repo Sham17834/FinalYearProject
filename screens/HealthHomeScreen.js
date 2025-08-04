@@ -427,11 +427,9 @@ const HealthHomeScreen = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Retrieve data from navigation params
         const data = route.params?.lifestyleData;
         const predictions = route.params?.predictionData;
 
-        // Retrieve stored data from AsyncStorage as fallback
         const storedProfileData = await AsyncStorage.getItem("userProfileData");
         const storedPredictionData = await AsyncStorage.getItem(
           "predictionData"

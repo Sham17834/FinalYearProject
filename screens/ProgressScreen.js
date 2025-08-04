@@ -326,7 +326,6 @@ const ProgressScreen = () => {
   const [error, setError] = useState(null);
   const scrollY = new Animated.Value(0);
 
-  // Fallback data with proper structure
   const fallbackData = useMemo(
     () => [
       {
@@ -395,10 +394,8 @@ const ProgressScreen = () => {
     setError(null);
 
     try {
-      // Open the database
       const db = await SQLite.openDatabaseAsync("userprofile.db");
 
-      // Create UserProfile table if it doesn't exist
       await db.execAsync(`
       CREATE TABLE IF NOT EXISTS UserProfile (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -422,11 +419,9 @@ const ProgressScreen = () => {
       );
     `);
 
-      // Get data from navigation params
       const navLifestyleData = route.params?.lifestyleData;
       const navPredictionData = route.params?.predictionData;
 
-      // Create current day entry from lifestyle data
       const today = new Date().toISOString().split("T")[0];
       let currentDayData = null;
 
@@ -448,18 +443,16 @@ const ProgressScreen = () => {
           fruits_veggies: Number(navLifestyleData.FRUITS_VEGGIES) || 0,
           stress_level: Number(navLifestyleData.Stress_Level) || 1,
           screen_time_hours: Number(navLifestyleData.Screen_Time_Hours) || 0,
-          salt_intake: "Moderate", // Note: Salt intake not in input screen, defaulting to "Moderate"
+          salt_intake: "Moderate", 
         };
       }
 
-      // Fetch historical data from UserProfile table
       const historicalData = await db.getAllAsync(
         "SELECT * FROM UserProfile ORDER BY id DESC"
       );
 
-      // Transform historical data
       const transformedHistoricalData = historicalData.map((item) => ({
-        date: new Date().toISOString().split("T")[0], // Assuming date is not stored; use current date as fallback
+        date: new Date().toISOString().split("T")[0], 
         daily_steps: Number(item.Daily_Steps) || 0,
         sleep_hours: Number(item.Sleep_Hours) || 0,
         bmi: Number(item.BMI) || null,
@@ -475,13 +468,11 @@ const ProgressScreen = () => {
         fruits_veggies: Number(item.FRUITS_VEGGIES) || 0,
         stress_level: Number(item.Stress_Level) || 1,
         screen_time_hours: Number(item.Screen_Time_Hours) || 0,
-        salt_intake: "Moderate", // Note: Salt intake not in input screen, defaulting to "Moderate"
+        salt_intake: "Moderate", 
       }));
 
-      // Combine all data sources: fallback + historical + current
       const allData = [...fallbackData];
 
-      // Add historical data
       transformedHistoricalData.forEach((item) => {
         const existingIndex = allData.findIndex(
           (existing) => existing.date === item.date
@@ -493,7 +484,6 @@ const ProgressScreen = () => {
         }
       });
 
-      // Add current day data (highest priority)
       if (currentDayData) {
         const existingIndex = allData.findIndex(
           (existing) => existing.date === currentDayData.date
@@ -532,7 +522,6 @@ const ProgressScreen = () => {
 
     const risks = { obesity: 1, hypertension: 1, stroke: 1 };
 
-    // Obesity risk calculation
     let obesityScore = 0;
     if (data.bmi >= 30) obesityScore += 50;
     else if (data.bmi >= 25) obesityScore += 30;
@@ -549,7 +538,6 @@ const ProgressScreen = () => {
 
     risks.obesity = Math.max(1, Math.min(100, Math.round(obesityScore)));
 
-    // Hypertension risk calculation
     let hypertensionScore = 0;
     if (data.bmi >= 30) hypertensionScore += 30;
     else if (data.bmi >= 25) hypertensionScore += 15;
@@ -571,7 +559,6 @@ const ProgressScreen = () => {
       Math.min(100, Math.round(hypertensionScore))
     );
 
-    // Stroke risk calculation
     let strokeScore = 0;
     if (data.bmi >= 30) strokeScore += 25;
     else if (data.bmi >= 25) strokeScore += 15;
@@ -595,59 +582,49 @@ const ProgressScreen = () => {
 
     let score = 0;
 
-    // BMI score (15 points max)
     if (data.bmi >= 18.5 && data.bmi < 25) score += 15;
     else if (data.bmi < 18.5 || data.bmi < 30) score += 8;
     else score += 3;
 
-    // Steps score (10 points max)
     if (data.daily_steps >= 10000) score += 10;
     else if (data.daily_steps >= 7000) score += 7;
     else if (data.daily_steps >= 5000) score += 4;
     else score += 1;
 
-    // Exercise frequency (15 points max)
     if (data.exercise_frequency >= 5) score += 15;
     else if (data.exercise_frequency >= 3) score += 10;
     else if (data.exercise_frequency >= 1) score += 5;
     else score += 1;
 
-    // Sleep hours (15 points max)
     if (data.sleep_hours >= 7 && data.sleep_hours <= 9) score += 15;
     else if (data.sleep_hours === 6 || data.sleep_hours === 10) score += 10;
     else score += 5;
 
-    // Fruits and veggies (10 points max)
     if (data.fruits_veggies >= 5) score += 10;
     else if (data.fruits_veggies >= 3) score += 7;
     else if (data.fruits_veggies >= 1) score += 3;
     else score += 0;
 
-    // Smoking and alcohol (10 points max)
     const isNonSmoker = data.smoking_habit === "No";
     const isLowAlcohol = data.alcohol_consumption === "No";
     if (isNonSmoker && isLowAlcohol) score += 10;
     else if (isNonSmoker || isLowAlcohol) score += 5;
     else score += 0;
 
-    // Screen time (5 points max)
     if (data.screen_time_hours < 2) score += 5;
     else if (data.screen_time_hours <= 4) score += 3;
     else if (data.screen_time_hours <= 6) score += 1;
     else score += 0;
 
-    // Diet quality (10 points max)
     if (data.diet_quality === "Excellent") score += 10;
     else if (data.diet_quality === "Good") score += 7;
     else if (data.diet_quality === "Average") score += 4;
     else score += 1;
 
-    // Stress level (5 points max)
     if (data.stress_level <= 3) score += 5;
     else if (data.stress_level <= 6) score += 3;
     else score += 1;
 
-    // Chronic disease (5 points max)
     if (data.chronic_disease === "None") score += 5;
     else score += 0;
 

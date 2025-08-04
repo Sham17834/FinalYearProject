@@ -396,11 +396,9 @@ const TrackScreen = () => {
     };
 
     try {
-      // Get the database connection
       const db = await getDb();
       console.log("Database opened successfully");
 
-      // Insert data into HealthRecords table
       await db.runAsync(
         `INSERT INTO HealthRecords (
         date, daily_steps, sleep_hours, bmi, age, gender, height_cm, weight_kg,
@@ -479,7 +477,6 @@ const TrackScreen = () => {
             {t.trackTagline || "Record your health metrics"}
           </Text>
         </View>
-        {/* Record Header */}
         <View style={styles.recordHeader}>
           <Text style={styles.recordTitle}>
             {t.healthAssessmentRecord || "Health Assessment Record"}
@@ -488,7 +485,6 @@ const TrackScreen = () => {
             {t.date || "Date"}: {currentDate}
           </Text>
         </View>
-        {/* Personal Information */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
@@ -524,7 +520,6 @@ const TrackScreen = () => {
             </View>
           </View>
         </View>
-        {/* Physical Measurements */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
@@ -575,7 +570,6 @@ const TrackScreen = () => {
             </View>
           </View>
         </View>
-        {/* Medical History */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
@@ -603,7 +597,6 @@ const TrackScreen = () => {
             </View>
           </View>
         </View>
-        {/* Activity & Exercise */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
@@ -664,7 +657,6 @@ const TrackScreen = () => {
             </View>
           </View>
         </View>
-        {/* Sleep & Recovery */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
@@ -700,7 +692,6 @@ const TrackScreen = () => {
             </View>
           </View>
         </View>
-        {/* Lifestyle Habits */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
@@ -766,7 +757,6 @@ const TrackScreen = () => {
             </View>
           </View>
         </View>
-        {/* Nutrition */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
@@ -821,7 +811,6 @@ const TrackScreen = () => {
             </View>
           </View>
         </View>
-        {/* Mental Health */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
@@ -869,7 +858,6 @@ const TrackScreen = () => {
             </View>
           </View>
         </View>
-        {/* Submit Section */}
         <View style={styles.submitSection}>
           <TouchableOpacity
             style={[
