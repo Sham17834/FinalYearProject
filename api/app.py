@@ -1,25 +1,32 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware  # 
 from pydantic import BaseModel
 import numpy as np
 import joblib
 
-# -----------------------------
-# ✅ Load pre-trained artifacts
-rf_model = joblib.load('rf_model.pkl')
-scaler = joblib.load('scaler_rf.pkl')
-label_encoders = joblib.load('label_encoders_rf.pkl')
-selected_features = joblib.load('selected_features_rf.pkl')
+# Load pre-trained artifacts
+model = joblib.load('api/XGBoost_model.pkl')
+scaler = joblib.load('api/scaler_final.pkl')
+label_encoders = joblib.load('api/label_encoders_final.pkl')
+selected_features = joblib.load('api/selected_features_final.pkl')
 
-# -----------------------------
-# ✅ FastAPI app
+# FastAPI app
 app = FastAPI(
-    title="Multi-label Random Forest API (with Probability)",
+    title="Multi-label XGBoost API",
     description="Predict Obesity, Hypertension, Stroke risk with probability.",
     version="1.0"
 )
 
-# -----------------------------
-# ✅ Input schema
+# Add CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Input schema and predict stays the same
 class InputData(BaseModel):
     Age: int
     Gender: str
@@ -37,37 +44,27 @@ class InputData(BaseModel):
     FRUITS_VEGGIES: float
     Screen_Time_Hours: float
 
-# -----------------------------
-# ✅ Predict endpoint
 @app.post("/predict")
 async def predict(data: InputData):
     try:
-        # -----------------------------
-        # Convert to dict & DataFrame
         input_data = data.dict()
-        input_df = {}
 
+        input_processed = {}
         for col in selected_features:
-            value = input_data[col]
+            val = input_data[col]
             if col in label_encoders:
                 encoder = label_encoders[col]
-                value = encoder.transform([value])[0]
-            input_df[col] = [value]
+                val = encoder.transform([val])[0]
+            input_processed[col] = val
 
-        # -----------------------------
-        # Scale
-        X = np.array([list(input_df.values())])
+        X = np.array([list(input_processed.values())])
         X_scaled = scaler.transform(X)
 
-        # -----------------------------
-        # Predict
-        pred = rf_model.predict(X_scaled)[0].tolist()
+        pred = model.predict(X_scaled)[0].tolist()
 
-        # -----------------------------
-        # Probability for each label
         proba = []
-        for estimator in rf_model.estimators_:
-            prob = estimator.predict_proba(X_scaled)[0][1]  # Prob of class 1
+        for estimator in model.estimators_:
+            prob = estimator.predict_proba(X_scaled)[0][1]
             proba.append(float(prob))
 
         return {

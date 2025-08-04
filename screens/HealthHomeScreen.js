@@ -15,6 +15,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import Svg, { Circle } from "react-native-svg";
 import { LanguageContext } from "./LanguageContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 const isIOS = Platform.OS === "ios";
@@ -297,7 +298,6 @@ const CustomProgressBar = ({ progress, color }) => {
   const animatedWidth = new Animated.Value(0);
 
   useEffect(() => {
-    // Clamp progress to [0, 1]
     const clampedProgress = Math.max(0, Math.min(1, progress));
     Animated.timing(animatedWidth, {
       toValue: clampedProgress,
@@ -385,7 +385,6 @@ const AnimatedProgressCircle = ({
           },
         ]}
       />
-
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <Circle
           cx={halfSize}
@@ -402,7 +401,6 @@ const AnimatedProgressCircle = ({
           origin={`${halfSize}, ${halfSize}`}
         />
       </Svg>
-
       <View style={{ position: "absolute", alignItems: "center" }}>
         <Text style={styles.progressNumber}>{percentage || 0}</Text>
         <Text style={styles.progressSubtext}>{t.outOf100 || "out of 100"}</Text>
@@ -416,6 +414,7 @@ const HealthHomeScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const [lifestyleData, setLifestyleData] = useState(null);
+  const [predictionData, setPredictionData] = useState(null);
   const [localScore, setLocalScore] = useState(75);
   const [diseaseRisks, setDiseaseRisks] = useState({
     obesity: 1,
@@ -426,155 +425,127 @@ const HealthHomeScreen = () => {
   const slideAnim = new Animated.Value(10);
 
   useEffect(() => {
-    const data = route.params?.lifestyleData;
-    console.log("Received lifestyleData:", data);
-    if (data) {
-      setLifestyleData(data);
-      calculateLocalScore(data);
-      calculateDiseaseRisks(data);
-    }
+    const fetchData = async () => {
+      try {
+        // Retrieve data from navigation params
+        const data = route.params?.lifestyleData;
+        const predictions = route.params?.predictionData;
 
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      fadeAnim.setValue(1);
-      slideAnim.setValue(0);
-    });
+        // Retrieve stored data from AsyncStorage as fallback
+        const storedProfileData = await AsyncStorage.getItem("userProfileData");
+        const storedPredictionData = await AsyncStorage.getItem(
+          "predictionData"
+        );
+
+        const lifestyle =
+          data || (storedProfileData ? JSON.parse(storedProfileData) : null);
+        const prediction =
+          predictions ||
+          (storedPredictionData ? JSON.parse(storedPredictionData) : null);
+
+        console.log("Received lifestyleData:", lifestyle);
+        console.log("Received predictionData:", prediction);
+
+        if (lifestyle) {
+          setLifestyleData(lifestyle);
+          calculateLocalScore(lifestyle);
+        }
+
+        if (
+          prediction &&
+          prediction.Obesity_Flag?.probability != null &&
+          prediction.Hypertension_Flag?.probability != null &&
+          prediction.Stroke_Flag?.probability != null
+        ) {
+          setPredictionData(prediction);
+          setDiseaseRisks({
+            obesity: Number(
+              (prediction.Obesity_Flag.probability * 100).toFixed(2)
+            ),
+            hypertension: Number(
+              (prediction.Hypertension_Flag.probability * 100).toFixed(2)
+            ),
+            stroke: Number(
+              (prediction.Stroke_Flag.probability * 100).toFixed(2)
+            ),
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        fadeAnim.setValue(1);
+        slideAnim.setValue(0);
+      });
+    };
+
+    fetchData();
   }, [route.params]);
 
   const calculateLocalScore = (data) => {
     if (!data) return setLocalScore(0);
     let score = 0;
 
-    if (data.bmi >= 18.5 && data.bmi < 25) score += 15;
-    else if (data.bmi < 18.5 || data.bmi < 30) score += 8;
+    if (data.BMI >= 18.5 && data.BMI < 25) score += 15;
+    else if (data.BMI < 18.5 || data.BMI < 30) score += 8;
     else score += 3;
 
-    if (data.daily_steps >= 10000) score += 10;
-    else if (data.daily_steps >= 7000) score += 7;
-    else if (data.daily_steps >= 5000) score += 4;
+    if (data.Daily_Steps >= 10000) score += 10;
+    else if (data.Daily_Steps >= 7000) score += 7;
+    else if (data.Daily_Steps >= 5000) score += 4;
     else score += 1;
 
-    if (data.exercise_frequency >= 5) score += 15;
-    else if (data.exercise_frequency >= 3) score += 10;
-    else if (data.exercise_frequency >= 1) score += 5;
+    if (data.Exercise_Frequency >= 5) score += 15;
+    else if (data.Exercise_Frequency >= 3) score += 10;
+    else if (data.Exercise_Frequency >= 1) score += 5;
     else score += 1;
 
-    if (data.sleep_hours >= 7 && data.sleep_hours <= 9) score += 15;
-    else if (data.sleep_hours === 6 || data.sleep_hours === 10) score += 10;
+    if (data.Sleep_Hours >= 7 && data.Sleep_Hours <= 9) score += 15;
+    else if (data.Sleep_Hours === 6 || data.Sleep_Hours === 10) score += 10;
     else score += 5;
 
-    if (data.fruits_veggies >= 5) score += 10;
-    else if (data.fruits_veggies >= 3) score += 7;
-    else if (data.fruits_veggies >= 1) score += 3;
+    if (data.FRUITS_VEGGIES >= 5) score += 10;
+    else if (data.FRUITS_VEGGIES >= 3) score += 7;
+    else if (data.FRUITS_VEGGIES >= 1) score += 3;
     else score += 0;
 
-    const isNonSmoker = data.smoking_habit === "No";
-    const isLowAlcohol = data.alcohol_consumption === "No";
+    const isNonSmoker = data.Smoking_Habit === "No";
+    const isLowAlcohol = data.Alcohol_Consumption === "No";
     if (isNonSmoker && isLowAlcohol) score += 10;
     else if (isNonSmoker || isLowAlcohol) score += 5;
     else score += 0;
 
-    if (data.screen_time_hours < 2) score += 5;
-    else if (data.screen_time_hours <= 4) score += 3;
-    else if (data.screen_time_hours <= 6) score += 1;
+    if (data.Screen_Time_Hours < 2) score += 5;
+    else if (data.Screen_Time_Hours <= 4) score += 3;
+    else if (data.Screen_Time_Hours <= 6) score += 1;
     else score += 0;
 
-    if (data.diet_quality === "Excellent") score += 10;
-    else if (data.diet_quality === "Good") score += 7;
-    else if (data.diet_quality === "Average") score += 4;
+    if (data.Diet_Quality === "Excellent") score += 10;
+    else if (data.Diet_Quality === "Good") score += 7;
+    else if (data.Diet_Quality === "Average") score += 4;
     else score += 1;
 
-    if (data.stress_level <= 3) score += 5;
-    else if (data.stress_level <= 6) score += 3;
+    if (data.Stress_Level <= 3) score += 5;
+    else if (data.Stress_Level <= 6) score += 3;
     else score += 1;
 
-    if (data.chronic_disease === "None") score += 5;
+    if (data.Chronic_Disease === "None") score += 5;
     else score += 0;
 
     const finalScore = Math.min(Math.round(score), 100);
     setLocalScore(finalScore);
-  };
-
-  const calculateDiseaseRisks = (data) => {
-    if (!data) {
-      setDiseaseRisks({ obesity: 1, hypertension: 1, stroke: 1 });
-      return;
-    }
-
-    const newRisks = {
-      obesity: 1,
-      hypertension: 1,
-      stroke: 1,
-    };
-
-    // Obesity risk: Based on BMI, diet quality, and exercise
-    let obesityScore = 0;
-    if (data.bmi >= 30) obesityScore += 50;
-    else if (data.bmi >= 25) obesityScore += 30;
-    else if (data.bmi < 18.5) obesityScore += 10;
-    else obesityScore += 0;
-
-    if (data.fruits_veggies < 3) obesityScore += 20;
-    else if (data.fruits_veggies < 5) obesityScore += 10;
-
-    if (data.exercise_frequency < 1) obesityScore += 20;
-    else if (data.exercise_frequency < 3) obesityScore += 10;
-
-    if (data.diet_quality === "Poor") obesityScore += 20;
-    else if (data.diet_quality === "Average") obesityScore += 10;
-
-    newRisks.obesity = Math.max(1, Math.min(100, Math.round(obesityScore)));
-
-    // Hypertension risk: Based on BMI, steps, salt intake, alcohol, stress
-    let hypertensionScore = 0;
-    if (data.bmi >= 30) hypertensionScore += 30;
-    else if (data.bmi >= 25) hypertensionScore += 15;
-
-    if (data.daily_steps < 5000) hypertensionScore += 20;
-    else if (data.daily_steps < 7000) hypertensionScore += 10;
-
-    if (data.salt_intake?.toUpperCase() === "HIGH") hypertensionScore += 20;
-    else if (data.salt_intake?.toUpperCase() === "MODERATE")
-      hypertensionScore += 10;
-
-    if (data.alcohol_consumption === "Yes") hypertensionScore += 15;
-
-    if (data.stress_level > 7) hypertensionScore += 20;
-    else if (data.stress_level > 3) hypertensionScore += 10;
-
-    newRisks.hypertension = Math.max(
-      1,
-      Math.min(100, Math.round(hypertensionScore))
-    );
-
-    // Stroke risk: Based on BMI, smoking, alcohol, chronic disease, stress
-    let strokeScore = 0;
-    if (data.bmi >= 30) strokeScore += 25;
-    else if (data.bmi >= 25) strokeScore += 15;
-
-    if (data.smoking_habit === "Yes") strokeScore += 25;
-
-    if (data.alcohol_consumption === "Yes") strokeScore += 15;
-
-    if (data.chronic_disease === "Hypertension") strokeScore += 25;
-    else if (data.chronic_disease !== "None") strokeScore += 10;
-
-    if (data.stress_level > 7) strokeScore += 20;
-    else if (data.stress_level > 3) strokeScore += 10;
-
-    newRisks.stroke = Math.max(1, Math.min(100, Math.round(strokeScore)));
-
-    setDiseaseRisks(newRisks);
   };
 
   const formatNumber = (num) => {
@@ -628,9 +599,9 @@ const HealthHomeScreen = () => {
   };
 
   const getRiskColor = (riskPercentage) => {
-    if (riskPercentage >= 67) return "#FF3B30"; // High
-    if (riskPercentage >= 34) return "#FFD60A"; // Medium
-    return "#34C759"; // Low
+    if (riskPercentage >= 67) return "#FF3B30";
+    if (riskPercentage >= 34) return "#FFD60A";
+    return "#34C759";
   };
 
   const getRiskProgress = (riskPercentage) => {
@@ -677,21 +648,21 @@ const HealthHomeScreen = () => {
     }
 
     if (tips.length < 3) {
-      if (lifestyleData.exercise_frequency < 3) {
+      if (lifestyleData.Exercise_Frequency < 3) {
         tips.push({
           text: t.increasePhysicalActivity || "Try to exercise 3+ days/week",
           icon: "directions-run",
         });
       }
 
-      if (lifestyleData.sleep_hours < 7 || lifestyleData.sleep_hours > 9) {
+      if (lifestyleData.Sleep_Hours < 7 || lifestyleData.Sleep_Hours > 9) {
         tips.push({
           text: t.improvesSleepQuality || "Aim for 7-9 hours of sleep nightly",
           icon: "bed",
         });
       }
 
-      if (lifestyleData.fruits_veggies < 5) {
+      if (lifestyleData.FRUITS_VEGGIES < 5) {
         tips.push({
           text:
             t.eatMoreFruitsVeggies || "Eat 5+ servings of fruits/veggies daily",
@@ -765,6 +736,11 @@ const HealthHomeScreen = () => {
     const riskPercentage = diseaseRisks[item.key];
     const color = getRiskColor(riskPercentage);
     const progress = getRiskProgress(riskPercentage);
+    const predictionStatus = predictionData?.[
+      `${item.key.charAt(0).toUpperCase() + item.key.slice(1)}_Flag`
+    ]?.prediction
+      ? t.highRisk || "High Risk"
+      : t.lowRisk || "Low Risk";
 
     return (
       <Animated.View
@@ -783,7 +759,8 @@ const HealthHomeScreen = () => {
           <View style={styles.riskTextContainer}>
             <Text style={styles.riskTitle}>{item.name}</Text>
             <Text style={[styles.riskStatus, { color }]}>
-              {riskPercentage}% {t.risk || "Risk"}
+              {riskPercentage.toFixed(2)}% {t.risk || "Risk"} (
+              {predictionStatus})
             </Text>
           </View>
         </View>
@@ -827,6 +804,25 @@ const HealthHomeScreen = () => {
   ];
 
   const renderItem = ({ item }) => {
+    if (!predictionData && item.type !== "recalculate") {
+      return (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>
+            {t.noData ||
+              "Please submit your lifestyle data to view your health risk predictions."}
+          </Text>
+          <TouchableOpacity
+            style={styles.recalculateButton}
+            onPress={() => navigation.navigate("LifestyleDataInput")}
+          >
+            <Text style={styles.recalculateButtonText}>
+              {t.recalculate || "Submit Lifestyle Data"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     switch (item.type) {
       case "header":
         return (
@@ -872,33 +868,33 @@ const HealthHomeScreen = () => {
             <View style={styles.metricsGrid}>
               {renderMetricCard(
                 t.bmiLabel?.replace(": ", "") || "BMI",
-                lifestyleData?.bmi?.toFixed(1) ?? t.unknown,
-                getBMICategory(lifestyleData?.bmi) ?? t.unknown,
+                lifestyleData?.BMI?.toFixed(1) ?? t.unknown,
+                getBMICategory(lifestyleData?.BMI) ?? t.unknown,
                 "accessibility",
-                getBMIColor(lifestyleData?.bmi)
+                getBMIColor(lifestyleData?.BMI)
               )}
               {renderMetricCard(
                 t.steps || "Steps",
-                formatNumber(lifestyleData?.daily_steps) ?? "0",
+                formatNumber(lifestyleData?.Daily_Steps) ?? "0",
                 t.daily || "Daily",
                 "directions-walk",
                 "#326db9ff"
               )}
               {renderMetricCard(
                 t.sleep || "Sleep",
-                lifestyleData?.sleep_hours !== undefined
-                  ? `${lifestyleData.sleep_hours}h`
+                lifestyleData?.Sleep_Hours !== undefined
+                  ? `${lifestyleData.Sleep_Hours}h`
                   : `0${t.hours?.toLowerCase() || "h"}`,
-                getSleepStatus(lifestyleData?.sleep_hours) ?? t.unknown,
+                getSleepStatus(lifestyleData?.Sleep_Hours) ?? t.unknown,
                 "bed",
                 "#8A2BE2"
               )}
               {renderMetricCard(
                 t.exercise || "Exercise",
-                lifestyleData?.exercise_frequency !== undefined
-                  ? `${lifestyleData.exercise_frequency}/${t.week || "week"}`
+                lifestyleData?.Exercise_Frequency !== undefined
+                  ? `${lifestyleData.Exercise_Frequency}/${t.week || "week"}`
                   : `0/${t.week || "week"}`,
-                getExerciseStatus(lifestyleData?.exercise_frequency) ??
+                getExerciseStatus(lifestyleData?.Exercise_Frequency) ??
                   t.unknown,
                 "fitness-center",
                 "#FF9500"
@@ -914,15 +910,15 @@ const HealthHomeScreen = () => {
             </Text>
             {renderFullWidthMetricCard(
               t.dietQuality || "Diet Quality",
-              lifestyleData?.diet_quality ?? t.unknown,
+              lifestyleData?.Diet_Quality ?? t.unknown,
               "",
               "restaurant",
               "#4CAF50"
             )}
             {renderFullWidthMetricCard(
               t.fruitsVeggies || "Fruits & Vegetables",
-              lifestyleData?.fruits_veggies !== undefined
-                ? `${lifestyleData.fruits_veggies} ${
+              lifestyleData?.FRUITS_VEGGIES !== undefined
+                ? `${lifestyleData.FRUITS_VEGGIES} ${
                     t.servingsPerDay || "servings/day"
                   }`
                 : `0 ${t.servingsPerDay || "servings/day"}`,
@@ -932,17 +928,17 @@ const HealthHomeScreen = () => {
             )}
             {renderFullWidthMetricCard(
               t.stressLevel || "Stress Level",
-              getStressLevelText(lifestyleData?.stress_level) ?? t.unknown,
-              lifestyleData?.stress_level !== undefined
-                ? `${lifestyleData.stress_level}/10`
+              getStressLevelText(lifestyleData?.Stress_Level) ?? t.unknown,
+              lifestyleData?.Stress_Level !== undefined
+                ? `${lifestyleData.Stress_Level}/10`
                 : `0/10`,
               "mood",
-              getStressColor(lifestyleData?.stress_level)
+              getStressColor(lifestyleData?.Stress_Level)
             )}
             {renderFullWidthMetricCard(
               t.screenTime || "Screen Time",
-              lifestyleData?.screen_time_hours !== undefined
-                ? `${lifestyleData.screen_time_hours}h`
+              lifestyleData?.Screen_Time_Hours !== undefined
+                ? `${lifestyleData.Screen_Time_Hours}h`
                 : `0${t.hours?.toLowerCase() || "h"}`,
               t.perDay || "per day",
               "devices",
@@ -1009,7 +1005,7 @@ const HealthHomeScreen = () => {
               onPress={() => navigation.navigate("LifestyleDataInput")}
             >
               <Text style={styles.recalculateButtonText}>
-                {t.recalculate || "Update Lifestyle Data"}
+                {t.recalculate || "Submit Lifestyle Data"}
               </Text>
             </TouchableOpacity>
           </Animated.View>

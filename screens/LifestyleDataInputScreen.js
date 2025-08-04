@@ -305,36 +305,65 @@ const LifestyleDataInputScreen = () => {
     setIsSubmitting(true);
 
     const data = {
-      email: route.params?.email || "",
-      age: parseInt(age),
-      gender,
-      height_cm: parseFloat(heightCm),
-      weight_kg: parseFloat(weightKg),
-      bmi: parseFloat(bmi),
-      chronic_disease: chronicDisease,
-      daily_steps: dailySteps,
-      exercise_frequency: exerciseFrequency,
-      sleep_hours: sleepHours,
-      alcohol_consumption: alcoholConsumption ? "Yes" : "No",
-      smoking_habit: smokingHabit ? "Yes" : "No",
-      diet_quality: dietQuality,
-      fruits_veggies: fruitsVeggies,
-      stress_level: stressLevel,
-      screen_time_hours: screenTimeHours,
+      Age: parseInt(age),
+      Gender: gender,
+      Height_cm: parseFloat(heightCm),
+      Weight_kg: parseFloat(weightKg),
+      BMI: parseFloat(bmi),
+      Chronic_Disease: chronicDisease,
+      Daily_Steps: dailySteps,
+      Exercise_Frequency: exerciseFrequency,
+      Sleep_Hours: sleepHours,
+      Alcohol_Consumption: alcoholConsumption ? "Yes" : "No",
+      Smoking_Habit: smokingHabit ? "Yes" : "No",
+      Diet_Quality: dietQuality,
+      Stress_Level: stressLevel,
+      FRUITS_VEGGIES: fruitsVeggies,
+      Screen_Time_Hours: screenTimeHours,
     };
 
     try {
-      // Save the lifestyle data to AsyncStorage
+      // Save to AsyncStorage
       await AsyncStorage.setItem("userProfileData", JSON.stringify(data));
 
+      // Make POST request to FastAPI
+      const response = await fetch("http://127.0.0.1:8000/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.detail || "Failed to get prediction from server"
+        );
+      }
+
+      const predictionData = await response.json();
+
+      // Save prediction data to AsyncStorage
+      await AsyncStorage.setItem(
+        "predictionData",
+        JSON.stringify(predictionData)
+      );
+
       console.log("Submitting form data:", data);
+      console.log("Prediction response:", predictionData);
+
+      // Navigate to HealthHomeScreen with data
       navigation.navigate("MainApp", {
         screen: "Home",
-        params: { lifestyleData: data },
+        params: { lifestyleData: data, predictionData },
       });
     } catch (error) {
-      console.error("Error saving profile data:", error);
-      Alert.alert(t.error || "Error", "Failed to save profile data.");
+      console.error("Error during submission:", error);
+      Alert.alert(
+        t.error || "Error",
+        error.message || "Failed to process request."
+      );
     } finally {
       setIsSubmitting(false);
     }
