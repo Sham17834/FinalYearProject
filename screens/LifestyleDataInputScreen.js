@@ -323,31 +323,59 @@ const LifestyleDataInputScreen = () => {
     };
 
     try {
-      // Save to AsyncStorage
-      await AsyncStorage.setItem("userProfileData", JSON.stringify(data));
+      // Save to SQLite
+      const db = await openDB();
+      await db.executeSql(
+        `INSERT INTO UserProfile (
+        Age, Gender, Height_cm, Weight_kg, BMI, Chronic_Disease, 
+        Daily_Steps, Exercise_Frequency, Sleep_Hours, Alcohol_Consumption, 
+        Smoking_Habit, Diet_Quality, Stress_Level, FRUITS_VEGGIES, Screen_Time_Hours
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          data.Age,
+          data.Gender,
+          data.Height_cm,
+          data.Weight_kg,
+          data.BMI,
+          data.Chronic_Disease,
+          data.Daily_Steps,
+          data.Exercise_Frequency,
+          data.Sleep_Hours,
+          data.Alcohol_Consumption,
+          data.Smoking_Habit,
+          data.Diet_Quality,
+          data.Stress_Level,
+          data.FRUITS_VEGGIES,
+          data.Screen_Time_Hours,
+        ]
+      );
 
       // Make POST request to FastAPI
-      const response = await fetch("http://192.168.0.107:8000/predict", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await fetch(
+        "https://https://lifestyle-api-zv69.onrender.com/predict",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        }
+      );
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.detail || "Failed to get prediction from server"
+          errorData.detail ||
+            `HTTP error ${response.status}: Failed to get prediction from server`
         );
       }
 
       const predictionData = await response.json();
 
       // Save prediction data to AsyncStorage
-      await AsyncStorage.setItem(
-        "predictionData",
-        JSON.stringify(predictionData)
+      await db.executeSql(
+        `INSERT INTO PredictionData (prediction) VALUES (?)`,
+        [JSON.stringify(predictionData)]
       );
 
       console.log("Submitting form data:", data);
@@ -359,10 +387,11 @@ const LifestyleDataInputScreen = () => {
         params: { lifestyleData: data, predictionData },
       });
     } catch (error) {
-      console.error("Error during submission:", error);
+      console.error("Error during submission:", error.message, error.stack);
       Alert.alert(
         t.error || "Error",
-        error.message || "Failed to process request."
+        error.message ||
+          "Failed to process request. Please check your internet connection or try again later."
       );
     } finally {
       setIsSubmitting(false);

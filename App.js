@@ -14,6 +14,7 @@ import TrackScreen from './screens/TrackScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import { LanguageProvider, LanguageContext } from './screens/LanguageContext';
 import { getTranslations } from './screens/translations';
+import "setimmediate";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
