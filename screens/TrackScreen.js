@@ -15,7 +15,7 @@ import { Picker } from "@react-native-picker/picker";
 import Slider from "@react-native-community/slider";
 import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
-import { mockStorage } from "../storage.js";
+import * as SQLite from "expo-sqlite";
 
 const getCurrentDate = () => {
   const today = new Date();
@@ -371,7 +371,7 @@ const TrackScreen = () => {
     return true;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
@@ -393,14 +393,83 @@ const TrackScreen = () => {
       fruits_veggies: fruitsVeggies,
       stress_level: stressLevel,
       screen_time_hours: screenTimeHours,
+      salt_intake: "Moderate",
     };
-    mockStorage.push(data);
-    console.log("Health record saved:", data);
-    navigation.navigate("MainApp", {
-      screen: "Progress",
-      params: { lifestyleData: data },
-    });
-    setIsSubmitting(false);
+
+    try {
+      // Open the database asynchronously
+      const db = await SQLite.openDatabaseAsync("userprofile.db");
+      console.log("Database opened successfully");
+
+      // Create UserProfile table if it doesn't exist
+      await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS UserProfile (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          date TEXT,
+          Daily_Steps INTEGER,
+          Sleep_Hours REAL,
+          BMI REAL,
+          Age INTEGER,
+          Gender TEXT,
+          Height_cm REAL,
+          Weight_kg REAL,
+          Chronic_Disease TEXT,
+          Exercise_Frequency INTEGER,
+          Alcohol_Consumption TEXT,
+          Smoking_Habit TEXT,
+          Diet_Quality TEXT,
+          FRUITS_VEGGIES INTEGER,
+          Stress_Level INTEGER,
+          Screen_Time_Hours REAL,
+          Salt_Intake TEXT
+        );
+      `);
+      console.log("Table created or already exists");
+
+      // Insert data into UserProfile table
+      await db.runAsync(
+        `
+        INSERT INTO UserProfile (
+          date, Daily_Steps, Sleep_Hours, BMI, Age, Gender, Height_cm, Weight_kg,
+          Chronic_Disease, Exercise_Frequency, Alcohol_Consumption, Smoking_Habit,
+          Diet_Quality, FRUITS_VEGGIES, Stress_Level, Screen_Time_Hours, Salt_Intake
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        [
+          data.date,
+          data.daily_steps,
+          data.sleep_hours,
+          data.bmi,
+          data.age,
+          data.gender,
+          data.height_cm,
+          data.weight_kg,
+          data.chronic_disease,
+          data.exercise_frequency,
+          data.alcohol_consumption,
+          data.smoking_habit,
+          data.diet_quality,
+          data.fruits_veggies,
+          data.stress_level,
+          data.screen_time_hours,
+          data.salt_intake,
+        ]
+      );
+      console.log("Health record saved to database:", data);
+
+      navigation.navigate("MainApp", {
+        screen: "Progress",
+        params: { lifestyleData: data },
+      });
+    } catch (error) {
+      console.error("Error saving data to database:", error.message, error.stack);
+      Alert.alert(
+        t.error || "Error",
+        t.errorSaving || "Failed to save health record: " + error.message
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const currentDate = getCurrentDate();

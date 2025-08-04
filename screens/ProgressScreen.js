@@ -398,7 +398,31 @@ const ProgressScreen = () => {
       // Open the database
       const db = await SQLite.openDatabaseAsync("userprofile.db");
 
-      // Get data from navigation params (same as HealthHomeScreen)
+      // Create UserProfile table if it doesn't exist
+      await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS UserProfile (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT,
+        Daily_Steps INTEGER,
+        Sleep_Hours REAL,
+        BMI REAL,
+        Age INTEGER,
+        Gender TEXT,
+        Height_cm REAL,
+        Weight_kg REAL,
+        Chronic_Disease TEXT,
+        Exercise_Frequency INTEGER,
+        Alcohol_Consumption TEXT,
+        Smoking_Habit TEXT,
+        Diet_Quality TEXT,
+        FRUITS_VEGGIES INTEGER,
+        Stress_Level INTEGER,
+        Screen_Time_Hours REAL,
+        Salt_Intake TEXT
+      );
+    `);
+
+      // Get data from navigation params
       const navLifestyleData = route.params?.lifestyleData;
       const navPredictionData = route.params?.predictionData;
 

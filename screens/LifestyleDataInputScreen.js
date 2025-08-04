@@ -271,12 +271,12 @@ const LifestyleDataInputScreen = () => {
       if (
         !weightKg ||
         isNaN(weightKg) ||
-        parseFloat(weightKg) < 30 ||
+        parseFloat(weightKg) < 20 ||
         parseFloat(weightKg) > 300
       ) {
         Alert.alert(
           t.error || "Error",
-          t.errorWeight || "Please enter a valid weight (30 - 300 kg)"
+          t.errorWeight || "Please enter a valid weight (20 - 300 kg)"
         );
         return false;
       }
