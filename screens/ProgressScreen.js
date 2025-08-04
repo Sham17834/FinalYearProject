@@ -18,7 +18,7 @@ import {
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { LanguageContext } from "./LanguageContext";
-import * as SQLite from "expo-sqlite"; // Import expo-sqlite
+import * as SQLite from "expo-sqlite"; 
 import { useRoute } from "@react-navigation/native";
 
 const screenWidth = Dimensions.get("window").width;
