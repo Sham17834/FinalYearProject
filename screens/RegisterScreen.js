@@ -14,6 +14,8 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getDb } from "./db";
 
 const RegisterScreen = () => {
   const [fullName, setFullName] = useState("");
@@ -23,7 +25,7 @@ const RegisterScreen = () => {
   const navigation = useNavigation();
   const { t } = useContext(LanguageContext);
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (password !== confirmPassword) {
       Alert.alert(
         t?.error || "Error",
@@ -38,12 +40,51 @@ const RegisterScreen = () => {
       );
       return;
     }
-    console.log("Register:", { fullName, email, password });
-    Alert.alert(
-      t?.success || "Success",
-      t?.registrationSuccess || "Registration successful"
-    );
-    navigation.navigate("MainApp");
+
+    try {
+      const db = await getDb();
+
+      // Check if email already exists
+      const existingUser = await db.getFirstAsync(
+        `SELECT * FROM Users WHERE email = ?`,
+        [email]
+      );
+      if (existingUser) {
+        Alert.alert(
+          t?.error || "Error",
+          t?.emailExists || "Email already registered"
+        );
+        return;
+      }
+
+      // Save to Users table
+      await db.runAsync(
+        `INSERT INTO Users (fullName, email, password, createdAt) VALUES (?, ?, ?, ?)`,
+        [fullName, email, password, new Date().toISOString()]
+      );
+
+      // Save to AsyncStorage
+      await AsyncStorage.setItem("userProfileData", JSON.stringify({ fullName, email }));
+
+      // Save to UserProfile table
+      await db.runAsync(
+        `INSERT INTO UserProfile (Full_Name, email, date) VALUES (?, ?, ?)`,
+        [fullName, email, new Date().toISOString()]
+      );
+
+      console.log("Register:", { fullName, email, password });
+      Alert.alert(
+        t?.success || "Success",
+        t?.registrationSuccess || "Registration successful"
+      );
+      navigation.navigate("MainApp", { userData: { fullName, email } });
+    } catch (error) {
+      console.error("Error saving user data:", error);
+      Alert.alert(
+        t?.error || "Error",
+        t?.saveProfileError || "Failed to save user data"
+      );
+    }
   };
 
   return (
@@ -151,7 +192,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "700",
     color: "#333",
-    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,

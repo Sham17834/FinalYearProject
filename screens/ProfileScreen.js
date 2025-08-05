@@ -45,8 +45,8 @@ const ProfileScreen = () => {
   const { language, changeLanguage, t } = useContext(LanguageContext);
   const navigation = useNavigation();
   const route = useRoute();
-  const [name, setName] = useState("Sample User");
-  const [email, setEmail] = useState("john.doe@example.com");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [age, setAge] = useState("30");
   const [height, setHeight] = useState("175");
   const [weight, setWeight] = useState("70");
@@ -71,51 +71,70 @@ const ProfileScreen = () => {
     const loadProfileData = async () => {
       try {
         const db = await getDb();
-        const userProfileLatest = await db.getAllAsync(
-          "SELECT * FROM UserProfile ORDER BY id DESC LIMIT 1"
+
+        // Try loading from Users table first
+        let userData = {};
+        const storedData = await AsyncStorage.getItem("userProfileData");
+        if (storedData) {
+          userData = JSON.parse(storedData);
+        }
+        const user = await db.getFirstAsync(
+          `SELECT fullName, email FROM Users WHERE email = ?`,
+          [userData.email || route.params?.userData?.email || ""]
         );
 
-        if (userProfileLatest.length > 0) {
-          const data = userProfileLatest[0];
-          setEmail(data.email || "john.doe@example.com");
-          setAge(data.Age?.toString() || "30");
-          setGender(data.Gender || "Male");
-          setHeight(data.Height_cm?.toString() || "175");
-          setWeight(data.Weight_kg?.toString() || "70");
-          setChronicDisease(data.Chronic_Disease || "None");
-          setDailySteps(data.Daily_Steps?.toString() || "5000");
-          setExerciseFrequency(data.Exercise_Frequency?.toString() || "3");
-          setSleepHours(data.Sleep_Hours?.toString() || "7");
-          setAlcoholConsumption(data.Alcohol_Consumption === "Yes");
-          setSmokingHabit(data.Smoking_Habit === "Yes");
-          setDietQuality(data.Diet_Quality || "Good");
-          setFruitsVeggies(data.FRUITS_VEGGIES?.toString() || "5");
-          setStressLevel(data.Stress_Level?.toString() || "5");
-          setScreenTimeHours(data.Screen_Time_Hours?.toString() || "4");
-        } else if (route.params?.userData) {
-          const data = route.params.userData;
-          setEmail(data.email || email);
-          setAge(data.age?.toString() || age);
-          setGender(data.gender || gender);
-          setHeight(data.height_cm?.toString() || height);
-          setWeight(data.weight_kg?.toString() || weight);
-          setChronicDisease(data.chronic_disease || chronicDisease);
-          setDailySteps(data.daily_steps?.toString() || dailySteps);
-          setExerciseFrequency(
-            data.exercise_frequency?.toString() || exerciseFrequency
+        if (user) {
+          setName(user.fullName || "");
+          setEmail(user.email || "");
+        } else {
+          // Fallback to UserProfile table
+          const userProfileLatest = await db.getAllAsync(
+            "SELECT * FROM UserProfile ORDER BY id DESC LIMIT 1"
           );
-          setSleepHours(data.sleep_hours?.toString() || sleepHours);
-          setAlcoholConsumption(data.alcohol_consumption === "Yes");
-          setSmokingHabit(data.smoking_habit === "Yes");
-          setDietQuality(data.diet_quality || dietQuality);
-          setFruitsVeggies(data.fruits_veggies?.toString() || fruitsVeggies);
-          setStressLevel(data.stress_level?.toString() || stressLevel);
-          setScreenTimeHours(
-            data.screen_time_hours?.toString() || screenTimeHours
-          );
+          if (userProfileLatest.length > 0) {
+            const data = userProfileLatest[0];
+            setName(data.Full_Name || "");
+            setEmail(data.email || "");
+            setAge(data.Age?.toString() || "30");
+            setGender(data.Gender || "Male");
+            setHeight(data.Height_cm?.toString() || "175");
+            setWeight(data.Weight_kg?.toString() || "70");
+            setChronicDisease(data.Chronic_Disease || "None");
+            setDailySteps(data.Daily_Steps?.toString() || "5000");
+            setExerciseFrequency(data.Exercise_Frequency?.toString() || "3");
+            setSleepHours(data.Sleep_Hours?.toString() || "7");
+            setAlcoholConsumption(data.Alcohol_Consumption === "Yes");
+            setSmokingHabit(data.Smoking_Habit === "Yes");
+            setDietQuality(data.Diet_Quality || "Good");
+            setFruitsVeggies(data.FRUITS_VEGGIES?.toString() || "5");
+            setStressLevel(data.Stress_Level?.toString() || "5");
+            setScreenTimeHours(data.Screen_Time_Hours?.toString() || "4");
+          } else {
+            // Fallback to AsyncStorage or navigation params
+            const data = route.params?.userData || {};
+            if (storedData) {
+              Object.assign(data, JSON.parse(storedData));
+            }
+            setName(data.fullName || "");
+            setEmail(data.email || "");
+            setAge(data.age?.toString() || "30");
+            setGender(data.gender || "Male");
+            setHeight(data.height_cm?.toString() || "175");
+            setWeight(data.weight_kg?.toString() || "70");
+            setChronicDisease(data.chronic_disease || "None");
+            setDailySteps(data.daily_steps?.toString() || "5000");
+            setExerciseFrequency(data.exercise_frequency?.toString() || "3");
+            setSleepHours(data.sleep_hours?.toString() || "7");
+            setAlcoholConsumption(data.alcohol_consumption === "Yes");
+            setSmokingHabit(data.smoking_habit === "Yes");
+            setDietQuality(data.diet_quality || "Good");
+            setFruitsVeggies(data.fruits_veggies?.toString() || "5");
+            setStressLevel(data.stress_level?.toString() || "5");
+            setScreenTimeHours(data.screen_time_hours?.toString() || "4");
+          }
         }
       } catch (error) {
-        console.error("Error loading profile data from database:", error);
+        console.error("Error loading profile data:", error);
         Alert.alert(
           t.error || "Error",
           t.loadProfileError || "Failed to load profile data."
@@ -172,6 +191,7 @@ const ProfileScreen = () => {
 
   const handleSave = async () => {
     const data = {
+      fullName: name,
       email,
       age: parseInt(age) || 30,
       gender,
@@ -194,10 +214,62 @@ const ProfileScreen = () => {
     };
 
     try {
+      const db = await getDb();
+
+      // Update Users table
+      const user = await db.getFirstAsync(
+        `SELECT id FROM Users WHERE email = ?`,
+        [data.email]
+      );
+      if (user) {
+        await db.runAsync(`UPDATE Users SET fullName = ? WHERE email = ?`, [
+          data.fullName,
+          data.email,
+        ]);
+      } else {
+        // If no user exists, create one (without password)
+        await db.runAsync(
+          `INSERT INTO Users (fullName, email, createdAt) VALUES (?, ?, ?)`,
+          [data.fullName, data.email, new Date().toISOString()]
+        );
+      }
+
+      // Save to AsyncStorage
       await AsyncStorage.setItem("userProfileData", JSON.stringify(data));
-      Alert.alert(t.profileSaved, t.profileSavedMsg, [
-        { text: t.ok, style: "default" },
-      ]);
+
+      // Save to UserProfile table
+      await db.runAsync(
+        `INSERT INTO UserProfile (
+          Full_Name, email, Age, Gender, Height_cm, Weight_kg, Chronic_Disease,
+          Daily_Steps, Exercise_Frequency, Sleep_Hours, Alcohol_Consumption,
+          Smoking_Habit, Diet_Quality, FRUITS_VEGGIES, Stress_Level, Screen_Time_Hours, date
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          data.fullName,
+          data.email,
+          data.age,
+          data.gender,
+          data.height_cm,
+          data.weight_kg,
+          data.chronic_disease,
+          data.daily_steps,
+          data.exercise_frequency,
+          data.sleep_hours,
+          data.alcohol_consumption,
+          data.smoking_habit,
+          data.diet_quality,
+          data.fruits_veggies,
+          data.stress_level,
+          data.screen_time_hours,
+          new Date().toISOString(),
+        ]
+      );
+
+      Alert.alert(
+        t.profileSaved || "Profile Saved",
+        t.profileSavedMsg || "Profile data saved successfully",
+        [{ text: t.ok || "OK", style: "default" }]
+      );
       console.log("Saved:", data);
     } catch (error) {
       console.error("Error saving profile data:", error);
@@ -210,60 +282,76 @@ const ProfileScreen = () => {
 
   const handlePrivacyPolicy = () => {
     Linking.openURL("https://www.who.int/about/policies/privacy").catch((err) =>
-      Alert.alert(t.error, t.errorPrivacyPolicy)
+      Alert.alert(
+        t.error || "Error",
+        t.errorPrivacyPolicy || "Failed to open privacy policy."
+      )
     );
   };
 
   const handleDeleteAccount = async () => {
-    Alert.alert(t.deleteAccount, t.deleteAccountConfirm, [
-      { text: t.cancel, style: "cancel" },
-      {
-        text: t.delete,
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await AsyncStorage.removeItem("userProfileData");
-            console.log("Account deletion requested");
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "Welcome" }],
-            });
-          } catch (error) {
-            console.error("Error deleting account:", error);
-            Alert.alert(
-              t.error || "Error",
-              t.deleteAccountError || "Failed to delete account."
-            );
-          }
+    Alert.alert(
+      t.deleteAccount || "Delete Account",
+      t.deleteAccountConfirm || "Are you sure you want to delete your account?",
+      [
+        { text: t.cancel || "Cancel", style: "cancel" },
+        {
+          text: t.delete || "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const db = await getDb();
+              await AsyncStorage.removeItem("userProfileData");
+              await db.runAsync("DELETE FROM Users WHERE email = ?", [email]);
+              await db.runAsync("DELETE FROM UserProfile WHERE email = ?", [
+                email,
+              ]);
+              console.log("Account deletion requested");
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "Welcome" }],
+              });
+            } catch (error) {
+              console.error("Error deleting account:", error);
+              Alert.alert(
+                t.error || "Error",
+                t.deleteAccountError || "Failed to delete account."
+              );
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const handleLogout = async () => {
-    Alert.alert(t.logOut, t.logOutConfirm, [
-      { text: t.cancel, style: "cancel" },
-      {
-        text: t.logOut,
-        style: "default",
-        onPress: async () => {
-          try {
-            await AsyncStorage.removeItem("userProfileData");
-            console.log("User logged out successfully");
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "Welcome" }],
-            });
-          } catch (error) {
-            console.error("Error during logout:", error);
-            Alert.alert(
-              t.error || "Error",
-              t.logoutError || "Failed to log out."
-            );
-          }
+    Alert.alert(
+      t.logOut || "Log Out",
+      t.logOutConfirm || "Are you sure you want to log out?",
+      [
+        { text: t.cancel || "Cancel", style: "cancel" },
+        {
+          text: t.logOut || "Log Out",
+          style: "default",
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem("userProfileData");
+              console.log("User logged out successfully");
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "Welcome" }],
+              });
+            } catch (error) {
+              console.error("Error during logout:", error);
+              Alert.alert(
+                t.error || "Error",
+                t.logoutError || "Failed to log out."
+              );
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const SwitchRow = ({ label, value, onValueChange, description }) => (
@@ -291,8 +379,11 @@ const ProfileScreen = () => {
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         <View style={styles.headerContainer}>
           <View style={styles.headerContent}>
-            <Text style={styles.appName}>{t.profileTitle}</Text>
-            <Text style={styles.appTagline}>{t.profileTagline}</Text>
+            <Text style={styles.appName}>{t.profileTitle || "Profile"}</Text>
+            <Text style={styles.appTagline}>
+              {t.profileTagline ||
+                "Manage your personal information and settings"}
+            </Text>
           </View>
         </View>
 
@@ -302,14 +393,18 @@ const ProfileScreen = () => {
           scrollEnabled={false}
         >
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t.personalInfo}</Text>
+            <Text style={styles.sectionTitle}>
+              {t.personalInfo || "Personal Information"}
+            </Text>
 
             <View style={styles.formCard}>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>{t.fullName}</Text>
+                <Text style={styles.inputLabel}>
+                  {t.fullName || "Full Name"}
+                </Text>
                 <TextInput
                   style={styles.input}
-                  placeholder={t.enterFullName}
+                  placeholder={t.enterFullName || "Enter your full name"}
                   placeholderTextColor="#9ca3af"
                   value={name}
                   onChangeText={setName}
@@ -317,10 +412,12 @@ const ProfileScreen = () => {
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>{t.emailAddress}</Text>
+                <Text style={styles.inputLabel}>
+                  {t.emailAddress || "Email Address"}
+                </Text>
                 <TextInput
                   style={styles.input}
-                  placeholder={t.enterEmail}
+                  placeholder={t.enterEmail || "Enter your email"}
                   placeholderTextColor="#9ca3af"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -333,10 +430,10 @@ const ProfileScreen = () => {
                 <View
                   style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}
                 >
-                  <Text style={styles.inputLabel}>{t.age}</Text>
+                  <Text style={styles.inputLabel}>{t.age || "Age"}</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder={t.age}
+                    placeholder={t.age || "Age"}
                     placeholderTextColor="#9ca3af"
                     keyboardType="numeric"
                     value={age}
@@ -347,7 +444,7 @@ const ProfileScreen = () => {
                 <View
                   style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}
                 >
-                  <Text style={styles.inputLabel}>{t.gender}</Text>
+                  <Text style={styles.inputLabel}>{t.gender || "Gender"}</Text>
                   <View style={styles.pickerContainer}>
                     <Picker
                       selectedValue={gender}
@@ -373,10 +470,12 @@ const ProfileScreen = () => {
                 <View
                   style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}
                 >
-                  <Text style={styles.inputLabel}>{t.heightCm}</Text>
+                  <Text style={styles.inputLabel}>
+                    {t.heightCm || "Height (cm)"}
+                  </Text>
                   <TextInput
                     style={styles.input}
-                    placeholder={t.heightPlaceholder}
+                    placeholder={t.heightPlaceholder || "Enter height"}
                     placeholderTextColor="#9ca3af"
                     keyboardType="numeric"
                     value={height}
@@ -387,10 +486,12 @@ const ProfileScreen = () => {
                 <View
                   style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}
                 >
-                  <Text style={styles.inputLabel}>{t.weightKg}</Text>
+                  <Text style={styles.inputLabel}>
+                    {t.weightKg || "Weight (kg)"}
+                  </Text>
                   <TextInput
                     style={styles.input}
-                    placeholder={t.weightPlaceholder}
+                    placeholder={t.weightPlaceholder || "Enter weight"}
                     placeholderTextColor="#9ca3af"
                     keyboardType="numeric"
                     value={weight}
@@ -402,7 +503,9 @@ const ProfileScreen = () => {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t.preferences}</Text>
+            <Text style={styles.sectionTitle}>
+              {t.preferences || "Preferences"}
+            </Text>
 
             <View style={styles.settingsCard}>
               <View style={styles.pickerSection}>
@@ -423,8 +526,11 @@ const ProfileScreen = () => {
               <View style={styles.divider} />
 
               <SwitchRow
-                label={t.offlineMode}
-                description={t.offlineModeDesc}
+                label={t.offlineMode || "Offline Mode"}
+                description={
+                  t.offlineModeDesc ||
+                  "Enable offline mode to use the app without internet."
+                }
                 value={isOfflineMode}
                 onValueChange={setIsOfflineMode}
               />
@@ -432,8 +538,11 @@ const ProfileScreen = () => {
               <View style={styles.divider} />
 
               <SwitchRow
-                label={t.pushNotifications}
-                description={t.notificationsDesc}
+                label={t.pushNotifications || "Push Notifications"}
+                description={
+                  t.notificationsDesc ||
+                  "Receive notifications for updates and reminders."
+                }
                 value={notificationsEnabled}
                 onValueChange={setNotificationsEnabled}
               />
@@ -443,7 +552,7 @@ const ProfileScreen = () => {
                   <View style={styles.divider} />
                   <View style={styles.pickerSection}>
                     <Text style={styles.inputLabel}>
-                      {t.notificationFrequency}
+                      {t.notificationFrequency || "Notification Frequency"}
                     </Text>
                     <TouchableOpacity
                       style={styles.pickerButton}
@@ -465,7 +574,9 @@ const ProfileScreen = () => {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t.securityPrivacy}</Text>
+            <Text style={styles.sectionTitle}>
+              {t.securityPrivacy || "Security & Privacy"}
+            </Text>
 
             <View style={styles.securityCard}>
               <View style={styles.securityItem}>
@@ -473,13 +584,17 @@ const ProfileScreen = () => {
                   <Text style={styles.securityIconText}>🔒</Text>
                 </View>
                 <View style={styles.securityContent}>
-                  <Text style={styles.securityTitle}>{t.dataEncryption}</Text>
+                  <Text style={styles.securityTitle}>
+                    {t.dataEncryption || "Data Encryption"}
+                  </Text>
                   <Text style={styles.securityDescription}>
-                    {t.encryptionDesc}
+                    {t.encryptionDesc || "Your data is encrypted and secure."}
                   </Text>
                 </View>
                 <View style={styles.securityStatus}>
-                  <Text style={styles.activeStatus}>{t.active}</Text>
+                  <Text style={styles.activeStatus}>
+                    {t.active || "Active"}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -489,28 +604,34 @@ const ProfileScreen = () => {
               onPress={handlePrivacyPolicy}
             >
               <Text style={styles.secondaryButtonText}>
-                {t.reviewPrivacyPolicy}
+                {t.reviewPrivacyPolicy || "Review Privacy Policy"}
               </Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.actionSection}>
             <TouchableOpacity style={styles.primaryButton} onPress={handleSave}>
-              <Text style={styles.primaryButtonText}>{t.saveChanges}</Text>
+              <Text style={styles.primaryButtonText}>
+                {t.saveChanges || "Save Changes"}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.dangerButton}
               onPress={handleDeleteAccount}
             >
-              <Text style={styles.dangerButtonText}>{t.deleteAccount}</Text>
+              <Text style={styles.dangerButtonText}>
+                {t.deleteAccount || "Delete Account"}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.secondaryButton}
               onPress={handleLogout}
             >
-              <Text style={styles.secondaryButtonText}>{t.logOut}</Text>
+              <Text style={styles.secondaryButtonText}>
+                {t.logOut || "Log Out"}
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -581,7 +702,9 @@ const ProfileScreen = () => {
           onPress={() => setShowFrequencyModal(false)}
         >
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{t.selectFrequency}</Text>
+            <Text style={styles.modalTitle}>
+              {t.selectFrequency || "Select Frequency"}
+            </Text>
             {frequencyOptions.map((option) => (
               <TouchableOpacity
                 key={option.value}

@@ -15,6 +15,7 @@ import { LanguageContext } from "./LanguageContext";
 import * as Google from "expo-google-app-auth";
 import Icon from "react-native-vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getDb } from "./db";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -27,19 +28,37 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert(t.error, t.errorPleaseAgree);
+      Alert.alert(t.error || "Error", t.errorPleaseAgree || "Please fill in all fields");
       return;
     }
-    
+
     try {
-      // Save email to AsyncStorage
-      await AsyncStorage.setItem("userEmail", email);
-      
+      // Check if user exists in Users table
+      const db = await getDb();
+      const user = await db.getFirstAsync(
+        `SELECT * FROM Users WHERE email = ? AND password = ?`,
+        [email, password]
+      );
+
+      if (!user) {
+        Alert.alert(t.error || "Error", t.invalidCredentials || "Invalid email or password");
+        return;
+      }
+
+      // Save to AsyncStorage
+      await AsyncStorage.setItem("userProfileData", JSON.stringify({ fullName: user.fullName, email }));
+
+      // Save to UserProfile table
+      await db.runAsync(
+        `INSERT INTO UserProfile (Full_Name, email, date) VALUES (?, ?, ?)`,
+        [user.fullName, email, new Date().toISOString()]
+      );
+
       console.log("Login:", { email, password });
-      navigation.navigate("MainApp");
+      navigation.navigate("MainApp", { userData: { fullName: user.fullName, email } });
     } catch (error) {
-      console.error("Error saving email:", error);
-      Alert.alert(t.error, "Failed to save user data");
+      console.error("Error during login:", error);
+      Alert.alert(t.error || "Error", t.loginError || "Failed to log in");
     }
   };
 
@@ -53,19 +72,41 @@ const LoginScreen = () => {
 
       if (result.type === "success") {
         const userEmail = result.user.email || "";
-        
-        // Save email to AsyncStorage
-        await AsyncStorage.setItem("userEmail", userEmail);
-        
+        const userFullName = result.user.name || null;
+
+        // Save to Users table
+        const db = await getDb();
+        try {
+          await db.runAsync(
+            `INSERT INTO Users (fullName, email, createdAt) VALUES (?, ?, ?)`,
+            [userFullName, userEmail, new Date().toISOString()]
+          );
+        } catch (error) {
+          if (error.message.includes('UNIQUE constraint failed')) {
+            console.log("User already exists, proceeding with login");
+          } else {
+            throw error;
+          }
+        }
+
+        // Save to AsyncStorage
+        await AsyncStorage.setItem("userProfileData", JSON.stringify({ fullName: userFullName, email: userEmail }));
+
+        // Save to UserProfile table
+        await db.runAsync(
+          `INSERT INTO UserProfile (Full_Name, email, date) VALUES (?, ?, ?)`,
+          [userFullName, userEmail, new Date().toISOString()]
+        );
+
         console.log("Google Sign-In successful:", result);
-        Alert.alert(t.success, "Google sign-in successful");
-        navigation.navigate("MainApp");
+        Alert.alert(t.success || "Success", t.googleSignInSuccess || "Google sign-in successful");
+        navigation.navigate("MainApp", { userData: { fullName: userFullName, email: userEmail } });
       } else {
         console.log("Google Sign-In cancelled");
       }
     } catch (error) {
       console.error("Google Sign-In Error:", error);
-      Alert.alert(t.error, "Google sign-in failed");
+      Alert.alert(t.error || "Error", t.googleSignInError || "Google sign-in failed");
     }
   };
 
@@ -74,13 +115,13 @@ const LoginScreen = () => {
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>{t.loginTitle}</Text>
-          <Text style={styles.subtitle}>{t.loginSubtitle}</Text>
+          <Text style={styles.title}>{t.loginTitle || "Login"}</Text>
+          <Text style={styles.subtitle}>{t.loginSubtitle || "Sign in to continue"}</Text>
         </View>
 
         <View style={styles.form}>
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>{t.email}</Text>
+            <Text style={styles.inputLabel}>{t.email || "Email"}</Text>
             <View
               style={[
                 styles.input,
@@ -89,30 +130,28 @@ const LoginScreen = () => {
             >
               <TextInput
                 style={styles.inputText}
-                placeholder={t.email}
+                placeholder={t.email || "Email"}
                 placeholderTextColor="#9ca3af"
                 keyboardType="email-address"
                 value={email}
                 onChangeText={setEmail}
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
+                autoCapitalize="none"
               />
             </View>
           </View>
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>{t.password}</Text>
+            <Text style={styles.inputLabel}>{t.password || "Password"}</Text>
             <View
               style={[
                 styles.input,
-                isPasswordFocused && {
-                  borderColor: "#008080",
-                  borderWidth: 1.5,
-                },
+                isPasswordFocused && { borderColor: "#008080", borderWidth: 1.5 },
               ]}
             >
               <TextInput
                 style={styles.inputText}
-                placeholder={t.password}
+                placeholder={t.password || "Password"}
                 placeholderTextColor="#9ca3af"
                 secureTextEntry={!showPassword}
                 value={password}
@@ -122,29 +161,27 @@ const LoginScreen = () => {
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Text style={styles.passwordToggle}>
-                  {showPassword ? "Hide" : "Show"}
+                  {showPassword ? t.hide || "Hide" : t.show || "Show"}
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
           <TouchableOpacity
             style={styles.helpLink}
-            onPress={() =>
-              Alert.alert(t.help || "Help", "Having trouble signing in?")
-            }
+            onPress={() => Alert.alert(t.help || "Help", t.troubleSigningIn || "Having trouble signing in?")}
           >
-            <Text style={styles.linkText}>{t.forgotPassword}</Text>
+            <Text style={styles.linkText}>{t.forgotPassword || "Forgot Password?"}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.loginButton}
             onPress={handleLogin}
             activeOpacity={0.8}
           >
-            <Text style={styles.loginButtonText}>{t.signIn}</Text>
+            <Text style={styles.loginButtonText}>{t.signIn || "Sign In"}</Text>
           </TouchableOpacity>
           <View style={styles.dividerContainer}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
+            <Text style={styles.dividerText}>{t.or || "or"}</Text>
             <View style={styles.dividerLine} />
           </View>
           <TouchableOpacity
@@ -158,12 +195,12 @@ const LoginScreen = () => {
               color="#DB4437"
               style={styles.googleIcon}
             />
-            <Text style={styles.googleButtonText}>Continue with Google</Text>
+            <Text style={styles.googleButtonText}>{t.continueWithGoogle || "Continue with Google"}</Text>
           </TouchableOpacity>
           <View style={styles.footer}>
-            <Text style={styles.footerText}>{t.noAccount} </Text>
+            <Text style={styles.footerText}>{t.noAccount || "Don't have an account?"} </Text>
             <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-              <Text style={styles.footerLink}>{t.signUp}</Text>
+              <Text style={styles.footerLink}>{t.signUp || "Sign Up"}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -7,7 +7,16 @@ export const getDb = async () => {
 
   db = await SQLite.openDatabaseAsync('userprofile.db');
 
-  // Create UserProfile table if it doesn't exist
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS Users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      fullName TEXT,
+      email TEXT UNIQUE,
+      password TEXT,
+      createdAt TEXT
+    );
+  `);
+
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS UserProfile (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,11 +39,32 @@ export const getDb = async () => {
       Salt_Intake TEXT,
       Obesity_Flag TEXT,
       Hypertension_Flag TEXT,
-      Stroke_Flag TEXT
+      Stroke_Flag TEXT,
+      Full_Name TEXT,
+      email TEXT
     );
   `);
 
-  // Migration: Add date column if it doesn't exist
+  try {
+    await db.execAsync(`
+      ALTER TABLE UserProfile ADD COLUMN Full_Name TEXT;
+    `);
+  } catch (error) {
+    if (!error.message.includes('duplicate column name')) {
+      console.error('Error adding Full_Name column:', error);
+    }
+  }
+
+  try {
+    await db.execAsync(`
+      ALTER TABLE UserProfile ADD COLUMN email TEXT;
+    `);
+  } catch (error) {
+    if (!error.message.includes('duplicate column name')) {
+      console.error('Error adding email column:', error);
+    }
+  }
+
   try {
     await db.execAsync(`
       ALTER TABLE UserProfile ADD COLUMN date TEXT;
@@ -45,7 +75,6 @@ export const getDb = async () => {
     }
   }
 
-  // Migration: Add Salt_Intake column if it doesn't exist
   try {
     await db.execAsync(`
       ALTER TABLE UserProfile ADD COLUMN Salt_Intake TEXT;
@@ -56,7 +85,6 @@ export const getDb = async () => {
     }
   }
 
-  // Migration: Add prediction columns if they don't exist
   try {
     await db.execAsync(`
       ALTER TABLE UserProfile ADD COLUMN Obesity_Flag TEXT;
@@ -66,6 +94,7 @@ export const getDb = async () => {
       console.error('Error adding Obesity_Flag column:', error);
     }
   }
+
   try {
     await db.execAsync(`
       ALTER TABLE UserProfile ADD COLUMN Hypertension_Flag TEXT;
@@ -75,6 +104,7 @@ export const getDb = async () => {
       console.error('Error adding Hypertension_Flag column:', error);
     }
   }
+
   try {
     await db.execAsync(`
       ALTER TABLE UserProfile ADD COLUMN Stroke_Flag TEXT;
@@ -85,7 +115,6 @@ export const getDb = async () => {
     }
   }
 
-  // Create HealthRecords table if it doesn't exist
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS HealthRecords (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -110,20 +139,3 @@ export const getDb = async () => {
 
   return db;
 };
-
-// Optional: Function to reset the database (for testing or critical errors)
-export const resetDatabase = async () => {
-  try {
-    await db.execAsync(`
-      DROP TABLE IF EXISTS UserProfile;
-      DROP TABLE IF EXISTS HealthRecords;
-    `);
-    db = null; // Force reinitialization
-    console.log('Database reset successfully');
-    return await getDb(); // Recreate tables
-  } catch (error) {
-    console.error('Error resetting database:', error);
-    throw error;
-  }
-};
-
