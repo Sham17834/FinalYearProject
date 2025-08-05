@@ -1,6 +1,5 @@
 const translations = {
   English: {
-    // Common
     confirmDelete: "Confirm Delete",
     dietQuality: {
       label: "Diet Quality",
@@ -48,6 +47,19 @@ const translations = {
     invalidCredentials: "Invalid email or password",
     googleSignInSuccess: "Google sign-in successful",
     googleSignInError: "Google sign-in failed",
+    troubleSigningIn: "Having trouble signing in?",
+    // Forgot Password Screen
+    forgotPasswordTitle: "Reset Password",
+    forgotPasswordSubtitle:
+      "Enter your Gmail to receive a verification code",
+    resetPassword: "Reset Password",
+    emailNotFound: "Email not found",
+    phoneNotFound: "Phone number not found",
+    resetLinkSent: "Verification code sent to your Gmail",
+    backToLogin: "Back to Login",
+    phoneNumber: "WhatsApp Number",
+    invalidPhone: "Please enter a valid phone number (e.g., 016-7239840)",
+    validFillAllFields: "Please fill in all fields",
     // Home Screen
     week: "Week",
     exercise: "Exercise",
@@ -356,6 +368,18 @@ const translations = {
     invalidCredentials: "电子邮箱或密码错误",
     googleSignInSuccess: "谷歌登录成功",
     googleSignInError: "谷歌登录失败",
+    troubleSigningIn: "登录遇到问题？",
+    // Forgot Password Screen
+    forgotPasswordTitle: "重置密码",
+    forgotPasswordSubtitle: "输入您的Gmail以接收验证码",
+    resetPassword: "重置密码",
+    emailNotFound: "未找到电子邮箱",
+    phoneNotFound: "未找到电话号码",
+    resetLinkSent: "验证码已发送至您的Gmail",
+    backToLogin: "返回登录",
+    phoneNumber: "WhatsApp号码",
+    invalidPhone: "请输入有效的电话号码（例如，016-7239840）",
+    validFillAllFields: "请填写所有字段",
     // Home Screen
     deleteConfirmation: "您确定要删除此条目吗？",
     allSources: "全部",
@@ -546,7 +570,6 @@ const translations = {
     exercise: "锻炼",
     stress: "压力",
     diet: "饮食",
-    deleteConfirmation: "您确定要删除此条目吗？",
     progressTitle: "您的健康进展",
     progressTagline: "跟踪并改善您的健康状况",
     bmi: "身体质量指数",
@@ -672,6 +695,19 @@ const translations = {
     invalidCredentials: "E-mel atau katalaluan tidak sah",
     googleSignInSuccess: "Log masuk Google berjaya",
     googleSignInError: "Log masuk Google gagal",
+    troubleSigningIn: "Mengalami masalah untuk log masuk?",
+    // Forgot Password Screen
+    forgotPasswordTitle: "Set Semula Katalaluan",
+    forgotPasswordSubtitle:
+      "Masukkan Gmail anda untuk menerima kod pengesahan",
+    resetPassword: "Set Semula Katalaluan",
+    emailNotFound: "E-mel tidak ditemui",
+    phoneNotFound: "Nombor telefon tidak ditemui",
+    resetLinkSent: "Kod pengesahan telah dihantar ke Gmail anda",
+    backToLogin: "Kembali ke Log Masuk",
+    phoneNumber: "Nombor WhatsApp",
+    invalidPhone: "Sila masukkan nombor telefon yang sah (contoh, 016-7239840)",
+    validFillAllFields: "Sila isi semua medan",
     // Home Screen
     week: "Minggu",
     exercise: "Senaman",

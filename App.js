@@ -8,6 +8,7 @@ import { StyleSheet } from 'react-native';
 import WelcomeScreen from './screens/WelcomeScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import LoginScreen from './screens/LoginScreen';
+import ForgotPasswordScreen from './screens/ForgotPasswordScreen'; // New import
 import LifestyleDataInputScreen from './screens/LifestyleDataInputScreen';
 import HealthTrackHomeScreen from './screens/HealthHomeScreen';
 import ProgressScreen from './screens/ProgressScreen';
@@ -37,7 +38,7 @@ const MainApp = () => {
         name="Home"
         component={HealthTrackHomeScreen}
         options={{
-          tabBarLabel: t.healthHome,
+          tabBarLabel: t.healthHome || "Home",
           tabBarIcon: ({ color }) => <Icon name="home" color={color} size={24} />,
           headerShown: false,
         }}
@@ -46,7 +47,7 @@ const MainApp = () => {
         name="Progress"
         component={ProgressScreen}
         options={{
-          tabBarLabel: t.progress,
+          tabBarLabel: t.progress || "Progress",
           tabBarIcon: ({ color }) => <Icon name="analytics" color={color} size={24} />,
           headerShown: false,
         }}
@@ -55,7 +56,7 @@ const MainApp = () => {
         name="Track"
         component={TrackScreen}
         options={{
-          tabBarLabel: t.track,
+          tabBarLabel: t.track || "Track",
           tabBarIcon: ({ color }) => <Icon name="track-changes" color={color} size={24} />,
           headerShown: false,
         }}
@@ -64,7 +65,7 @@ const MainApp = () => {
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarLabel: t.profile,
+          tabBarLabel: t.profile || "Profile",
           tabBarIcon: ({ color }) => <Icon name="person" color={color} size={24} />,
           headerShown: false,
         }}
@@ -82,8 +83,8 @@ const AppNavigator = () => {
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
-        const userEmail = await AsyncStorage.getItem("userEmail");
-        if (userEmail) {
+        const userProfileData = await AsyncStorage.getItem("userProfileData");
+        if (userProfileData) {
           setInitialRoute("MainApp");
         } else {
           setInitialRoute("Welcome");
@@ -120,6 +121,10 @@ const AppNavigator = () => {
         <Stack.Screen
           name="Login"
           component={LoginScreen}
+        />
+        <Stack.Screen
+          name="ForgotPassword"
+          component={ForgotPasswordScreen}
         />
         <Stack.Screen
           name="LifestyleDataInput"
