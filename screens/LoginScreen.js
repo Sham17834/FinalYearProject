@@ -23,12 +23,68 @@ const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isEmailFocused, setEmailFocused] = useState(false);
   const [isPasswordFocused, setPasswordFocused] = useState(false);
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+  });
   const navigation = useNavigation();
   const { t } = useContext(LanguageContext);
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = {
+      email: "",
+      password: "",
+    };
+
+    if (!email.trim()) {
+      newErrors.email = t.validFillAllFields || "Please fill in all fields";
+      isValid = false;
+    } else if (!validateEmail(email)) {
+      newErrors.email = t.invalidEmail || "Please enter a valid email address";
+      isValid = false;
+    }
+
+    if (!password) {
+      newErrors.password = t.validFillAllFields || "Please fill in all fields";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleInputChange = (field, value) => {
+    const setters = {
+      email: setEmail,
+      password: setPassword,
+    };
+    setters[field](value);
+
+    // Validate the changed field
+    const newErrors = { ...errors };
+    if (field === "email") {
+      newErrors.email = value.trim()
+        ? validateEmail(value)
+          ? ""
+          : t.invalidEmail || "Please enter a valid email address"
+        : t.validFillAllFields || "Please fill in all fields";
+    }
+    if (field === "password") {
+      newErrors.password = value
+        ? ""
+        : t.validFillAllFields || "Please fill in all fields";
+    }
+    setErrors(newErrors);
+  };
+
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert(t.error || "Error", t.errorPleaseAgree || "Please fill in all fields");
+    if (!validateForm()) {
       return;
     }
 
@@ -41,21 +97,28 @@ const LoginScreen = () => {
       );
 
       if (!user) {
-        Alert.alert(t.error || "Error", t.invalidCredentials || "Invalid email or password");
+        setErrors((prev) => ({
+          ...prev,
+          email: t.invalidCredentials || "Invalid email or password",
+          password: t.invalidCredentials || "Invalid email or password",
+        }));
+        Alert.alert(
+          t.error || "Error",
+          t.invalidCredentials || "Invalid email or password"
+        );
         return;
       }
 
       // Save to AsyncStorage
-      await AsyncStorage.setItem("userProfileData", JSON.stringify({ fullName: user.fullName, email }));
-
-      // Save to UserProfile table
-      await db.runAsync(
-        `INSERT INTO UserProfile (Full_Name, email, date) VALUES (?, ?, ?)`,
-        [user.fullName, email, new Date().toISOString()]
+      await AsyncStorage.setItem(
+        "userProfileData",
+        JSON.stringify({ fullName: user.fullName, email })
       );
 
       console.log("Login:", { email, password });
-      navigation.navigate("MainApp", { userData: { fullName: user.fullName, email } });
+      navigation.navigate("MainApp", {
+        userData: { fullName: user.fullName, email },
+      });
     } catch (error) {
       console.error("Error during login:", error);
       Alert.alert(t.error || "Error", t.loginError || "Failed to log in");
@@ -82,7 +145,7 @@ const LoginScreen = () => {
             [userFullName, userEmail, new Date().toISOString()]
           );
         } catch (error) {
-          if (error.message.includes('UNIQUE constraint failed')) {
+          if (error.message.includes("UNIQUE constraint failed")) {
             console.log("User already exists, proceeding with login");
           } else {
             throw error;
@@ -90,23 +153,28 @@ const LoginScreen = () => {
         }
 
         // Save to AsyncStorage
-        await AsyncStorage.setItem("userProfileData", JSON.stringify({ fullName: userFullName, email: userEmail }));
-
-        // Save to UserProfile table
-        await db.runAsync(
-          `INSERT INTO UserProfile (Full_Name, email, date) VALUES (?, ?, ?)`,
-          [userFullName, userEmail, new Date().toISOString()]
+        await AsyncStorage.setItem(
+          "userProfileData",
+          JSON.stringify({ fullName: userFullName, email: userEmail })
         );
 
         console.log("Google Sign-In successful:", result);
-        Alert.alert(t.success || "Success", t.googleSignInSuccess || "Google sign-in successful");
-        navigation.navigate("MainApp", { userData: { fullName: userFullName, email: userEmail } });
+        Alert.alert(
+          t.success || "Success",
+          t.googleSignInSuccess || "Google sign-in successful"
+        );
+        navigation.navigate("MainApp", {
+          userData: { fullName: userFullName, email: userEmail },
+        });
       } else {
         console.log("Google Sign-In cancelled");
       }
     } catch (error) {
       console.error("Google Sign-In Error:", error);
-      Alert.alert(t.error || "Error", t.googleSignInError || "Google sign-in failed");
+      Alert.alert(
+        t.error || "Error",
+        t.googleSignInError || "Google sign-in failed"
+      );
     }
   };
 
@@ -116,7 +184,9 @@ const LoginScreen = () => {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>{t.loginTitle || "Login"}</Text>
-          <Text style={styles.subtitle}>{t.loginSubtitle || "Sign in to continue"}</Text>
+          <Text style={styles.subtitle}>
+            {t.loginSubtitle || "Sign in to continue"}
+          </Text>
         </View>
 
         <View style={styles.form}>
@@ -126,6 +196,7 @@ const LoginScreen = () => {
               style={[
                 styles.input,
                 isEmailFocused && { borderColor: "#008080", borderWidth: 1.5 },
+                errors.email && styles.inputError,
               ]}
             >
               <TextInput
@@ -134,19 +205,26 @@ const LoginScreen = () => {
                 placeholderTextColor="#9ca3af"
                 keyboardType="email-address"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(text) => handleInputChange("email", text)}
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
                 autoCapitalize="none"
               />
             </View>
+            {errors.email ? (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            ) : null}
           </View>
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>{t.password || "Password"}</Text>
             <View
               style={[
                 styles.input,
-                isPasswordFocused && { borderColor: "#008080", borderWidth: 1.5 },
+                isPasswordFocused && {
+                  borderColor: "#008080",
+                  borderWidth: 1.5,
+                },
+                errors.password && styles.inputError,
               ]}
             >
               <TextInput
@@ -155,7 +233,7 @@ const LoginScreen = () => {
                 placeholderTextColor="#9ca3af"
                 secureTextEntry={!showPassword}
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => handleInputChange("password", text)}
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
               />
@@ -165,12 +243,22 @@ const LoginScreen = () => {
                 </Text>
               </TouchableOpacity>
             </View>
+            {errors.password ? (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            ) : null}
           </View>
           <TouchableOpacity
             style={styles.helpLink}
-            onPress={() => Alert.alert(t.help || "Help", t.troubleSigningIn || "Having trouble signing in?")}
+            onPress={() =>
+              Alert.alert(
+                t.help || "Help",
+                t.troubleSigningIn || "Having trouble signing in?"
+              )
+            }
           >
-            <Text style={styles.linkText}>{t.forgotPassword || "Forgot Password?"}</Text>
+            <Text style={styles.linkText}>
+              {t.forgotPassword || "Forgot Password?"}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.loginButton}
@@ -195,10 +283,14 @@ const LoginScreen = () => {
               color="#DB4437"
               style={styles.googleIcon}
             />
-            <Text style={styles.googleButtonText}>{t.continueWithGoogle || "Continue with Google"}</Text>
+            <Text style={styles.googleButtonText}>
+              {t.continueWithGoogle || "Continue with Google"}
+            </Text>
           </TouchableOpacity>
           <View style={styles.footer}>
-            <Text style={styles.footerText}>{t.noAccount || "Don't have an account?"} </Text>
+            <Text style={styles.footerText}>
+              {t.noAccount || "Don't have an account?"}{" "}
+            </Text>
             <TouchableOpacity onPress={() => navigation.navigate("Register")}>
               <Text style={styles.footerLink}>{t.signUp || "Sign Up"}</Text>
             </TouchableOpacity>
@@ -261,9 +353,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  inputError: {
+    borderColor: "#ef4444",
+  },
   inputText: {
     flex: 1,
     fontSize: 15,
+  },
+  errorText: {
+    color: "#ef4444",
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 10,
   },
   passwordToggle: {
     color: "#008080",
@@ -283,7 +384,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 14,
     alignItems: "center",
-    marginVertical: 16,
   },
   loginButtonText: {
     color: "#fff",
