@@ -15,6 +15,7 @@ import {
   FlatList,
   StyleSheet,
   Animated,
+  Alert,
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { LanguageContext } from "./LanguageContext";
@@ -24,7 +25,6 @@ import { getDb } from "./db";
 
 const screenWidth = Dimensions.get("window").width;
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "N/A";
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   compactStatLabel: {
-    fontSize: 11,
+    fontSize: 8,
     color: "#64748b",
     textAlign: "center",
   },
@@ -257,6 +257,9 @@ const styles = StyleSheet.create({
     padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   progressDate: {
     fontSize: 13,
@@ -268,6 +271,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 6,
+    flex: 1,
   },
   progressDetailItem: {
     fontSize: 11,
@@ -325,6 +329,38 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontStyle: "italic",
   },
+  historyControls: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  controlButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: "#f1f5f9",
+  },
+  activeControlButton: {
+    backgroundColor: "#008080",
+  },
+  controlButtonText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#64748b",
+  },
+  activeControlButtonText: {
+    color: "#ffffff",
+  },
+  deleteButton: {
+    padding: 8,
+    backgroundColor: "#ef4444",
+    borderRadius: 8,
+  },
+  deleteButtonText: {
+    fontSize: 12,
+    color: "#ffffff",
+    fontWeight: "500",
+  },
 });
 
 const ProgressScreen = () => {
@@ -336,7 +372,42 @@ const ProgressScreen = () => {
   const [progressData, setProgressData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortOrder, setSortOrder] = useState("asc"); // Moved to component level
+  const [sourceFilter, setSourceFilter] = useState("all"); // Moved to component level
   const scrollY = new Animated.Value(0);
+
+  const handleDeleteEntry = useCallback(
+    async (item) => {
+      try {
+        const db = await getDb();
+        const table = item.source === "UserProfile" ? "UserProfile" : "HealthRecords";
+        await db.runAsync(`DELETE FROM ${table} WHERE id = ?`, [item.id]);
+        setRefreshKey((prev) => prev + 1); // Trigger data refresh
+      } catch (error) {
+        console.error("Error deleting entry:", error);
+        Alert.alert(t.error || "Error", t.deleteError || "Failed to delete entry");
+      }
+    },
+    [t]
+  );
+
+  const confirmDelete = useCallback(
+    (item) => {
+      Alert.alert(
+        t.confirmDelete || "Confirm Delete",
+        `${t.deleteConfirmation || "Are you sure you want to delete this entry from"} (${item.date})?`,
+        [
+          { text: t.cancel || "Cancel", style: "cancel" },
+          {
+            text: t.delete || "Delete",
+            style: "destructive",
+            onPress: () => handleDeleteEntry(item),
+          },
+        ]
+      );
+    },
+    [t, handleDeleteEntry]
+  );
 
   const fallbackData = useMemo(
     () => [
@@ -440,11 +511,13 @@ const ProgressScreen = () => {
         };
       }
 
+      // Fetch from UserProfile
       const userProfileData = await db.getAllAsync(
         "SELECT * FROM UserProfile ORDER BY id DESC"
       );
 
       const transformedUserProfileData = userProfileData.map((item) => ({
+        id: item.id,
         date: formatDate(item.date || new Date().toISOString().split("T")[0]),
         daily_steps: Number(item.Daily_Steps) || 0,
         sleep_hours: Number(item.Sleep_Hours) || 0,
@@ -465,11 +538,13 @@ const ProgressScreen = () => {
         source: "UserProfile",
       }));
 
+      // Fetch from HealthRecords
       const healthRecordsData = await db.getAllAsync(
         "SELECT * FROM HealthRecords ORDER BY id DESC"
       );
 
       const transformedHealthRecordsData = healthRecordsData.map((item) => ({
+        id: item.id,
         date: formatDate(item.date || new Date().toISOString().split("T")[0]),
         daily_steps: Number(item.daily_steps) || 0,
         sleep_hours: Number(item.sleep_hours) || 0,
@@ -490,20 +565,14 @@ const ProgressScreen = () => {
         source: "HealthRecords",
       }));
 
-      let allData = [
-        ...fallbackData,
-        ...transformedUserProfileData,
-        ...transformedHealthRecordsData,
-      ];
+      let allData = [...fallbackData, ...transformedUserProfileData, ...transformedHealthRecordsData];
 
       const uniqueData = [];
       const seenDates = new Set();
 
       if (currentDayData) {
         const existingIndex = allData.findIndex(
-          (existing) =>
-            existing.date === currentDayData.date &&
-            existing.source === "UserProfile"
+          (existing) => existing.date === currentDayData.date && existing.source === "UserProfile"
         );
         if (existingIndex >= 0) {
           allData[existingIndex] = currentDayData;
@@ -526,13 +595,11 @@ const ProgressScreen = () => {
           }
         });
 
-      setProgressData(
-        uniqueData.sort((a, b) => {
-          const dateA = new Date(a.date.split("/").reverse().join("-"));
-          const dateB = new Date(b.date.split("/").reverse().join("-"));
-          return dateA - dateB;
-        })
-      );
+      setProgressData(uniqueData.sort((a, b) => {
+        const dateA = new Date(a.date.split("/").reverse().join("-"));
+        const dateB = new Date(b.date.split("/").reverse().join("-"));
+        return dateA - dateB;
+      }));
     } catch (error) {
       console.error("Error fetching progress data:", error);
       setError("Failed to load data from database");
@@ -669,9 +736,7 @@ const ProgressScreen = () => {
   const filteredData = useMemo(() => {
     const today = new Date();
     const daysAgo = timeRange === "7days" ? 7 : 30;
-    const cutoffDate = formatDate(
-      new Date(today.setDate(today.getDate() - daysAgo))
-    );
+    const cutoffDate = formatDate(new Date(today.setDate(today.getDate() - daysAgo)));
     return progressData
       .filter((item) => {
         const itemDate = new Date(item.date.split("/").reverse().join("-"));
@@ -739,11 +804,13 @@ const ProgressScreen = () => {
   );
 
   const summaryStats = useMemo(() => {
-    if (filteredData.length === 0) return null;
+    // Filter for UserProfile data only
+    const userProfileData = filteredData.filter((item) => item.source === "UserProfile");
+    if (userProfileData.length === 0) return null;
 
-    const latestData = filteredData[filteredData.length - 1];
+    const latestData = userProfileData[userProfileData.length - 1];
     const previousData =
-      filteredData.length > 1 ? filteredData[filteredData.length - 2] : null;
+      userProfileData.length > 1 ? userProfileData[userProfileData.length - 2] : null;
 
     const latestScore = calculateLifestyleScore(latestData);
     const previousScore = previousData
@@ -983,8 +1050,7 @@ const ProgressScreen = () => {
               {summaryStats && (
                 <View style={styles.trendContainer}>
                   <Text style={[styles.trendText, styles.neutralTrend]}>
-                    {t.latest || "Latest"}:{" "}
-                    {summaryStats.steps.toLocaleString()}
+                    {t.latest || "Latest"}: {summaryStats.steps.toLocaleString()}
                   </Text>
                 </View>
               )}
@@ -998,7 +1064,7 @@ const ProgressScreen = () => {
               {sleepData.length > 0 ? (
                 <LineChart
                   data={{
-                    labels: filteredData.map((item) => item.date.slice(0, 5)),
+                    labels: filteredData.map((item) => item.date.slice(0, 5)), // Use dd/mm format
                     datasets: [{ data: sleepData }],
                   }}
                   width={screenWidth / 2 - 40}
@@ -1030,164 +1096,241 @@ const ProgressScreen = () => {
   );
 
   const renderTabs = useCallback(
-    () => (
-      <View style={styles.bottomSection}>
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === "factors" && styles.activeTab,
-            ]}
-            onPress={() => setActiveTab("factors")}
-            accessibilityLabel={t.factors || "Factors"}
-          >
-            <Text
+    () => {
+      const filteredHistoryData = filteredData
+        .filter((item) => {
+          if (sourceFilter === "all") return true;
+          return item.source === sourceFilter;
+        })
+        .sort((a, b) => {
+          const dateA = new Date(a.date.split("/").reverse().join("-"));
+          const dateB = new Date(b.date.split("/").reverse().join("-"));
+          return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+        });
+
+      return (
+        <View style={styles.bottomSection}>
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
               style={[
-                styles.tabText,
-                activeTab === "factors" && styles.activeTabText,
+                styles.tabButton,
+                activeTab === "factors" && styles.activeTab,
               ]}
+              onPress={() => setActiveTab("factors")}
+              accessibilityLabel={t.factors || "Factors"}
             >
-              {t.factors || "Factors"}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === "risks" && styles.activeTab,
-            ]}
-            onPress={() => setActiveTab("risks")}
-            accessibilityLabel={t.risks || "Risks"}
-          >
-            <Text
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "factors" && styles.activeTabText,
+                ]}
+              >
+                {t.factors || "Factors"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={[
-                styles.tabText,
-                activeTab === "risks" && styles.activeTabText,
+                styles.tabButton,
+                activeTab === "risks" && styles.activeTab,
               ]}
+              onPress={() => setActiveTab("risks")}
+              accessibilityLabel={t.risks || "Risks"}
             >
-              {t.risks || "Risks"}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === "history" && styles.activeTab,
-            ]}
-            onPress={() => setActiveTab("history")}
-            accessibilityLabel={t.history || "History"}
-          >
-            <Text
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "risks" && styles.activeTabText,
+                ]}
+              >
+                {t.risks || "Risks"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={[
-                styles.tabText,
-                activeTab === "history" && styles.activeTabText,
+                styles.tabButton,
+                activeTab === "history" && styles.activeTab,
               ]}
+              onPress={() => setActiveTab("history")}
+              accessibilityLabel={t.history || "History"}
             >
-              {t.history || "History"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.tabContent}>
-          {activeTab === "factors" && (
-            <View>
-              {shapRankings.map((item, index) => (
-                <View key={index} style={styles.factorItem}>
-                  <Text style={styles.factorName}>{item.factor}</Text>
-                  <Text style={styles.factorValue}>
-                    {(item.value * 100).toFixed(0)}%
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "history" && styles.activeTabText,
+                ]}
+              >
+                {t.history || "History"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.tabContent}>
+            {activeTab === "factors" && (
+              <View>
+                {shapRankings.map((item, index) => (
+                  <View key={index} style={styles.factorItem}>
+                    <Text style={styles.factorName}>{item.factor}</Text>
+                    <Text style={styles.factorValue}>
+                      {(item.value * 100).toFixed(0)}%
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+            {activeTab === "risks" && (
+              <View>
+                {summaryStats ? (
+                  <>
+                    <View style={styles.riskIndicator}>
+                      <Text style={styles.riskName}>
+                        {t.obesityRisk || "Obesity Risk"}
+                      </Text>
+                      <Text style={styles.riskValue}>
+                        {summaryStats.latestRisks.obesity}%
+                      </Text>
+                    </View>
+                    <View style={styles.riskIndicator}>
+                      <Text style={styles.riskName}>
+                        {t.hypertensionRisk || "Hypertension Risk"}
+                      </Text>
+                      <Text style={styles.riskValue}>
+                        {summaryStats.latestRisks.hypertension}%
+                      </Text>
+                    </View>
+                    <View style={styles.riskIndicator}>
+                      <Text style={styles.riskName}>
+                        {t.strokeRisk || "Stroke Risk"}
+                      </Text>
+                      <Text style={styles.riskValue}>
+                        {summaryStats.latestRisks.stroke}%
+                      </Text>
+                    </View>
+                  </>
+                ) : (
+                  <Text style={styles.riskName}>
+                    {t.noDataAvailable || "No data available"}
                   </Text>
+                )}
+              </View>
+            )}
+            {activeTab === "history" && (
+              <View>
+                <View style={styles.historyControls}>
+                  <View style={styles.timeRangeContainer}>
+                    <TouchableOpacity
+                      style={[
+                        styles.controlButton,
+                        sortOrder === "asc" && styles.activeControlButton,
+                      ]}
+                      onPress={() => setSortOrder("asc")}
+                      accessibilityLabel={t.sortAsc || "Sort Ascending"}
+                    >
+                      <Text
+                        style={[
+                          styles.controlButtonText,
+                          sortOrder === "asc" && styles.activeControlButtonText,
+                        ]}
+                      >
+                        {t.sortAsc || "Sort Asc"}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.controlButton,
+                        sortOrder === "desc" && styles.activeControlButton,
+                      ]}
+                      onPress={() => setSortOrder("desc")}
+                      accessibilityLabel={t.sortDesc || "Sort Descending"}
+                    >
+                      <Text
+                        style={[
+                          styles.controlButtonText,
+                          sortOrder === "desc" && styles.activeControlButtonText,
+                        ]}
+                      >
+                        {t.sortDesc || "Sort Desc"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.timeRangeContainer}>
+                    <TouchableOpacity
+                      style={[
+                        styles.controlButton,
+                        sourceFilter === "all" && styles.activeControlButton,
+                      ]}
+                      onPress={() => setSourceFilter("all")}
+                      accessibilityLabel={t.allSources || "All Sources"}
+                    >
+                      <Text
+                        style={[
+                          styles.controlButtonText,
+                          sourceFilter === "all" && styles.activeControlButtonText,
+                        ]}
+                      >
+                        {t.allSources || "All"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              ))}
-            </View>
-          )}
-          {activeTab === "risks" && (
-            <View>
-              {summaryStats ? (
-                <>
-                  <View style={styles.riskIndicator}>
-                    <Text style={styles.riskName}>
-                      {t.obesityRisk || "Obesity Risk"}
-                    </Text>
-                    <Text style={styles.riskValue}>
-                      {summaryStats.latestRisks.obesity}%
-                    </Text>
-                  </View>
-                  <View style={styles.riskIndicator}>
-                    <Text style={styles.riskName}>
-                      {t.hypertensionRisk || "Hypertension Risk"}
-                    </Text>
-                    <Text style={styles.riskValue}>
-                      {summaryStats.latestRisks.hypertension}%
-                    </Text>
-                  </View>
-                  <View style={styles.riskIndicator}>
-                    <Text style={styles.riskName}>
-                      {t.strokeRisk || "Stroke Risk"}
-                    </Text>
-                    <Text style={styles.riskValue}>
-                      {summaryStats.latestRisks.stroke}%
-                    </Text>
-                  </View>
-                </>
-              ) : (
-                <Text style={styles.riskName}>
-                  {t.noDataAvailable || "No data available"}
-                </Text>
-              )}
-            </View>
-          )}
-          {activeTab === "history" && (
-            <View>
-              {filteredData.length > 0 ? (
-                filteredData
-                  .slice()
-                  .reverse()
-                  .map((item, index) => (
+                {filteredHistoryData.length > 0 ? (
+                  filteredHistoryData.map((item, index) => (
                     <View
                       key={`${item.date}-${item.source}-${index}`}
                       style={styles.progressItem}
                     >
-                      <Text style={styles.progressDate}>{item.date}</Text>
-                      <View style={styles.progressDetails}>
-                        <Text style={styles.progressDetailItem}>
-                          {t.steps || "Steps"}:{" "}
-                          {item.daily_steps?.toLocaleString() || 0}
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.progressDate}>
+                          {item.date}
                         </Text>
-                        <Text style={styles.progressDetailItem}>
-                          {t.sleep || "Sleep"}: {item.sleep_hours || 0}h
-                        </Text>
-                        <Text style={styles.progressDetailItem}>
-                          BMI: {item.bmi || "N/A"}
-                        </Text>
-                        <Text style={styles.progressDetailItem}>
-                          {t.weight || "Weight"}: {item.weight_kg || "N/A"}kg
-                        </Text>
-                        <Text style={styles.progressDetailItem}>
-                          {t.exercise || "Exercise"}:{" "}
-                          {item.exercise_frequency || 0}/{t.perWeek || "week"}
-                        </Text>
-                        <Text style={styles.progressDetailItem}>
-                          {t.stress || "Stress"}: {item.stress_level || 0}/10
-                        </Text>
-                        <Text style={styles.progressDetailItem}>
-                          {t.diet || "Diet"}: {item.diet_quality || "N/A"}
-                        </Text>
-                        <Text style={styles.progressDetailItem}>
-                          {t.screenTime || "Screen"}:{" "}
-                          {item.screen_time_hours || 0}h
-                        </Text>
+                        <View style={styles.progressDetails}>
+                          <Text style={styles.progressDetailItem}>
+                            {t.steps || "Steps"}: {item.daily_steps?.toLocaleString() || 0}
+                          </Text>
+                          <Text style={styles.progressDetailItem}>
+                            {t.sleep || "Sleep"}: {item.sleep_hours || 0} {t.hrs}
+                          </Text>
+                          <Text style={styles.progressDetailItem}>
+                            BMI: {item.bmi || "N/A"}
+                          </Text>
+                          <Text style={styles.progressDetailItem}>
+                            {t.kgAbbreviation || "Weight"}: {item.weight_kg || "N/A"} {t.kgAbbreviation}
+                          </Text>
+                          <Text style={styles.progressDetailItem}>
+                            {t.exercise || "Exercise"}: {item.exercise_frequency || 0}/{t.perWeek || "week"}
+                          </Text>
+                          <Text style={styles.progressDetailItem}>
+                            {t.stress || "Stress"}: {item.stress_level || 0}/10
+                          </Text>
+                          <Text style={styles.progressDetailItem}>
+                            {t.dietQuality || "Diet"}: {item.diet_quality || "N/A"}
+                          </Text>
+                          <Text style={styles.progressDetailItem}>
+                            {t.screenTime || "Screen"}: {item.screen_time_hours || 0} {t.hrs}
+                          </Text>
+                        </View>
                       </View>
+                      <TouchableOpacity
+                        style={styles.deleteButton}
+                        onPress={() => confirmDelete(item)}
+                        accessibilityLabel={t.deleteEntry || "Delete Entry"}
+                      >
+                        <Text style={styles.deleteButtonText}>
+                          {t.delete || "Delete"}
+                        </Text>
+                      </TouchableOpacity>
                     </View>
                   ))
-              ) : (
-                <Text style={styles.riskName}>
-                  {t.noHistoryDataAvailable || "No history data available"}
-                </Text>
-              )}
-            </View>
-          )}
+                ) : (
+                  <Text style={styles.riskName}>
+                    {t.noHistoryDataAvailable || "No history data available"}
+                  </Text>
+                )}
+              </View>
+            )}
+          </View>
         </View>
-      </View>
-    ),
-    [activeTab, shapRankings, summaryStats, filteredData, t]
+      );
+    },
+    [activeTab, shapRankings, summaryStats, filteredData, t, sortOrder, sourceFilter, confirmDelete]
   );
 
   const renderItem = useCallback(

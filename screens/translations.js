@@ -1,6 +1,7 @@
 const translations = {
   English: {
     // Common
+    confirmDelete: "Confirm Delete",
     dietQuality: {
       label: "Diet Quality",
       poor: "Poor",
@@ -210,6 +211,7 @@ const translations = {
     hide: "Hide",
     show: "Show",
     // Progress Screen
+    allSources: "All",
     quickStats: "Quick Stats",
     lifestyleScore: "Lifestyle Score",
     weight: "Weight",
@@ -260,6 +262,8 @@ const translations = {
     serving: "serving",
     servings: "servings",
     hours: "hours",
+    sortAsc: "Sort Asc",
+    sortDesc: "Sort Des",
     // Lifestyle Data Input Screen
     lifestyleDataTitle: "Lifestyle Data",
     lifestyleDataTagline: "Step {currentStep} of {totalSteps}",
@@ -341,6 +345,8 @@ const translations = {
     minimal: "最少",
     extensive: "广泛",
     // Home Screen
+    deleteConfirmation: "Are you sure you want to delete this entry from",
+    allSources: "全部",
     week: "周",
     exercise: "锻炼",
     overallRisk: "总体风险",
@@ -369,6 +375,7 @@ const translations = {
     normal: "正常",
     today: "今天",
     lowStress: "低",
+    confirmDelete: "确定删除",
     moderateStress: "适中",
     highStress: "高",
     lifestyleFactors: "生活方式因素",
@@ -527,6 +534,7 @@ const translations = {
     exercise: "锻炼",
     stress: "压力",
     diet: "饮食",
+    deleteConfirmation: "您确定要删除此条目吗？",
     progressTitle: "您的健康进展",
     progressTagline: "跟踪并改善您的健康状况",
     bmi: "身体质量指数",
@@ -559,6 +567,8 @@ const translations = {
     serving: "份",
     servings: "份",
     hours: "小时",
+    sortAsc: "升序",
+    sortDesc: "降序",
     // Lifestyle Data Input Screen
     lifestyleDataTitle: "生活方式数据",
     lifestyleDataTagline: "步骤 {currentStep} 共 {totalSteps}",
@@ -704,6 +714,7 @@ const translations = {
     needsImprovement: "Perlu Ditingkatkan",
     unknown: "Tidak Diketahui",
     // Risk assessment terms
+    allSources: "Semua",
     overallHealthRisk: "Jumlah Risiko Kesihatan",
     lifestyleRisk: "Risiko Gaya Hidup",
     // Personalized tips
@@ -726,6 +737,8 @@ const translations = {
     or: "atau",
     "Continue with Google": "Teruskan dengan Google",
     // Register Screen
+    deleteConfirmation: "Adakah anda pasti mahu memadam entri ini?",
+    confirmDelete: "Anda pasti?",
     registerTitle: "Cipta Akaun",
     registerSubtitle: "Isi butiran anda untuk memulakan",
     fullName: "Nama Penuh",
@@ -866,6 +879,8 @@ const translations = {
     serving: "hidangan",
     servings: "hidangan",
     hours: "jam",
+    sortAsc: "Urut Menaik",
+    sortDesc: "Urut Menurun",
     // Lifestyle Data Input Screen
     lifestyleDataTitle: "Data Gaya Hidup",
     lifestyleDataTagline: "Langkah {currentStep} daripada {totalSteps}",

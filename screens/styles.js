@@ -251,7 +251,8 @@ export const styles = StyleSheet.create({
   },
 
   welcomeSection: {
-    marginBottom: 28,
+    marginBottom: 10,
+    paddingleft: 100
   },
 
   welcomeSectionTitle: {
@@ -268,11 +269,6 @@ export const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: "#e5e7eb",
-  },
-
-  welcomePicker: {
-    height: 54,
-    paddingHorizontal: 14,
   },
 
   privacyContainer: {
