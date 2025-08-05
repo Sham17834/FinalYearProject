@@ -14,7 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
-import { ResponseType } from "expo-auth-session";
+import { ResponseType, makeRedirectUri } from "expo-auth-session";
 import Icon from "react-native-vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getDb } from "./db";
@@ -38,13 +38,17 @@ const LoginScreen = () => {
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId:
-      "2278465694-cut7quuif1m2uc9v7rjvpmca3v31o53c.apps.googleusercontent.com",
+      "201040809867-ikcsmf4h7ounu0otc5u5dgn7iie8a3ds.apps.googleusercontent.com",
     iosClientId:
-      "2278465694-d6n4q95h0o61e2676lh44lr431b5t08r.apps.googleusercontent.com",
+      "201040809867-ikcsmf4h7ounu0otc5u5dgn7iie8a3ds.apps.googleusercontent.com",
     expoClientId:
       "2278465694-ne50ajia20laqf1mgtgr5jjcqcc5csv0.apps.googleusercontent.com",
     responseType: ResponseType.Token,
     scopes: ["profile", "email"],
+    redirectUri: makeRedirectUri({
+      native: "com.googleusercontent.apps.2278465694-cut7quuif1m2uc9v7rjvpmca3v31o53c://",
+      useProxy: true
+    }),
   });
 
   useEffect(() => {
@@ -54,7 +58,13 @@ const LoginScreen = () => {
       handleGoogleSignIn(authentication.accessToken);
     } else if (response?.type === "error") {
       console.error("Google Sign-In error:", response.error);
-      Alert.alert(t.error, response.error?.message || t.googleSignInError);
+      // More detailed error message to help diagnose the issue
+      const errorMessage = response.error?.message || t.googleSignInError;
+      const errorDetails = response.error?.code ? `\nError code: ${response.error.code}` : '';
+      Alert.alert(
+        t.error, 
+        `${errorMessage}${errorDetails}\n\nPlease try again or use email login instead.`
+      );
     }
   }, [response]);
 
@@ -138,6 +148,8 @@ const LoginScreen = () => {
   const handleGoogleSignIn = async (accessToken) => {
     setIsLoading(true);
     try {
+      console.log("Attempting to fetch user info with token:", accessToken.substring(0, 10) + "...");
+      
       // Get user info from Google
       const userInfoResponse = await fetch(
         "https://www.googleapis.com/userinfo/v2/me",
@@ -145,7 +157,15 @@ const LoginScreen = () => {
           headers: { Authorization: `Bearer ${accessToken}` },
         }
       );
+      
+      if (!userInfoResponse.ok) {
+        const errorText = await userInfoResponse.text();
+        console.error("Google API error:", errorText);
+        throw new Error(`Google API error: ${userInfoResponse.status} ${errorText}`);
+      }
+      
       const userInfo = await userInfoResponse.json();
+      console.log("User info received:", { name: userInfo.name, email: userInfo.email });
 
       if (userInfo.error) {
         throw new Error(userInfo.error.message);
@@ -158,11 +178,14 @@ const LoginScreen = () => {
           `INSERT INTO Users (fullName, email, createdAt) VALUES (?,?,?)`,
           [userInfo.name, userInfo.email, new Date().toISOString()]
         );
+        console.log("User saved to database");
       } catch (error) {
         if (!error.message.includes("UNIQUE constraint failed")) {
           console.error("Database error:", error);
           Alert.alert(t.error, t.databaseError || "Failed to save user data");
           return;
+        } else {
+          console.log("User already exists in database");
         }
       }
 
@@ -170,13 +193,17 @@ const LoginScreen = () => {
         "userProfileData",
         JSON.stringify({ fullName: userInfo.name, email: userInfo.email })
       );
+      console.log("User data saved to AsyncStorage");
 
       navigation.navigate("MainApp", {
         userData: { fullName: userInfo.name, email: userInfo.email },
       });
     } catch (error) {
       console.error("Google Sign-In Error:", error);
-      Alert.alert(t.error, t.googleSignInError);
+      Alert.alert(
+        t.error, 
+        `${t.googleSignInError}\n\n${error.message}\n\nPlease try again or use email login instead.`
+      );
     } finally {
       setIsLoading(false);
     }
@@ -290,7 +317,18 @@ const LoginScreen = () => {
 
           <TouchableOpacity
             style={[styles.googleButton, isLoading && styles.disabledButton]}
-            onPress={() => promptAsync()}
+            onPress={() => {
+              try {
+                console.log("Initiating Google Sign-In");
+                promptAsync();
+              } catch (error) {
+                console.error("Error starting Google Sign-In:", error);
+                Alert.alert(
+                  t.error,
+                  "Failed to start Google Sign-In. Please try again or use email login."
+                );
+              }
+            }}
             disabled={!request || isLoading}
             activeOpacity={0.8}
           >
@@ -302,6 +340,12 @@ const LoginScreen = () => {
             />
             <Text style={styles.googleButtonText}>{t.continueWithGoogle}</Text>
           </TouchableOpacity>
+          
+          {response?.type === "error" && (
+            <Text style={styles.errorHelpText}>
+              If you're having trouble with Google Sign-In, please try using email login instead.
+            </Text>
+          )}
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>{t.noAccount} </Text>
@@ -458,6 +502,13 @@ const styles = StyleSheet.create({
     color: "#008080",
     fontWeight: "500",
     fontSize: 14,
+  },
+  errorHelpText: {
+    color: "#ef4444",
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 8,
+    marginBottom: 8,
   },
 });
 
