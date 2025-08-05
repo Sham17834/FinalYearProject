@@ -47,10 +47,6 @@ const ProfileScreen = () => {
   const route = useRoute();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [age, setAge] = useState("30");
-  const [height, setHeight] = useState("175");
-  const [weight, setWeight] = useState("70");
-  const [gender, setGender] = useState("Male");
   const [chronicDisease, setChronicDisease] = useState("None");
   const [dailySteps, setDailySteps] = useState("5000");
   const [exerciseFrequency, setExerciseFrequency] = useState("3");
@@ -95,10 +91,6 @@ const ProfileScreen = () => {
             const data = userProfileLatest[0];
             setName(data.Full_Name || "");
             setEmail(data.email || "");
-            setAge(data.Age?.toString() || "30");
-            setGender(data.Gender || "Male");
-            setHeight(data.Height_cm?.toString() || "175");
-            setWeight(data.Weight_kg?.toString() || "70");
             setChronicDisease(data.Chronic_Disease || "None");
             setDailySteps(data.Daily_Steps?.toString() || "5000");
             setExerciseFrequency(data.Exercise_Frequency?.toString() || "3");
@@ -117,10 +109,6 @@ const ProfileScreen = () => {
             }
             setName(data.fullName || "");
             setEmail(data.email || "");
-            setAge(data.age?.toString() || "30");
-            setGender(data.gender || "Male");
-            setHeight(data.height_cm?.toString() || "175");
-            setWeight(data.weight_kg?.toString() || "70");
             setChronicDisease(data.chronic_disease || "None");
             setDailySteps(data.daily_steps?.toString() || "5000");
             setExerciseFrequency(data.exercise_frequency?.toString() || "3");
@@ -157,11 +145,6 @@ const ProfileScreen = () => {
     { label: t.monthly || "Monthly", value: "monthly" },
   ];
 
-  const genderOptions = [
-    { label: t.male || "Male", value: "Male" },
-    { label: t.female || "Female", value: "Female" },
-  ];
-
   const handleLanguageSelect = async (selectedLanguage) => {
     try {
       await changeLanguage(selectedLanguage.code);
@@ -193,10 +176,6 @@ const ProfileScreen = () => {
     const data = {
       fullName: name,
       email,
-      age: parseInt(age) || 30,
-      gender,
-      height_cm: parseFloat(height) || 175,
-      weight_kg: parseFloat(weight) || 70,
       chronic_disease: chronicDisease,
       daily_steps: parseInt(dailySteps) || 5000,
       exercise_frequency: parseInt(exerciseFrequency) || 3,
@@ -216,18 +195,17 @@ const ProfileScreen = () => {
     try {
       const db = await getDb();
 
-      // Update Users table
+      // Update or insert into Users table
       const user = await db.getFirstAsync(
         `SELECT id FROM Users WHERE email = ?`,
         [data.email]
       );
       if (user) {
-        await db.runAsync(`UPDATE Users SET fullName = ? WHERE email = ?`, [
-          data.fullName,
-          data.email,
-        ]);
+        await db.runAsync(
+          `UPDATE Users SET fullName = ? WHERE email = ?`,
+          [data.fullName, data.email]
+        );
       } else {
-        // If no user exists, create one (without password)
         await db.runAsync(
           `INSERT INTO Users (fullName, email, createdAt) VALUES (?, ?, ?)`,
           [data.fullName, data.email, new Date().toISOString()]
@@ -237,40 +215,16 @@ const ProfileScreen = () => {
       // Save to AsyncStorage
       await AsyncStorage.setItem("userProfileData", JSON.stringify(data));
 
-      // Save to UserProfile table
-      await db.runAsync(
-        `INSERT INTO UserProfile (
-          Full_Name, email, Age, Gender, Height_cm, Weight_kg, Chronic_Disease,
-          Daily_Steps, Exercise_Frequency, Sleep_Hours, Alcohol_Consumption,
-          Smoking_Habit, Diet_Quality, FRUITS_VEGGIES, Stress_Level, Screen_Time_Hours, date
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          data.fullName,
-          data.email,
-          data.age,
-          data.gender,
-          data.height_cm,
-          data.weight_kg,
-          data.chronic_disease,
-          data.daily_steps,
-          data.exercise_frequency,
-          data.sleep_hours,
-          data.alcohol_consumption,
-          data.smoking_habit,
-          data.diet_quality,
-          data.fruits_veggies,
-          data.stress_level,
-          data.screen_time_hours,
-          new Date().toISOString(),
-        ]
-      );
-
       Alert.alert(
         t.profileSaved || "Profile Saved",
         t.profileSavedMsg || "Profile data saved successfully",
         [{ text: t.ok || "OK", style: "default" }]
       );
       console.log("Saved:", data);
+
+      // Update state to reflect new values
+      setName(data.fullName);
+      setEmail(data.email);
     } catch (error) {
       console.error("Error saving profile data:", error);
       Alert.alert(
@@ -424,80 +378,6 @@ const ProfileScreen = () => {
                   value={email}
                   onChangeText={setEmail}
                 />
-              </View>
-
-              <View style={styles.inputRow}>
-                <View
-                  style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}
-                >
-                  <Text style={styles.inputLabel}>{t.age || "Age"}</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t.age || "Age"}
-                    placeholderTextColor="#9ca3af"
-                    keyboardType="numeric"
-                    value={age}
-                    onChangeText={setAge}
-                  />
-                </View>
-
-                <View
-                  style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}
-                >
-                  <Text style={styles.inputLabel}>{t.gender || "Gender"}</Text>
-                  <View style={styles.pickerContainer}>
-                    <Picker
-                      selectedValue={gender}
-                      style={styles.picker}
-                      dropdownIconColor={COLORS.textMuted}
-                      mode="dropdown"
-                      onValueChange={(itemValue) => setGender(itemValue)}
-                    >
-                      {genderOptions.map((option) => (
-                        <Picker.Item
-                          key={option.value}
-                          label={option.label}
-                          value={option.value}
-                          style={styles.pickerItem}
-                        />
-                      ))}
-                    </Picker>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.inputRow}>
-                <View
-                  style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}
-                >
-                  <Text style={styles.inputLabel}>
-                    {t.heightCm || "Height (cm)"}
-                  </Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t.heightPlaceholder || "Enter height"}
-                    placeholderTextColor="#9ca3af"
-                    keyboardType="numeric"
-                    value={height}
-                    onChangeText={setHeight}
-                  />
-                </View>
-
-                <View
-                  style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}
-                >
-                  <Text style={styles.inputLabel}>
-                    {t.weightKg || "Weight (kg)"}
-                  </Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t.weightPlaceholder || "Enter weight"}
-                    placeholderTextColor="#9ca3af"
-                    keyboardType="numeric"
-                    value={weight}
-                    onChangeText={setWeight}
-                  />
-                </View>
               </View>
             </View>
           </View>

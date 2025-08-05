@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useCallback, useContext, useEffect } from "react";
+import React, {
+  useState,
+  useMemo,
+  useCallback,
+  useContext,
+  useEffect,
+} from "react";
 import {
   View,
   Text,
@@ -10,12 +16,13 @@ import {
   StyleSheet,
   Animated,
   Alert,
+  Modal,
 } from "react-native";
-import { LineChart } from "react-native-chart-kit";
 import { LanguageContext } from "./LanguageContext";
 import * as SQLite from "expo-sqlite";
 import { useRoute } from "@react-navigation/native";
 import { getDb } from "./db";
+import { LineChart } from "react-native-chart-kit";
 
 const screenWidth = Dimensions.get("window").width;
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -38,7 +45,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: "#008080",
     width: "100%",
-    paddingTop: 25,
+    paddingTop: 19,
     paddingBottom: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -355,6 +362,44 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontWeight: "500",
   },
+  tooltipModal: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  tooltipContent: {
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    padding: 16,
+    width: screenWidth - 80,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  tooltipTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1e293b",
+    marginBottom: 8,
+  },
+  tooltipText: {
+    fontSize: 14,
+    color: "#334155",
+  },
+  tooltipCloseButton: {
+    marginTop: 12,
+    padding: 8,
+    backgroundColor: "#008080",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  tooltipCloseText: {
+    color: "#ffffff",
+    fontWeight: "500",
+  },
 });
 
 const ProgressScreen = () => {
@@ -369,19 +414,29 @@ const ProgressScreen = () => {
   const [error, setError] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [selectedDataPoint, setSelectedDataPoint] = useState(null);
   const scrollY = new Animated.Value(0);
 
   const handleDeleteEntry = useCallback(
     async (item) => {
       try {
         const db = await getDb();
-        const table = item.source === "UserProfile" ? "UserProfile" : "HealthRecords";
+        const table =
+          item.source === "UserProfile" ? "UserProfile" : "HealthRecords";
         await db.runAsync(`DELETE FROM ${table} WHERE id = ?`, [item.id]);
-        console.log(`Deleted ${table} record with id ${item.id} and date ${item.date}`);
-        setRefreshKey((prev) => prev + 1); // Trigger data refresh
+        console.log(
+          `Deleted ${table} record with id ${item.id} and date ${item.date}`
+        );
+        setRefreshKey((prev) => prev + 1);
       } catch (error) {
-        console.error(`Error deleting ${table} entry with id ${item.id}:`, error);
-        Alert.alert(t.error || "Error", t.deleteError || "Failed to delete entry");
+        console.error(
+          `Error deleting ${table} entry with id ${item.id}:`,
+          error
+        );
+        Alert.alert(
+          t.error || "Error",
+          t.deleteError || "Failed to delete entry"
+        );
       }
     },
     [t]
@@ -391,7 +446,10 @@ const ProgressScreen = () => {
     (item) => {
       Alert.alert(
         t.confirmDelete || "Confirm Delete",
-        `${t.deleteConfirmation || "Are you sure you want to delete this entry from"} (${item.date})?`,
+        `${
+          t.deleteConfirmation ||
+          "Are you sure you want to delete this entry from"
+        } (${item.date})?`,
         [
           { text: t.cancel || "Cancel", style: "cancel" },
           {
@@ -507,7 +565,6 @@ const ProgressScreen = () => {
         };
       }
 
-      // Fetch latest UserProfile record for quick stats
       const userProfileLatest = await db.getAllAsync(
         "SELECT * FROM UserProfile ORDER BY id DESC LIMIT 1"
       );
@@ -542,7 +599,6 @@ const ProgressScreen = () => {
 
       setLatestUserProfile(latestRecord);
 
-      // Fetch all data for charts and history
       const userProfileData = await db.getAllAsync(
         "SELECT * FROM UserProfile ORDER BY id DESC"
       );
@@ -595,14 +651,20 @@ const ProgressScreen = () => {
         source: "HealthRecords",
       }));
 
-      let allData = [...fallbackData, ...transformedUserProfileData, ...transformedHealthRecordsData];
+      let allData = [
+        ...fallbackData,
+        ...transformedUserProfileData,
+        ...transformedHealthRecordsData,
+      ];
 
       const uniqueData = [];
       const seenDates = new Set();
 
       if (currentDayData) {
         const existingIndex = allData.findIndex(
-          (existing) => existing.date === currentDayData.date && existing.source === "UserProfile"
+          (existing) =>
+            existing.date === currentDayData.date &&
+            existing.source === "UserProfile"
         );
         if (existingIndex >= 0) {
           allData[existingIndex] = currentDayData;
@@ -625,11 +687,13 @@ const ProgressScreen = () => {
           }
         });
 
-      setProgressData(uniqueData.sort((a, b) => {
-        const dateA = new Date(a.date.split("/").reverse().join("-"));
-        const dateB = new Date(b.date.split("/").reverse().join("-"));
-        return dateA - dateB;
-      }));
+      setProgressData(
+        uniqueData.sort((a, b) => {
+          const dateA = new Date(a.date.split("/").reverse().join("-"));
+          const dateB = new Date(b.date.split("/").reverse().join("-"));
+          return dateA - dateB;
+        })
+      );
     } catch (error) {
       console.error("Error fetching progress data:", error);
       setError("Failed to load data from database");
@@ -679,14 +743,18 @@ const ProgressScreen = () => {
     else if (data.daily_steps < 7000) hypertensionScore += 10;
 
     if (data.salt_intake?.toUpperCase() === "HIGH") hypertensionScore += 20;
-    else if (data.salt_intake?.toUpperCase() === "MODERATE") hypertensionScore += 10;
+    else if (data.salt_intake?.toUpperCase() === "MODERATE")
+      hypertensionScore += 10;
 
     if (data.alcohol_consumption === "Yes") hypertensionScore += 15;
 
     if (data.stress_level > 7) hypertensionScore += 20;
     else if (data.stress_level > 3) hypertensionScore += 10;
 
-    risks.hypertension = Math.max(1, Math.min(100, Math.round(hypertensionScore)));
+    risks.hypertension = Math.max(
+      1,
+      Math.min(100, Math.round(hypertensionScore))
+    );
 
     let strokeScore = 0;
     if (data.bmi >= 30) strokeScore += 25;
@@ -763,7 +831,9 @@ const ProgressScreen = () => {
   const filteredData = useMemo(() => {
     const today = new Date();
     const daysAgo = timeRange === "7days" ? 7 : 30;
-    const cutoffDate = formatDate(new Date(today.setDate(today.getDate() - daysAgo)));
+    const cutoffDate = formatDate(
+      new Date(today.setDate(today.getDate() - daysAgo))
+    );
     return progressData
       .filter((item) => {
         const itemDate = new Date(item.date.split("/").reverse().join("-"));
@@ -806,32 +876,49 @@ const ProgressScreen = () => {
       { factor: t.dietQuality || "Diet Quality", value: 0.1 },
       { factor: t.fruitsVeggies || "Fruits & Veggies", value: 0.1 },
     ],
-    [t.steps, t.bmi, t.exerciseFrequency, t.sleep, t.dietQuality, t.fruitsVeggies]
+    [
+      t.steps,
+      t.bmi,
+      t.exerciseFrequency,
+      t.sleep,
+      t.dietQuality,
+      t.fruitsVeggies,
+    ]
   );
 
-  const chartConfig = useMemo(
-    () => ({
-      backgroundGradientFrom: "#ffffff",
-      backgroundGradientTo: "#ffffff",
-      decimalPlaces: 1,
-      color: (opacity = 1) => `rgba(0, 128, 128, ${opacity})`,
-      labelColor: (opacity = 1) => `rgba(31, 41, 55, ${opacity})`,
-      style: { borderRadius: 8 },
-      propsForDots: { r: "3", strokeWidth: "1", stroke: "#008080" },
-      propsForBackgroundLines: { strokeDasharray: "", stroke: "#e5e7eb" },
-    }),
-    []
-  );
+  const chartConfig = {
+    backgroundColor: "#ffffff",
+    backgroundGradientFrom: "#ffffff",
+    backgroundGradientTo: "#ffffff",
+    decimalPlaces: 1,
+    color: (opacity = 1) => `rgba(0, 128, 128, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(30, 41, 59, ${opacity})`,
+    style: {
+      borderRadius: 16,
+    },
+    propsForDots: {
+      r: "4",
+      strokeWidth: "2",
+      stroke: "#008080",
+    },
+  };
 
   const summaryStats = useMemo(() => {
     if (!latestUserProfile) return null;
 
     const latestData = latestUserProfile;
-    const userProfileData = filteredData.filter((item) => item.source === "UserProfile");
-    const previousData = userProfileData.length > 1 ? userProfileData[userProfileData.length - 2] : null;
+    const userProfileData = filteredData.filter(
+      (item) => item.source === "UserProfile"
+    );
+    const previousData =
+      userProfileData.length > 1
+        ? userProfileData[userProfileData.length - 2]
+        : null;
 
     const latestScore = calculateLifestyleScore(latestData);
-    const previousScore = previousData ? calculateLifestyleScore(previousData) : latestScore;
+    const previousScore = previousData
+      ? calculateLifestyleScore(previousData)
+      : latestScore;
     const scoreChange = latestScore - previousScore;
 
     const latestRisks = calculateDiseaseRisks(latestData);
@@ -840,9 +927,13 @@ const ProgressScreen = () => {
     if (previousData) {
       const previousRisks = calculateDiseaseRisks(previousData);
       const avgPreviousRisk =
-        (previousRisks.obesity + previousRisks.hypertension + previousRisks.stroke) / 3;
+        (previousRisks.obesity +
+          previousRisks.hypertension +
+          previousRisks.stroke) /
+        3;
       const avgLatestRisk =
-        (latestRisks.obesity + latestRisks.hypertension + latestRisks.stroke) / 3;
+        (latestRisks.obesity + latestRisks.hypertension + latestRisks.stroke) /
+        3;
 
       riskChange =
         avgLatestRisk < avgPreviousRisk
@@ -860,11 +951,18 @@ const ProgressScreen = () => {
       bmi: latestData.bmi || null,
       weight: latestData.weight_kg || null,
       height: latestData.height_cm || null,
-      riskLevel: (latestRisks.obesity + latestRisks.hypertension + latestRisks.stroke) / 3,
+      riskLevel:
+        (latestRisks.obesity + latestRisks.hypertension + latestRisks.stroke) /
+        3,
       riskChange,
       latestRisks,
     };
-  }, [latestUserProfile, filteredData, calculateLifestyleScore, calculateDiseaseRisks]);
+  }, [
+    latestUserProfile,
+    filteredData,
+    calculateLifestyleScore,
+    calculateDiseaseRisks,
+  ]);
 
   const data = useMemo(
     () => [
@@ -875,6 +973,21 @@ const ProgressScreen = () => {
       { type: "tabs" },
     ],
     []
+  );
+
+  const handleChartSelect = useCallback(
+    (dataPoint, index) => {
+      if (index >= 0 && index < filteredData.length) {
+        const selectedItem = filteredData[index];
+        setSelectedDataPoint({
+          chartType: "lifestyle",
+          date: selectedItem.date,
+          value: dataPoint.value,
+          details: selectedItem,
+        });
+      }
+    },
+    [filteredData]
   );
 
   const renderQuickStats = useCallback(
@@ -955,28 +1068,38 @@ const ProgressScreen = () => {
       <View style={styles.timeRangeCard}>
         <View style={styles.timeRangeContainer}>
           <TouchableOpacity
-            style={[styles.timeRangeButton, timeRange === "7days" && styles.activeTimeRange]}
+            style={[
+              styles.timeRangeButton,
+              timeRange === "7days" && styles.activeTimeRange,
+            ]}
             onPress={() => setTimeRange("7days")}
             accessibilityLabel={t.sevenDays || "7 Days"}
           >
             <Text
               style={[
                 styles.timeRangeText,
-                timeRange === "7days" ? styles.activeTimeRangeText : styles.inactiveTimeRangeText,
+                timeRange === "7days"
+                  ? styles.activeTimeRangeText
+                  : styles.inactiveTimeRangeText,
               ]}
             >
               {t.sevenDays || "7 Days"}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.timeRangeButton, timeRange === "30days" && styles.activeTimeRange]}
+            style={[
+              styles.timeRangeButton,
+              timeRange === "30days" && styles.activeTimeRange,
+            ]}
             onPress={() => setTimeRange("30days")}
             accessibilityLabel={t.thirtyDays || "30 Days"}
           >
             <Text
               style={[
                 styles.timeRangeText,
-                timeRange === "30days" ? styles.activeTimeRangeText : styles.inactiveTimeRangeText,
+                timeRange === "30days"
+                  ? styles.activeTimeRangeText
+                  : styles.inactiveTimeRangeText,
               ]}
             >
               {t.thirtyDays || "30 Days"}
@@ -998,13 +1121,23 @@ const ProgressScreen = () => {
           <LineChart
             data={{
               labels: filteredData.map((item) => item.date.slice(0, 5)),
-              datasets: [{ data: lifestyleScores }],
+              datasets: [
+                {
+                  data: lifestyleScores,
+                  color: (opacity = 1) => `rgba(0, 128, 128, ${opacity})`,
+                  strokeWidth: 2,
+                },
+              ],
             }}
             width={screenWidth - 64}
             height={180}
             chartConfig={chartConfig}
             bezier
-            style={{ alignSelf: "center" }}
+            onDataPointClick={handleChartSelect}
+            style={{
+              marginVertical: 8,
+              borderRadius: 16,
+            }}
           />
         ) : (
           <Text style={styles.compactStatLabel}>
@@ -1013,7 +1146,7 @@ const ProgressScreen = () => {
         )}
       </View>
     ),
-    [lifestyleScores, filteredData, chartConfig, t]
+    [lifestyleScores, filteredData, chartConfig, t, handleChartSelect]
   );
 
   const renderStepsSleepCharts = useCallback(
@@ -1029,18 +1162,22 @@ const ProgressScreen = () => {
                 <LineChart
                   data={{
                     labels: filteredData.map((item) => item.date.slice(0, 5)),
-                    datasets: [{ data: stepsData }],
+                    datasets: [
+                      {
+                        data: stepsData,
+                        color: (opacity = 1) => `rgba(0, 128, 128, ${opacity})`,
+                        strokeWidth: 2,
+                      },
+                    ],
                   }}
                   width={screenWidth / 2 - 40}
                   height={120}
-                  chartConfig={{
-                    ...chartConfig,
-                    decimalPlaces: 0,
+                  chartConfig={chartConfig}
+                  bezier
+                  style={{
+                    marginVertical: 8,
+                    borderRadius: 16,
                   }}
-                  withDots={false}
-                  withInnerLines={false}
-                  withOuterLines={false}
-                  style={{ alignSelf: "center" }}
                 />
               ) : (
                 <Text style={styles.compactStatLabel}>
@@ -1050,7 +1187,8 @@ const ProgressScreen = () => {
               {summaryStats && (
                 <View style={styles.trendContainer}>
                   <Text style={[styles.trendText, styles.neutralTrend]}>
-                    {t.latest || "Latest"}: {summaryStats.steps.toLocaleString()}
+                    {t.latest || "Latest"}:{" "}
+                    {summaryStats.steps.toLocaleString()}
                   </Text>
                 </View>
               )}
@@ -1065,15 +1203,22 @@ const ProgressScreen = () => {
                 <LineChart
                   data={{
                     labels: filteredData.map((item) => item.date.slice(0, 5)),
-                    datasets: [{ data: sleepData }],
+                    datasets: [
+                      {
+                        data: sleepData,
+                        color: (opacity = 1) => `rgba(0, 128, 128, ${opacity})`,
+                        strokeWidth: 2,
+                      },
+                    ],
                   }}
                   width={screenWidth / 2 - 40}
                   height={120}
                   chartConfig={chartConfig}
-                  withDots={false}
-                  withInnerLines={false}
-                  withOuterLines={false}
-                  style={{ alignSelf: "center" }}
+                  bezier
+                  style={{
+                    marginVertical: 8,
+                    borderRadius: 16,
+                  }}
                 />
               ) : (
                 <Text style={styles.compactStatLabel}>
@@ -1092,219 +1237,318 @@ const ProgressScreen = () => {
         </View>
       </View>
     ),
-    [stepsData, sleepData, filteredData, chartConfig, summaryStats, t]
+    [
+      stepsData,
+      sleepData,
+      filteredData,
+      chartConfig,
+      summaryStats,
+      t,
+    ]
   );
 
-  const renderTabs = useCallback(
-    () => {
-      const filteredHistoryData = filteredData
-        .filter((item) => {
-          if (sourceFilter === "all") return true;
-          return item.source === sourceFilter;
-        })
-        .sort((a, b) => {
-          const dateA = new Date(a.date.split("/").reverse().join("-"));
-          const dateB = new Date(b.date.split("/").reverse().join("-"));
-          return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
-        });
+  const renderTooltip = useCallback(() => {
+    if (!selectedDataPoint) return null;
 
-      return (
-        <View style={styles.bottomSection}>
-          <View style={styles.tabContainer}>
+    const { chartType, date, value, details } = selectedDataPoint;
+    let title = "";
+    let valueText = "";
+
+    if (chartType === "lifestyle") {
+      title = t.lifestyleScore || "Lifestyle Score";
+      valueText = `${Math.round(value)}`;
+    } else if (chartType === "steps") {
+      title = t.steps || "Steps";
+      valueText = `${Math.round(value).toLocaleString()}`;
+    } else if (chartType === "sleep") {
+      title = t.sleep || "Sleep";
+      valueText = `${value.toFixed(1)}h`;
+    }
+
+    return (
+      <Modal
+        transparent={true}
+        visible={!!selectedDataPoint}
+        animationType="fade"
+        onRequestClose={() => setSelectedDataPoint(null)}
+      >
+        <View style={styles.tooltipModal}>
+          <View style={styles.tooltipContent}>
+            <Text style={styles.tooltipTitle}>
+              {title} - {date}
+            </Text>
+            <Text style={styles.tooltipText}>
+              {t.value || "Value"}: {valueText}
+            </Text>
+            <Text style={styles.tooltipText}>
+              {t.bmi || "BMI"}: {details.bmi || "N/A"}
+            </Text>
+            <Text style={styles.tooltipText}>
+              {t.exercise || "Exercise"}: {details.exercise_frequency || 0}/
+              {t.perWeek || "week"}
+            </Text>
+            <Text style={styles.tooltipText}>
+              {t.dietQuality || "Diet"}: {details.diet_quality || "N/A"}
+            </Text>
             <TouchableOpacity
-              style={[styles.tabButton, activeTab === "factors" && styles.activeTab]}
-              onPress={() => setActiveTab("factors")}
-              accessibilityLabel={t.factors || "Factors"}
+              style={styles.tooltipCloseButton}
+              onPress={() => setSelectedDataPoint(null)}
             >
-              <Text
-                style={[styles.tabText, activeTab === "factors" && styles.activeTabText]}
-              >
-                {t.factors || "Factors"}
-              </Text>
+              <Text style={styles.tooltipCloseText}>{t.close || "Close"}</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === "risks" && styles.activeTab]}
-              onPress={() => setActiveTab("risks")}
-              accessibilityLabel={t.risks || "Risks"}
-            >
-              <Text
-                style={[styles.tabText, activeTab === "risks" && styles.activeTabText]}
-              >
-                {t.risks || "Risks"}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === "history" && styles.activeTab]}
-              onPress={() => setActiveTab("history")}
-              accessibilityLabel={t.history || "History"}
-            >
-              <Text
-                style={[styles.tabText, activeTab === "history" && styles.activeTabText]}
-              >
-                {t.history || "History"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.tabContent}>
-            {activeTab === "factors" && (
-              <View>
-                {shapRankings.map((item, index) => (
-                  <View key={index} style={styles.factorItem}>
-                    <Text style={styles.factorName}>{item.factor}</Text>
-                    <Text style={styles.factorValue}>
-                      {(item.value * 100).toFixed(0)}%
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
-            {activeTab === "risks" && (
-              <View>
-                {summaryStats ? (
-                  <>
-                    <View style={styles.riskIndicator}>
-                      <Text style={styles.riskName}>
-                        {t.obesityRisk || "Obesity Risk"}
-                      </Text>
-                      <Text style={styles.riskValue}>
-                        {summaryStats.latestRisks.obesity}%
-                      </Text>
-                    </View>
-                    <View style={styles.riskIndicator}>
-                      <Text style={styles.riskName}>
-                        {t.hypertensionRisk || "Hypertension Risk"}
-                      </Text>
-                      <Text style={styles.riskValue}>
-                        {summaryStats.latestRisks.hypertension}%
-                      </Text>
-                    </View>
-                    <View style={styles.riskIndicator}>
-                      <Text style={styles.riskName}>
-                        {t.strokeRisk || "Stroke Risk"}
-                      </Text>
-                      <Text style={styles.riskValue}>
-                        {summaryStats.latestRisks.stroke}%
-                      </Text>
-                    </View>
-                  </>
-                ) : (
-                  <Text style={styles.riskName}>
-                    {t.noDataAvailable || "No data available"}
-                  </Text>
-                )}
-              </View>
-            )}
-            {activeTab === "history" && (
-              <View>
-                <View style={styles.historyControls}>
-                  <View style={styles.timeRangeContainer}>
-                    <TouchableOpacity
-                      style={[styles.controlButton, sortOrder === "asc" && styles.activeControlButton]}
-                      onPress={() => setSortOrder("asc")}
-                      accessibilityLabel={t.sortAsc || "Sort Ascending"}
-                    >
-                      <Text
-                        style={[
-                          styles.controlButtonText,
-                          sortOrder === "asc" && styles.activeControlButtonText,
-                        ]}
-                      >
-                        {t.sortAsc || "Sort Asc"}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.controlButton, sortOrder === "desc" && styles.activeControlButton]}
-                      onPress={() => setSortOrder("desc")}
-                      accessibilityLabel={t.sortDesc || "Sort Descending"}
-                    >
-                      <Text
-                        style={[
-                          styles.controlButtonText,
-                          sortOrder === "desc" && styles.activeControlButtonText,
-                        ]}
-                      >
-                        {t.sortDesc || "Sort Desc"}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                  <View style={styles.timeRangeContainer}>
-                    <TouchableOpacity
-                      style={[styles.controlButton, sourceFilter === "all" && styles.activeControlButton]}
-                      onPress={() => setSourceFilter("all")}
-                      accessibilityLabel={t.allSources || "All Sources"}
-                    >
-                      <Text
-                        style={[
-                          styles.controlButtonText,
-                          sourceFilter === "all" && styles.activeControlButtonText,
-                        ]}
-                      >
-                        {t.allSources || "All"}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                {filteredHistoryData.length > 0 ? (
-                  filteredHistoryData.map((item, index) => (
-                    <View
-                      key={`${item.date}-${item.source}-${index}`}
-                      style={styles.progressItem}
-                    >
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.progressDate}>
-                          {item.date}
-                        </Text>
-                        <View style={styles.progressDetails}>
-                          <Text style={styles.progressDetailItem}>
-                            {t.steps || "Steps"}: {item.daily_steps?.toLocaleString() || 0}
-                          </Text>
-                          <Text style={styles.progressDetailItem}>
-                            {t.sleep || "Sleep"}: {item.sleep_hours || 0} {t.hrs}
-                          </Text>
-                          <Text style={styles.progressDetailItem}>
-                            BMI: {item.bmi || "N/A"}
-                          </Text>
-                          <Text style={styles.progressDetailItem}>
-                            {t.kgAbbreviation || "Weight"}: {item.weight_kg || "N/A"} {t.kgAbbreviation}
-                          </Text>
-                          <Text style={styles.progressDetailItem}>
-                            {t.exercise || "Exercise"}: {item.exercise_frequency || 0}/{t.perWeek || "week"}
-                          </Text>
-                          <Text style={styles.progressDetailItem}>
-                            {t.stress || "Stress"}: {item.stress_level || 0}/10
-                          </Text>
-                          <Text style={styles.progressDetailItem}>
-                            {t.dietQuality || "Diet"}: {item.diet_quality || "N/A"}
-                          </Text>
-                          <Text style={styles.progressDetailItem}>
-                            {t.screenTime || "Screen"}: {item.screen_time_hours || 0} {t.hrs}
-                          </Text>
-                        </View>
-                      </View>
-                      <TouchableOpacity
-                        style={styles.deleteButton}
-                        onPress={() => confirmDelete(item)}
-                        accessibilityLabel={t.deleteEntry || "Delete Entry"}
-                      >
-                        <Text style={styles.deleteButtonText}>
-                          {t.delete || "Delete"}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  ))
-                ) : (
-                  <Text style={styles.riskName}>
-                    {t.noHistoryDataAvailable || "No history data available"}
-                  </Text>
-                )}
-              </View>
-            )}
           </View>
         </View>
-      );
-    },
-    [activeTab, shapRankings, summaryStats, filteredData, t, sortOrder, sourceFilter, confirmDelete]
-  );
+      </Modal>
+    );
+  }, [selectedDataPoint, t]);
+
+  const renderTabs = useCallback(() => {
+    const filteredHistoryData = filteredData
+      .filter((item) => {
+        if (sourceFilter === "all") return true;
+        return item.source === sourceFilter;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.date.split("/").reverse().join("-"));
+        const dateB = new Date(b.date.split("/").reverse().join("-"));
+        return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+      });
+
+    return (
+      <View style={styles.bottomSection}>
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              activeTab === "factors" && styles.activeTab,
+            ]}
+            onPress={() => setActiveTab("factors")}
+            accessibilityLabel={t.factors || "Factors"}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "factors" && styles.activeTabText,
+              ]}
+            >
+              {t.factors || "Factors"}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              activeTab === "risks" && styles.activeTab,
+            ]}
+            onPress={() => setActiveTab("risks")}
+            accessibilityLabel={t.risks || "Risks"}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "risks" && styles.activeTabText,
+              ]}
+            >
+              {t.risks || "Risks"}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              activeTab === "history" && styles.activeTab,
+            ]}
+            onPress={() => setActiveTab("history")}
+            accessibilityLabel={t.history || "History"}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "history" && styles.activeTabText,
+              ]}
+            >
+              {t.history || "History"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.tabContent}>
+          {activeTab === "factors" && (
+            <View>
+              {shapRankings.map((item, index) => (
+                <View key={index} style={styles.factorItem}>
+                  <Text style={styles.factorName}>{item.factor}</Text>
+                  <Text style={styles.factorValue}>
+                    {(item.value * 100).toFixed(0)}%
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+          {activeTab === "risks" && (
+            <View>
+              {summaryStats ? (
+                <>
+                  <View style={styles.riskIndicator}>
+                    <Text style={styles.riskName}>
+                      {t.obesityRisk || "Obesity Risk"}
+                    </Text>
+                    <Text style={styles.riskValue}>
+                      {summaryStats.latestRisks.obesity}%
+                    </Text>
+                  </View>
+                  <View style={styles.riskIndicator}>
+                    <Text style={styles.riskName}>
+                      {t.hypertensionRisk || "Hypertension Risk"}
+                    </Text>
+                    <Text style={styles.riskValue}>
+                      {summaryStats.latestRisks.hypertension}%
+                    </Text>
+                  </View>
+                  <View style={styles.riskIndicator}>
+                    <Text style={styles.riskName}>
+                      {t.strokeRisk || "Stroke Risk"}
+                    </Text>
+                    <Text style={styles.riskValue}>
+                      {summaryStats.latestRisks.stroke}%
+                    </Text>
+                  </View>
+                </>
+              ) : (
+                <Text style={styles.riskName}>
+                  {t.noDataAvailable || "No data available"}
+                </Text>
+              )}
+            </View>
+          )}
+          {activeTab === "history" && (
+            <View>
+              <View style={styles.historyControls}>
+                <View style={styles.timeRangeContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.controlButton,
+                      sortOrder === "asc" && styles.activeControlButton,
+                    ]}
+                    onPress={() => setSortOrder("asc")}
+                    accessibilityLabel={t.sortAsc || "Sort Ascending"}
+                  >
+                    <Text
+                      style={[
+                        styles.controlButtonText,
+                        sortOrder === "asc" && styles.activeControlButtonText,
+                      ]}
+                    >
+                      {t.sortAsc || "Sort Asc"}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.controlButton,
+                      sortOrder === "desc" && styles.activeControlButton,
+                    ]}
+                    onPress={() => setSortOrder("desc")}
+                    accessibilityLabel={t.sortDesc || "Sort Descending"}
+                  >
+                    <Text
+                      style={[
+                        styles.controlButtonText,
+                        sortOrder === "desc" && styles.activeControlButtonText,
+                      ]}
+                    >
+                      {t.sortDesc || "Sort Desc"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.timeRangeContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.controlButton,
+                      sourceFilter === "all" && styles.activeControlButton,
+                    ]}
+                    onPress={() => setSourceFilter("all")}
+                    accessibilityLabel={t.allSources || "All Sources"}
+                  >
+                    <Text
+                      style={[
+                        styles.controlButtonText,
+                        sourceFilter === "all" &&
+                          styles.activeControlButtonText,
+                      ]}
+                    >
+                      {t.allSources || "All"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              {filteredHistoryData.length > 0 ? (
+                filteredHistoryData.map((item, index) => (
+                  <View
+                    key={`${item.date}-${item.source}-${index}`}
+                    style={styles.progressItem}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.progressDate}>{item.date}</Text>
+                      <View style={styles.progressDetails}>
+                        <Text style={styles.progressDetailItem}>
+                          {t.steps || "Steps"}:{" "}
+                          {item.daily_steps?.toLocaleString() || 0}
+                        </Text>
+                        <Text style={styles.progressDetailItem}>
+                          {t.sleep || "Sleep"}: {item.sleep_hours || 0} {t.hrs}
+                        </Text>
+                        <Text style={styles.progressDetailItem}>
+                          BMI: {item.bmi || "N/A"}
+                        </Text>
+                        <Text style={styles.progressDetailItem}>
+                          {t.kgAbbreviation || "Weight"}:{" "}
+                          {item.weight_kg || "N/A"} {t.kgAbbreviation}
+                        </Text>
+                        <Text style={styles.progressDetailItem}>
+                          {t.exercise || "Exercise"}:{" "}
+                          {item.exercise_frequency || 0}/{t.perWeek || "week"}
+                        </Text>
+                        <Text style={styles.progressDetailItem}>
+                          {t.stress || "Stress"}: {item.stress_level || 0}/10
+                        </Text>
+                        <Text style={styles.progressDetailItem}>
+                          {t.dietQuality || "Diet"}:{" "}
+                          {item.diet_quality || "N/A"}
+                        </Text>
+                        <Text style={styles.progressDetailItem}>
+                          {t.screenTime || "Screen"}:{" "}
+                          {item.screen_time_hours || 0} {t.hrs}
+                        </Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => confirmDelete(item)}
+                      accessibilityLabel={t.deleteEntry || "Delete Entry"}
+                    >
+                      <Text style={styles.deleteButtonText}>
+                        {t.delete || "Delete"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.riskName}>
+                  {t.noHistoryDataAvailable || "No history data available"}
+                </Text>
+              )}
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  }, [
+    activeTab,
+    shapRankings,
+    summaryStats,
+    filteredData,
+    t,
+    sortOrder,
+    sourceFilter,
+    confirmDelete,
+  ]);
 
   const renderItem = useCallback(
     ({ item }) => {
@@ -1323,7 +1567,13 @@ const ProgressScreen = () => {
           return null;
       }
     },
-    [renderQuickStats, renderTimeRange, renderLifestyleChart, renderStepsSleepCharts, renderTabs]
+    [
+      renderQuickStats,
+      renderTimeRange,
+      renderLifestyleChart,
+      renderStepsSleepCharts,
+      renderTabs,
+    ]
   );
 
   const fadeAnim = scrollY.interpolate({
@@ -1342,13 +1592,19 @@ const ProgressScreen = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
       <Animated.View
-        style={[styles.header, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
+        style={[
+          styles.header,
+          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+        ]}
       >
         <Text style={styles.headerTitle}>
           {t.progressTitle || "Your Health Progress"}
         </Text>
         <Animated.Text
-          style={[styles.headerSubtitle, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
+          style={[
+            styles.headerSubtitle,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+          ]}
         >
           {t.progressTagline || "Track and improve your wellbeing"}
         </Animated.Text>
@@ -1369,11 +1625,30 @@ const ProgressScreen = () => {
         windowSize={5}
         initialNumToRender={3}
         getItemLayout={(data, index) => ({
-          length: index === 0 ? 120 : index === 1 ? 60 : index === 2 ? 240 : index === 3 ? 220 : 300,
-          offset: index === 0 ? 0 : index === 1 ? 120 : index === 2 ? 180 : index === 3 ? 420 : 640,
+          length:
+            index === 0
+              ? 120
+              : index === 1
+              ? 60
+              : index === 2
+              ? 240
+              : index === 3
+              ? 220
+              : 300,
+          offset:
+            index === 0
+              ? 0
+              : index === 1
+              ? 120
+              : index === 2
+              ? 180
+              : index === 3
+              ? 420
+              : 640,
           index,
         })}
       />
+      {renderTooltip()}
     </SafeAreaView>
   );
 };
