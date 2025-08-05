@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import Svg, { Circle } from "react-native-svg";
 import { LanguageContext } from "./LanguageContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getDb } from "./db.js";
 
 const { width } = Dimensions.get("window");
 const isIOS = Platform.OS === "ios";
@@ -424,73 +424,129 @@ const HealthHomeScreen = () => {
   const fadeAnim = new Animated.Value(0.8);
   const slideAnim = new Animated.Value(10);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = route.params?.lifestyleData;
-        const predictions = route.params?.predictionData;
+  const fetchProgressData = useCallback(async () => {
+    try {
+      const db = await getDb();
 
-        const storedProfileData = await AsyncStorage.getItem("userProfileData");
-        const storedPredictionData = await AsyncStorage.getItem(
-          "predictionData"
-        );
+      // Fetch the latest record from UserProfile
+      const userProfileData = await db.getAllAsync(
+        "SELECT * FROM UserProfile ORDER BY id DESC LIMIT 1"
+      );
 
-        const lifestyle =
-          data || (storedProfileData ? JSON.parse(storedProfileData) : null);
-        const prediction =
-          predictions ||
-          (storedPredictionData ? JSON.parse(storedPredictionData) : null);
+      let lifestyle = null;
+      let prediction = null;
 
-        console.log("Received lifestyleData:", lifestyle);
-        console.log("Received predictionData:", prediction);
+      if (userProfileData.length > 0) {
+        const record = userProfileData[0];
+        lifestyle = {
+          date: record.date,
+          Daily_Steps: Number(record.Daily_Steps) || 0,
+          Sleep_Hours: Number(record.Sleep_Hours) || 0,
+          BMI: Number(record.BMI) || null,
+          Age: Number(record.Age) || null,
+          Gender: record.Gender || "Unknown",
+          Height_cm: Number(record.Height_cm) || null,
+          Weight_kg: Number(record.Weight_kg) || null,
+          Chronic_Disease: record.Chronic_Disease || "None",
+          Exercise_Frequency: Number(record.Exercise_Frequency) || 0,
+          Alcohol_Consumption: record.Alcohol_Consumption || "No",
+          Smoking_Habit: record.Smoking_Habit || "No",
+          Diet_Quality: record.Diet_Quality || "Average",
+          FRUITS_VEGGIES: Number(record.FRUITS_VEGGIES) || 0,
+          Stress_Level: Number(record.Stress_Level) || 1,
+          Screen_Time_Hours: Number(record.Screen_Time_Hours) || 0,
+          Salt_Intake: record.Salt_Intake || "Moderate",
+        };
 
-        if (lifestyle) {
-          setLifestyleData(lifestyle);
-          calculateLocalScore(lifestyle);
-        }
-
-        if (
-          prediction &&
-          prediction.Obesity_Flag?.probability != null &&
-          prediction.Hypertension_Flag?.probability != null &&
-          prediction.Stroke_Flag?.probability != null
-        ) {
-          setPredictionData(prediction);
-          setDiseaseRisks({
-            obesity: Number(
-              (prediction.Obesity_Flag.probability * 100).toFixed(2)
-            ),
-            hypertension: Number(
-              (prediction.Hypertension_Flag.probability * 100).toFixed(2)
-            ),
-            stroke: Number(
-              (prediction.Stroke_Flag.probability * 100).toFixed(2)
-            ),
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+        // Parse prediction data from JSON strings
+        prediction = {
+          Obesity_Flag: record.Obesity_Flag ? JSON.parse(record.Obesity_Flag) : null,
+          Hypertension_Flag: record.Hypertension_Flag ? JSON.parse(record.Hypertension_Flag) : null,
+          Stroke_Flag: record.Stroke_Flag ? JSON.parse(record.Stroke_Flag) : null,
+        };
       }
 
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        fadeAnim.setValue(1);
-        slideAnim.setValue(0);
-      });
-    };
+      // Fallback to route.params if no database records
+      const navLifestyleData = route.params?.lifestyleData;
+      const navPredictionData = route.params?.predictionData;
 
-    fetchData();
+      if (!lifestyle && navLifestyleData) {
+        lifestyle = {
+          date: new Date().toISOString(),
+          Daily_Steps: Number(navLifestyleData.Daily_Steps) || 0,
+          Sleep_Hours: Number(navLifestyleData.Sleep_Hours) || 0,
+          BMI: Number(navLifestyleData.BMI) || null,
+          Age: Number(navLifestyleData.Age) || null,
+          Gender: navLifestyleData.Gender || "Unknown",
+          Height_cm: Number(navLifestyleData.Height_cm) || null,
+          Weight_kg: Number(navLifestyleData.Weight_kg) || null,
+          Chronic_Disease: navLifestyleData.Chronic_Disease || "None",
+          Exercise_Frequency: Number(navLifestyleData.Exercise_Frequency) || 0,
+          Alcohol_Consumption: navLifestyleData.Alcohol_Consumption || "No",
+          Smoking_Habit: navLifestyleData.Smoking_Habit || "No",
+          Diet_Quality: navLifestyleData.Diet_Quality || "Average",
+          FRUITS_VEGGIES: Number(navLifestyleData.FRUITS_VEGGIES) || 0,
+          Stress_Level: Number(navLifestyleData.Stress_Level) || 1,
+          Screen_Time_Hours: Number(navLifestyleData.Screen_Time_Hours) || 0,
+          Salt_Intake: navLifestyleData.Salt_Intake || "Moderate",
+        };
+      }
+
+      if (!prediction && navPredictionData) {
+        prediction = navPredictionData;
+      }
+
+      console.log("Received lifestyleData:", lifestyle);
+      console.log("Received predictionData:", prediction);
+
+      if (lifestyle) {
+        setLifestyleData(lifestyle);
+        calculateLocalScore(lifestyle);
+      }
+
+      if (
+        prediction &&
+        prediction.Obesity_Flag?.probability != null &&
+        prediction.Hypertension_Flag?.probability != null &&
+        prediction.Stroke_Flag?.probability != null
+      ) {
+        setPredictionData(prediction);
+        setDiseaseRisks({
+          obesity: Number(
+            (prediction.Obesity_Flag.probability * 100).toFixed(2)
+          ),
+          hypertension: Number(
+            (prediction.Hypertension_Flag.probability * 100).toFixed(2)
+          ),
+          stroke: Number(
+            (prediction.Stroke_Flag.probability * 100).toFixed(2)
+          ),
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      fadeAnim.setValue(1);
+      slideAnim.setValue(0);
+    });
   }, [route.params]);
+
+  useEffect(() => {
+    fetchProgressData();
+  }, [fetchProgressData]);
 
   const calculateLocalScore = (data) => {
     if (!data) return setLocalScore(0);

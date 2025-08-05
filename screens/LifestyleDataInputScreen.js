@@ -302,8 +302,9 @@ const LifestyleDataInputScreen = () => {
     setIsSubmitting(true);
 
     const data = {
+      date: new Date().toISOString(),
       Age: parseInt(age),
-      Gender: gender, // ✅ lowercase
+      Gender: gender,
       Height_cm: parseFloat(heightCm),
       Weight_kg: parseFloat(weightKg),
       BMI: parseFloat(bmi),
@@ -317,36 +318,11 @@ const LifestyleDataInputScreen = () => {
       Stress_Level: stressLevel,
       FRUITS_VEGGIES: fruitsVeggies,
       Screen_Time_Hours: screenTimeHours,
+      Salt_Intake: "Unknown",
     };
 
     try {
-      const db = await getDb();
-
-      await db.runAsync(
-        `INSERT INTO UserProfile (
-        Age, Gender, Height_cm, Weight_kg, BMI, Chronic_Disease,
-        Daily_Steps, Exercise_Frequency, Sleep_Hours, Alcohol_Consumption,
-        Smoking_Habit, Diet_Quality, Stress_Level, FRUITS_VEGGIES, Screen_Time_Hours
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          data.Age,
-          data.Gender,
-          data.Height_cm,
-          data.Weight_kg,
-          data.BMI,
-          data.Chronic_Disease,
-          data.Daily_Steps,
-          data.Exercise_Frequency,
-          data.Sleep_Hours,
-          data.Alcohol_Consumption,
-          data.Smoking_Habit,
-          data.Diet_Quality,
-          data.Stress_Level,
-          data.FRUITS_VEGGIES,
-          data.Screen_Time_Hours,
-        ]
-      );
-
+      // Fetch prediction data
       const response = await fetch(
         "https://finalyearproject-c5hy.onrender.com/predict",
         {
@@ -359,13 +335,51 @@ const LifestyleDataInputScreen = () => {
 
       const predictionData = await response.json();
 
-      await db.runAsync("INSERT INTO PredictionData (prediction) VALUES (?)", [
-        JSON.stringify(predictionData),
-      ]);
+      // Prepare data with predictions for UserProfile table
+      const fullData = {
+        ...data,
+        Obesity_Flag: JSON.stringify(predictionData.Obesity_Flag || {}),
+        Hypertension_Flag: JSON.stringify(predictionData.Hypertension_Flag || {}),
+        Stroke_Flag: JSON.stringify(predictionData.Stroke_Flag || {}),
+      };
 
+      // Insert into UserProfile table
+      const db = await getDb();
+      await db.runAsync(
+        `INSERT INTO UserProfile (
+          date, Age, Gender, Height_cm, Weight_kg, BMI, Chronic_Disease,
+          Daily_Steps, Exercise_Frequency, Sleep_Hours, Alcohol_Consumption,
+          Smoking_Habit, Diet_Quality, Stress_Level, FRUITS_VEGGIES, Screen_Time_Hours,
+          Salt_Intake, Obesity_Flag, Hypertension_Flag, Stroke_Flag
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          fullData.date,
+          fullData.Age,
+          fullData.Gender,
+          fullData.Height_cm,
+          fullData.Weight_kg,
+          fullData.BMI,
+          fullData.Chronic_Disease,
+          fullData.Daily_Steps,
+          fullData.Exercise_Frequency,
+          fullData.Sleep_Hours,
+          fullData.Alcohol_Consumption,
+          fullData.Smoking_Habit,
+          fullData.Diet_Quality,
+          fullData.Stress_Level,
+          fullData.FRUITS_VEGGIES,
+          fullData.Screen_Time_Hours,
+          fullData.Salt_Intake,
+          fullData.Obesity_Flag,
+          fullData.Hypertension_Flag,
+          fullData.Stroke_Flag,
+        ]
+      );
+
+      // Navigate to HealthHomeScreen with both lifestyle and prediction data
       navigation.navigate("MainApp", {
-        screen: "Home",
-        params: { lifestyleData: data, predictionData },
+        lifestyleData: data,
+        predictionData: predictionData,
       });
     } catch (error) {
       console.error("Submission error:", error);

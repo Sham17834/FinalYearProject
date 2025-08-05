@@ -36,7 +36,7 @@ const LoginScreen = () => {
       await AsyncStorage.setItem("userEmail", email);
       
       console.log("Login:", { email, password });
-      navigation.navigate("LifestyleDataInput", { email });
+      navigation.navigate("MainApp");
     } catch (error) {
       console.error("Error saving email:", error);
       Alert.alert(t.error, "Failed to save user data");
@@ -59,7 +59,7 @@ const LoginScreen = () => {
         
         console.log("Google Sign-In successful:", result);
         Alert.alert(t.success, "Google sign-in successful");
-        navigation.navigate("LifestyleDataInput", { email: userEmail });
+        navigation.navigate("MainApp");
       } else {
         console.log("Google Sign-In cancelled");
       }
