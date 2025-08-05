@@ -18,11 +18,23 @@ import {
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { LanguageContext } from "./LanguageContext";
-import * as SQLite from "expo-sqlite"; 
+import * as SQLite from "expo-sqlite";
 import { useRoute } from "@react-navigation/native";
+import { getDb } from "./db"; 
 
 const screenWidth = Dimensions.get("window").width;
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return "N/A";
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr; 
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -329,7 +341,7 @@ const ProgressScreen = () => {
   const fallbackData = useMemo(
     () => [
       {
-        date: "2025-08-03",
+        date: formatDate("2025-08-03"),
         daily_steps: 9150,
         sleep_hours: 7.5,
         bmi: 22.1,
@@ -346,9 +358,10 @@ const ProgressScreen = () => {
         stress_level: 4,
         screen_time_hours: 3,
         salt_intake: "Moderate",
+        source: "UserProfile",
       },
       {
-        date: "2025-08-02",
+        date: formatDate("2025-08-02"),
         daily_steps: 8234,
         sleep_hours: 7.2,
         bmi: 22.4,
@@ -365,9 +378,10 @@ const ProgressScreen = () => {
         stress_level: 5,
         screen_time_hours: 4,
         salt_intake: "Moderate",
+        source: "UserProfile",
       },
       {
-        date: "2025-08-01",
+        date: formatDate("2025-08-01"),
         daily_steps: 7500,
         sleep_hours: 6.8,
         bmi: 22.4,
@@ -384,6 +398,7 @@ const ProgressScreen = () => {
         stress_level: 5,
         screen_time_hours: 4,
         salt_intake: "Moderate",
+        source: "UserProfile",
       },
     ],
     []
@@ -394,35 +409,12 @@ const ProgressScreen = () => {
     setError(null);
 
     try {
-      const db = await SQLite.openDatabaseAsync("userprofile.db");
-
-      await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS UserProfile (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date TEXT,
-        Daily_Steps INTEGER,
-        Sleep_Hours REAL,
-        BMI REAL,
-        Age INTEGER,
-        Gender TEXT,
-        Height_cm REAL,
-        Weight_kg REAL,
-        Chronic_Disease TEXT,
-        Exercise_Frequency INTEGER,
-        Alcohol_Consumption TEXT,
-        Smoking_Habit TEXT,
-        Diet_Quality TEXT,
-        FRUITS_VEGGIES INTEGER,
-        Stress_Level INTEGER,
-        Screen_Time_Hours REAL,
-        Salt_Intake TEXT
-      );
-    `);
+      const db = await getDb(); 
 
       const navLifestyleData = route.params?.lifestyleData;
       const navPredictionData = route.params?.predictionData;
 
-      const today = new Date().toISOString().split("T")[0];
+      const today = formatDate(new Date().toISOString().split("T")[0]);
       let currentDayData = null;
 
       if (navLifestyleData) {
@@ -443,16 +435,17 @@ const ProgressScreen = () => {
           fruits_veggies: Number(navLifestyleData.FRUITS_VEGGIES) || 0,
           stress_level: Number(navLifestyleData.Stress_Level) || 1,
           screen_time_hours: Number(navLifestyleData.Screen_Time_Hours) || 0,
-          salt_intake: "Moderate", 
+          salt_intake: navLifestyleData.Salt_Intake || "Moderate",
+          source: "UserProfile",
         };
       }
 
-      const historicalData = await db.getAllAsync(
+      const userProfileData = await db.getAllAsync(
         "SELECT * FROM UserProfile ORDER BY id DESC"
       );
 
-      const transformedHistoricalData = historicalData.map((item) => ({
-        date: new Date().toISOString().split("T")[0], 
+      const transformedUserProfileData = userProfileData.map((item) => ({
+        date: formatDate(item.date || new Date().toISOString().split("T")[0]),
         daily_steps: Number(item.Daily_Steps) || 0,
         sleep_hours: Number(item.Sleep_Hours) || 0,
         bmi: Number(item.BMI) || null,
@@ -468,25 +461,49 @@ const ProgressScreen = () => {
         fruits_veggies: Number(item.FRUITS_VEGGIES) || 0,
         stress_level: Number(item.Stress_Level) || 1,
         screen_time_hours: Number(item.Screen_Time_Hours) || 0,
-        salt_intake: "Moderate", 
+        salt_intake: item.Salt_Intake || "Moderate",
+        source: "UserProfile",
       }));
 
-      const allData = [...fallbackData];
+      const healthRecordsData = await db.getAllAsync(
+        "SELECT * FROM HealthRecords ORDER BY id DESC"
+      );
 
-      transformedHistoricalData.forEach((item) => {
-        const existingIndex = allData.findIndex(
-          (existing) => existing.date === item.date
-        );
-        if (existingIndex >= 0) {
-          allData[existingIndex] = item;
-        } else {
-          allData.push(item);
-        }
-      });
+      const transformedHealthRecordsData = healthRecordsData.map((item) => ({
+        date: formatDate(item.date || new Date().toISOString().split("T")[0]),
+        daily_steps: Number(item.daily_steps) || 0,
+        sleep_hours: Number(item.sleep_hours) || 0,
+        bmi: Number(item.bmi) || null,
+        age: Number(item.age) || null,
+        gender: item.gender || "Unknown",
+        height_cm: Number(item.height_cm) || null,
+        weight_kg: Number(item.weight_kg) || null,
+        chronic_disease: item.chronic_disease || "None",
+        exercise_frequency: Number(item.exercise_frequency) || 0,
+        alcohol_consumption: item.alcohol_consumption || "No",
+        smoking_habit: item.smoking_habit || "No",
+        diet_quality: item.diet_quality || "Average",
+        fruits_veggies: Number(item.fruits_veggies) || 0,
+        stress_level: Number(item.stress_level) || 1,
+        screen_time_hours: Number(item.screen_time_hours) || 0,
+        salt_intake: item.salt_intake || "Moderate",
+        source: "HealthRecords",
+      }));
+
+      let allData = [
+        ...fallbackData,
+        ...transformedUserProfileData,
+        ...transformedHealthRecordsData,
+      ];
+
+      const uniqueData = [];
+      const seenDates = new Set();
 
       if (currentDayData) {
         const existingIndex = allData.findIndex(
-          (existing) => existing.date === currentDayData.date
+          (existing) =>
+            existing.date === currentDayData.date &&
+            existing.source === "UserProfile"
         );
         if (existingIndex >= 0) {
           allData[existingIndex] = currentDayData;
@@ -495,8 +512,26 @@ const ProgressScreen = () => {
         }
       }
 
+      allData
+        .sort((a, b) => {
+          const dateA = new Date(a.date.split("/").reverse().join("-"));
+          const dateB = new Date(b.date.split("/").reverse().join("-"));
+          return dateB - dateA;
+        })
+        .forEach((item) => {
+          const key = `${item.date}-${item.source}`;
+          if (!seenDates.has(key)) {
+            seenDates.add(key);
+            uniqueData.push(item);
+          }
+        });
+
       setProgressData(
-        allData.sort((a, b) => new Date(a.date) - new Date(b.date))
+        uniqueData.sort((a, b) => {
+          const dateA = new Date(a.date.split("/").reverse().join("-"));
+          const dateB = new Date(b.date.split("/").reverse().join("-"));
+          return dateA - dateB;
+        })
       );
     } catch (error) {
       console.error("Error fetching progress data:", error);
@@ -634,12 +669,20 @@ const ProgressScreen = () => {
   const filteredData = useMemo(() => {
     const today = new Date();
     const daysAgo = timeRange === "7days" ? 7 : 30;
-    const cutoffDate = new Date(today.setDate(today.getDate() - daysAgo))
-      .toISOString()
-      .split("T")[0];
+    const cutoffDate = formatDate(
+      new Date(today.setDate(today.getDate() - daysAgo))
+    );
     return progressData
-      .filter((item) => item.date >= cutoffDate)
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
+      .filter((item) => {
+        const itemDate = new Date(item.date.split("/").reverse().join("-"));
+        const cutoff = new Date(cutoffDate.split("/").reverse().join("-"));
+        return itemDate >= cutoff;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.date.split("/").reverse().join("-"));
+        const dateB = new Date(b.date.split("/").reverse().join("-"));
+        return dateA - dateB;
+      });
   }, [progressData, timeRange]);
 
   const lifestyleScores = useMemo(
@@ -887,7 +930,7 @@ const ProgressScreen = () => {
         {lifestyleScores.length > 0 ? (
           <LineChart
             data={{
-              labels: filteredData.map((item) => item.date.slice(-5)),
+              labels: filteredData.map((item) => item.date.slice(0, 5)), // Use dd/mm format
               datasets: [{ data: lifestyleScores }],
             }}
             width={screenWidth - 64}
@@ -918,7 +961,7 @@ const ProgressScreen = () => {
               {stepsData.length > 0 ? (
                 <LineChart
                   data={{
-                    labels: filteredData.map((item) => item.date.slice(-2)),
+                    labels: filteredData.map((item) => item.date.slice(0, 5)), // Use dd/mm format
                     datasets: [{ data: stepsData }],
                   }}
                   width={screenWidth / 2 - 40}
@@ -955,7 +998,7 @@ const ProgressScreen = () => {
               {sleepData.length > 0 ? (
                 <LineChart
                   data={{
-                    labels: filteredData.map((item) => item.date.slice(-2)),
+                    labels: filteredData.map((item) => item.date.slice(0, 5)),
                     datasets: [{ data: sleepData }],
                   }}
                   width={screenWidth / 2 - 40}
@@ -1099,7 +1142,7 @@ const ProgressScreen = () => {
                   .reverse()
                   .map((item, index) => (
                     <View
-                      key={`${item.date}-${index}`}
+                      key={`${item.date}-${item.source}-${index}`}
                       style={styles.progressItem}
                     >
                       <Text style={styles.progressDate}>{item.date}</Text>
