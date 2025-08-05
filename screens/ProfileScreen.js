@@ -18,6 +18,7 @@ import { Picker } from "@react-native-picker/picker";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getDb } from "./db";
 
 const COLORS = {
   primary: "#008080",
@@ -69,51 +70,61 @@ const ProfileScreen = () => {
   useEffect(() => {
     const loadProfileData = async () => {
       try {
-        const storedData = await AsyncStorage.getItem("userProfileData");
-        if (storedData) {
-          const parsedData = JSON.parse(storedData);
-          setEmail(parsedData.email || "john.doe@example.com");
-          setAge(parsedData.age?.toString() || "30");
-          setGender(parsedData.gender || "Male");
-          setHeight(parsedData.height_cm?.toString() || "175");
-          setWeight(parsedData.weight_kg?.toString() || "70");
-          setChronicDisease(parsedData.chronic_disease || "None");
-          setDailySteps(parsedData.daily_steps?.toString() || "5000");
-          setExerciseFrequency(parsedData.exercise_frequency?.toString() || "3");
-          setSleepHours(parsedData.sleep_hours?.toString() || "7");
-          setAlcoholConsumption(parsedData.alcohol_consumption === "Yes");
-          setSmokingHabit(parsedData.smoking_habit === "Yes");
-          setDietQuality(parsedData.diet_quality || "Good");
-          setFruitsVeggies(parsedData.fruits_veggies?.toString() || "5");
-          setStressLevel(parsedData.stress_level?.toString() || "5");
-          setScreenTimeHours(parsedData.screen_time_hours?.toString() || "4");
+        const db = await getDb();
+        const userProfileLatest = await db.getAllAsync(
+          "SELECT * FROM UserProfile ORDER BY id DESC LIMIT 1"
+        );
+
+        if (userProfileLatest.length > 0) {
+          const data = userProfileLatest[0];
+          setEmail(data.email || "john.doe@example.com");
+          setAge(data.Age?.toString() || "30");
+          setGender(data.Gender || "Male");
+          setHeight(data.Height_cm?.toString() || "175");
+          setWeight(data.Weight_kg?.toString() || "70");
+          setChronicDisease(data.Chronic_Disease || "None");
+          setDailySteps(data.Daily_Steps?.toString() || "5000");
+          setExerciseFrequency(data.Exercise_Frequency?.toString() || "3");
+          setSleepHours(data.Sleep_Hours?.toString() || "7");
+          setAlcoholConsumption(data.Alcohol_Consumption === "Yes");
+          setSmokingHabit(data.Smoking_Habit === "Yes");
+          setDietQuality(data.Diet_Quality || "Good");
+          setFruitsVeggies(data.FRUITS_VEGGIES?.toString() || "5");
+          setStressLevel(data.Stress_Level?.toString() || "5");
+          setScreenTimeHours(data.Screen_Time_Hours?.toString() || "4");
+        } else if (route.params?.userData) {
+          const data = route.params.userData;
+          setEmail(data.email || email);
+          setAge(data.age?.toString() || age);
+          setGender(data.gender || gender);
+          setHeight(data.height_cm?.toString() || height);
+          setWeight(data.weight_kg?.toString() || weight);
+          setChronicDisease(data.chronic_disease || chronicDisease);
+          setDailySteps(data.daily_steps?.toString() || dailySteps);
+          setExerciseFrequency(
+            data.exercise_frequency?.toString() || exerciseFrequency
+          );
+          setSleepHours(data.sleep_hours?.toString() || sleepHours);
+          setAlcoholConsumption(data.alcohol_consumption === "Yes");
+          setSmokingHabit(data.smoking_habit === "Yes");
+          setDietQuality(data.diet_quality || dietQuality);
+          setFruitsVeggies(data.fruits_veggies?.toString() || fruitsVeggies);
+          setStressLevel(data.stress_level?.toString() || stressLevel);
+          setScreenTimeHours(
+            data.screen_time_hours?.toString() || screenTimeHours
+          );
         }
       } catch (error) {
-        console.error("Error loading profile data:", error);
-      }
-
-      if (route.params?.userData) {
-        const data = route.params.userData;
-        setEmail(data.email || email);
-        setAge(data.age?.toString() || age);
-        setGender(data.gender || gender);
-        setHeight(data.height_cm?.toString() || height);
-        setWeight(data.weight_kg?.toString() || weight);
-        setChronicDisease(data.chronic_disease || chronicDisease);
-        setDailySteps(data.daily_steps?.toString() || dailySteps);
-        setExerciseFrequency(data.exercise_frequency?.toString() || exerciseFrequency);
-        setSleepHours(data.sleep_hours?.toString() || sleepHours);
-        setAlcoholConsumption(data.alcohol_consumption === "Yes");
-        setSmokingHabit(data.smoking_habit === "Yes");
-        setDietQuality(data.diet_quality || dietQuality);
-        setFruitsVeggies(data.fruits_veggies?.toString() || fruitsVeggies);
-        setStressLevel(data.stress_level?.toString() || stressLevel);
-        setScreenTimeHours(data.screen_time_hours?.toString() || screenTimeHours);
+        console.error("Error loading profile data from database:", error);
+        Alert.alert(
+          t.error || "Error",
+          t.loadProfileError || "Failed to load profile data."
+        );
       }
     };
 
     loadProfileData();
-  }, [route.params]);
+  }, [route.params, t]);
 
   const availableLanguages = [
     { code: "English", name: "English", nativeName: "English" },
@@ -138,7 +149,8 @@ const ProfileScreen = () => {
       setShowLanguageModal(false);
       Alert.alert(
         t.languageChanged || "Language Changed",
-        t.languageChangedMsg || "The app language has been updated successfully.",
+        t.languageChangedMsg ||
+          "The app language has been updated successfully.",
         [{ text: t.ok || "OK", style: "default" }]
       );
     } catch (error) {
@@ -189,7 +201,10 @@ const ProfileScreen = () => {
       console.log("Saved:", data);
     } catch (error) {
       console.error("Error saving profile data:", error);
-      Alert.alert(t.error || "Error", "Failed to save profile data.");
+      Alert.alert(
+        t.error || "Error",
+        t.saveProfileError || "Failed to save profile data."
+      );
     }
   };
 
@@ -215,7 +230,10 @@ const ProfileScreen = () => {
             });
           } catch (error) {
             console.error("Error deleting account:", error);
-            Alert.alert(t.error || "Error", "Failed to delete account.");
+            Alert.alert(
+              t.error || "Error",
+              t.deleteAccountError || "Failed to delete account."
+            );
           }
         },
       },
@@ -238,7 +256,10 @@ const ProfileScreen = () => {
             });
           } catch (error) {
             console.error("Error during logout:", error);
-            Alert.alert(t.error || "Error", "Failed to log out.");
+            Alert.alert(
+              t.error || "Error",
+              t.logoutError || "Failed to log out."
+            );
           }
         },
       },

@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useMemo,
-  useCallback,
-  useContext,
-  useEffect,
-} from "react";
+import React, { useState, useMemo, useCallback, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -21,7 +15,7 @@ import { LineChart } from "react-native-chart-kit";
 import { LanguageContext } from "./LanguageContext";
 import * as SQLite from "expo-sqlite";
 import { useRoute } from "@react-navigation/native";
-import { getDb } from "./db"; 
+import { getDb } from "./db";
 
 const screenWidth = Dimensions.get("window").width;
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
@@ -29,7 +23,7 @@ const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 const formatDate = (dateStr) => {
   if (!dateStr) return "N/A";
   const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return dateStr; 
+  if (isNaN(date.getTime())) return dateStr;
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
@@ -370,10 +364,11 @@ const ProgressScreen = () => {
   const [activeTab, setActiveTab] = useState("factors");
   const [refreshKey, setRefreshKey] = useState(0);
   const [progressData, setProgressData] = useState([]);
+  const [latestUserProfile, setLatestUserProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sortOrder, setSortOrder] = useState("asc"); // Moved to component level
-  const [sourceFilter, setSourceFilter] = useState("all"); // Moved to component level
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [sourceFilter, setSourceFilter] = useState("all");
   const scrollY = new Animated.Value(0);
 
   const handleDeleteEntry = useCallback(
@@ -382,9 +377,10 @@ const ProgressScreen = () => {
         const db = await getDb();
         const table = item.source === "UserProfile" ? "UserProfile" : "HealthRecords";
         await db.runAsync(`DELETE FROM ${table} WHERE id = ?`, [item.id]);
+        console.log(`Deleted ${table} record with id ${item.id} and date ${item.date}`);
         setRefreshKey((prev) => prev + 1); // Trigger data refresh
       } catch (error) {
-        console.error("Error deleting entry:", error);
+        console.error(`Error deleting ${table} entry with id ${item.id}:`, error);
         Alert.alert(t.error || "Error", t.deleteError || "Failed to delete entry");
       }
     },
@@ -480,7 +476,7 @@ const ProgressScreen = () => {
     setError(null);
 
     try {
-      const db = await getDb(); 
+      const db = await getDb();
 
       const navLifestyleData = route.params?.lifestyleData;
       const navPredictionData = route.params?.predictionData;
@@ -511,7 +507,42 @@ const ProgressScreen = () => {
         };
       }
 
-      // Fetch from UserProfile
+      // Fetch latest UserProfile record for quick stats
+      const userProfileLatest = await db.getAllAsync(
+        "SELECT * FROM UserProfile ORDER BY id DESC LIMIT 1"
+      );
+
+      let latestRecord = null;
+      if (userProfileLatest.length > 0) {
+        const item = userProfileLatest[0];
+        latestRecord = {
+          id: item.id,
+          date: formatDate(item.date || new Date().toISOString().split("T")[0]),
+          daily_steps: Number(item.Daily_Steps) || 0,
+          sleep_hours: Number(item.Sleep_Hours) || 0,
+          bmi: Number(item.BMI) || null,
+          age: Number(item.Age) || null,
+          gender: item.Gender || "Unknown",
+          height_cm: Number(item.Height_cm) || null,
+          weight_kg: Number(item.Weight_kg) || null,
+          chronic_disease: item.Chronic_Disease || "None",
+          exercise_frequency: Number(item.Exercise_Frequency) || 0,
+          alcohol_consumption: item.Alcohol_Consumption || "No",
+          smoking_habit: item.Smoking_Habit || "No",
+          diet_quality: item.Diet_Quality || "Average",
+          fruits_veggies: Number(item.FRUITS_VEGGIES) || 0,
+          stress_level: Number(item.Stress_Level) || 1,
+          screen_time_hours: Number(item.Screen_Time_Hours) || 0,
+          salt_intake: item.Salt_Intake || "Moderate",
+          source: "UserProfile",
+        };
+      } else if (currentDayData) {
+        latestRecord = currentDayData;
+      }
+
+      setLatestUserProfile(latestRecord);
+
+      // Fetch all data for charts and history
       const userProfileData = await db.getAllAsync(
         "SELECT * FROM UserProfile ORDER BY id DESC"
       );
@@ -538,7 +569,6 @@ const ProgressScreen = () => {
         source: "UserProfile",
       }));
 
-      // Fetch from HealthRecords
       const healthRecordsData = await db.getAllAsync(
         "SELECT * FROM HealthRecords ORDER BY id DESC"
       );
@@ -604,6 +634,7 @@ const ProgressScreen = () => {
       console.error("Error fetching progress data:", error);
       setError("Failed to load data from database");
       setProgressData(fallbackData);
+      setLatestUserProfile(null);
     } finally {
       setIsLoading(false);
     }
@@ -648,18 +679,14 @@ const ProgressScreen = () => {
     else if (data.daily_steps < 7000) hypertensionScore += 10;
 
     if (data.salt_intake?.toUpperCase() === "HIGH") hypertensionScore += 20;
-    else if (data.salt_intake?.toUpperCase() === "MODERATE")
-      hypertensionScore += 10;
+    else if (data.salt_intake?.toUpperCase() === "MODERATE") hypertensionScore += 10;
 
     if (data.alcohol_consumption === "Yes") hypertensionScore += 15;
 
     if (data.stress_level > 7) hypertensionScore += 20;
     else if (data.stress_level > 3) hypertensionScore += 10;
 
-    risks.hypertension = Math.max(
-      1,
-      Math.min(100, Math.round(hypertensionScore))
-    );
+    risks.hypertension = Math.max(1, Math.min(100, Math.round(hypertensionScore)));
 
     let strokeScore = 0;
     if (data.bmi >= 30) strokeScore += 25;
@@ -779,14 +806,7 @@ const ProgressScreen = () => {
       { factor: t.dietQuality || "Diet Quality", value: 0.1 },
       { factor: t.fruitsVeggies || "Fruits & Veggies", value: 0.1 },
     ],
-    [
-      t.steps,
-      t.bmi,
-      t.exerciseFrequency,
-      t.sleep,
-      t.dietQuality,
-      t.fruitsVeggies,
-    ]
+    [t.steps, t.bmi, t.exerciseFrequency, t.sleep, t.dietQuality, t.fruitsVeggies]
   );
 
   const chartConfig = useMemo(
@@ -804,18 +824,14 @@ const ProgressScreen = () => {
   );
 
   const summaryStats = useMemo(() => {
-    // Filter for UserProfile data only
-    const userProfileData = filteredData.filter((item) => item.source === "UserProfile");
-    if (userProfileData.length === 0) return null;
+    if (!latestUserProfile) return null;
 
-    const latestData = userProfileData[userProfileData.length - 1];
-    const previousData =
-      userProfileData.length > 1 ? userProfileData[userProfileData.length - 2] : null;
+    const latestData = latestUserProfile;
+    const userProfileData = filteredData.filter((item) => item.source === "UserProfile");
+    const previousData = userProfileData.length > 1 ? userProfileData[userProfileData.length - 2] : null;
 
     const latestScore = calculateLifestyleScore(latestData);
-    const previousScore = previousData
-      ? calculateLifestyleScore(previousData)
-      : latestScore;
+    const previousScore = previousData ? calculateLifestyleScore(previousData) : latestScore;
     const scoreChange = latestScore - previousScore;
 
     const latestRisks = calculateDiseaseRisks(latestData);
@@ -824,13 +840,9 @@ const ProgressScreen = () => {
     if (previousData) {
       const previousRisks = calculateDiseaseRisks(previousData);
       const avgPreviousRisk =
-        (previousRisks.obesity +
-          previousRisks.hypertension +
-          previousRisks.stroke) /
-        3;
+        (previousRisks.obesity + previousRisks.hypertension + previousRisks.stroke) / 3;
       const avgLatestRisk =
-        (latestRisks.obesity + latestRisks.hypertension + latestRisks.stroke) /
-        3;
+        (latestRisks.obesity + latestRisks.hypertension + latestRisks.stroke) / 3;
 
       riskChange =
         avgLatestRisk < avgPreviousRisk
@@ -848,13 +860,11 @@ const ProgressScreen = () => {
       bmi: latestData.bmi || null,
       weight: latestData.weight_kg || null,
       height: latestData.height_cm || null,
-      riskLevel:
-        (latestRisks.obesity + latestRisks.hypertension + latestRisks.stroke) /
-        3,
+      riskLevel: (latestRisks.obesity + latestRisks.hypertension + latestRisks.stroke) / 3,
       riskChange,
       latestRisks,
     };
-  }, [filteredData, calculateLifestyleScore, calculateDiseaseRisks]);
+  }, [latestUserProfile, filteredData, calculateLifestyleScore, calculateDiseaseRisks]);
 
   const data = useMemo(
     () => [
@@ -945,38 +955,28 @@ const ProgressScreen = () => {
       <View style={styles.timeRangeCard}>
         <View style={styles.timeRangeContainer}>
           <TouchableOpacity
-            style={[
-              styles.timeRangeButton,
-              timeRange === "7days" && styles.activeTimeRange,
-            ]}
+            style={[styles.timeRangeButton, timeRange === "7days" && styles.activeTimeRange]}
             onPress={() => setTimeRange("7days")}
             accessibilityLabel={t.sevenDays || "7 Days"}
           >
             <Text
               style={[
                 styles.timeRangeText,
-                timeRange === "7days"
-                  ? styles.activeTimeRangeText
-                  : styles.inactiveTimeRangeText,
+                timeRange === "7days" ? styles.activeTimeRangeText : styles.inactiveTimeRangeText,
               ]}
             >
               {t.sevenDays || "7 Days"}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[
-              styles.timeRangeButton,
-              timeRange === "30days" && styles.activeTimeRange,
-            ]}
+            style={[styles.timeRangeButton, timeRange === "30days" && styles.activeTimeRange]}
             onPress={() => setTimeRange("30days")}
             accessibilityLabel={t.thirtyDays || "30 Days"}
           >
             <Text
               style={[
                 styles.timeRangeText,
-                timeRange === "30days"
-                  ? styles.activeTimeRangeText
-                  : styles.inactiveTimeRangeText,
+                timeRange === "30days" ? styles.activeTimeRangeText : styles.inactiveTimeRangeText,
               ]}
             >
               {t.thirtyDays || "30 Days"}
@@ -997,7 +997,7 @@ const ProgressScreen = () => {
         {lifestyleScores.length > 0 ? (
           <LineChart
             data={{
-              labels: filteredData.map((item) => item.date.slice(0, 5)), // Use dd/mm format
+              labels: filteredData.map((item) => item.date.slice(0, 5)),
               datasets: [{ data: lifestyleScores }],
             }}
             width={screenWidth - 64}
@@ -1028,7 +1028,7 @@ const ProgressScreen = () => {
               {stepsData.length > 0 ? (
                 <LineChart
                   data={{
-                    labels: filteredData.map((item) => item.date.slice(0, 5)), // Use dd/mm format
+                    labels: filteredData.map((item) => item.date.slice(0, 5)),
                     datasets: [{ data: stepsData }],
                   }}
                   width={screenWidth / 2 - 40}
@@ -1064,7 +1064,7 @@ const ProgressScreen = () => {
               {sleepData.length > 0 ? (
                 <LineChart
                   data={{
-                    labels: filteredData.map((item) => item.date.slice(0, 5)), // Use dd/mm format
+                    labels: filteredData.map((item) => item.date.slice(0, 5)),
                     datasets: [{ data: sleepData }],
                   }}
                   width={screenWidth / 2 - 40}
@@ -1112,52 +1112,34 @@ const ProgressScreen = () => {
         <View style={styles.bottomSection}>
           <View style={styles.tabContainer}>
             <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === "factors" && styles.activeTab,
-              ]}
+              style={[styles.tabButton, activeTab === "factors" && styles.activeTab]}
               onPress={() => setActiveTab("factors")}
               accessibilityLabel={t.factors || "Factors"}
             >
               <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "factors" && styles.activeTabText,
-                ]}
+                style={[styles.tabText, activeTab === "factors" && styles.activeTabText]}
               >
                 {t.factors || "Factors"}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === "risks" && styles.activeTab,
-              ]}
+              style={[styles.tabButton, activeTab === "risks" && styles.activeTab]}
               onPress={() => setActiveTab("risks")}
               accessibilityLabel={t.risks || "Risks"}
             >
               <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "risks" && styles.activeTabText,
-                ]}
+                style={[styles.tabText, activeTab === "risks" && styles.activeTabText]}
               >
                 {t.risks || "Risks"}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[
-                styles.tabButton,
-                activeTab === "history" && styles.activeTab,
-              ]}
+              style={[styles.tabButton, activeTab === "history" && styles.activeTab]}
               onPress={() => setActiveTab("history")}
               accessibilityLabel={t.history || "History"}
             >
               <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "history" && styles.activeTabText,
-                ]}
+                style={[styles.tabText, activeTab === "history" && styles.activeTabText]}
               >
                 {t.history || "History"}
               </Text>
@@ -1217,10 +1199,7 @@ const ProgressScreen = () => {
                 <View style={styles.historyControls}>
                   <View style={styles.timeRangeContainer}>
                     <TouchableOpacity
-                      style={[
-                        styles.controlButton,
-                        sortOrder === "asc" && styles.activeControlButton,
-                      ]}
+                      style={[styles.controlButton, sortOrder === "asc" && styles.activeControlButton]}
                       onPress={() => setSortOrder("asc")}
                       accessibilityLabel={t.sortAsc || "Sort Ascending"}
                     >
@@ -1234,10 +1213,7 @@ const ProgressScreen = () => {
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[
-                        styles.controlButton,
-                        sortOrder === "desc" && styles.activeControlButton,
-                      ]}
+                      style={[styles.controlButton, sortOrder === "desc" && styles.activeControlButton]}
                       onPress={() => setSortOrder("desc")}
                       accessibilityLabel={t.sortDesc || "Sort Descending"}
                     >
@@ -1253,10 +1229,7 @@ const ProgressScreen = () => {
                   </View>
                   <View style={styles.timeRangeContainer}>
                     <TouchableOpacity
-                      style={[
-                        styles.controlButton,
-                        sourceFilter === "all" && styles.activeControlButton,
-                      ]}
+                      style={[styles.controlButton, sourceFilter === "all" && styles.activeControlButton]}
                       onPress={() => setSourceFilter("all")}
                       accessibilityLabel={t.allSources || "All Sources"}
                     >
@@ -1350,13 +1323,7 @@ const ProgressScreen = () => {
           return null;
       }
     },
-    [
-      renderQuickStats,
-      renderTimeRange,
-      renderLifestyleChart,
-      renderStepsSleepCharts,
-      renderTabs,
-    ]
+    [renderQuickStats, renderTimeRange, renderLifestyleChart, renderStepsSleepCharts, renderTabs]
   );
 
   const fadeAnim = scrollY.interpolate({
@@ -1375,25 +1342,13 @@ const ProgressScreen = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
       <Animated.View
-        style={[
-          styles.header,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          },
-        ]}
+        style={[styles.header, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
       >
         <Text style={styles.headerTitle}>
           {t.progressTitle || "Your Health Progress"}
         </Text>
         <Animated.Text
-          style={[
-            styles.headerSubtitle,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
+          style={[styles.headerSubtitle, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
         >
           {t.progressTagline || "Track and improve your wellbeing"}
         </Animated.Text>
@@ -1414,26 +1369,8 @@ const ProgressScreen = () => {
         windowSize={5}
         initialNumToRender={3}
         getItemLayout={(data, index) => ({
-          length:
-            index === 0
-              ? 120
-              : index === 1
-              ? 60
-              : index === 2
-              ? 240
-              : index === 3
-              ? 220
-              : 300,
-          offset:
-            index === 0
-              ? 0
-              : index === 1
-              ? 120
-              : index === 2
-              ? 180
-              : index === 3
-              ? 420
-              : 640,
+          length: index === 0 ? 120 : index === 1 ? 60 : index === 2 ? 240 : index === 3 ? 220 : 300,
+          offset: index === 0 ? 0 : index === 1 ? 120 : index === 2 ? 180 : index === 3 ? 420 : 640,
           index,
         })}
       />
