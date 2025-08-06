@@ -3,6 +3,7 @@
     "name": "HealthApps",
     "slug": "HealthApps",
     "version": "1.0.0",
+    "scheme": "com.googleusercontent.apps.2278465694-cut7quuif1m2uc9v7rjvpmca3v31o53c",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

@@ -9,6 +9,7 @@ import {
   StatusBar,
   Alert,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
@@ -16,10 +17,9 @@ import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
 import { ResponseType, makeRedirectUri } from "expo-auth-session";
 import Icon from "react-native-vector-icons/FontAwesome";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getDb } from "./db";
+import { auth } from "../firebaseConfig";
+import { GoogleAuthProvider, signInWithCredential, signInWithEmailAndPassword } from "firebase/auth";
 
-// Required for web-based flows (Expo Go)
 WebBrowser.maybeCompleteAuthSession();
 
 const LoginScreen = () => {
@@ -46,27 +46,24 @@ const LoginScreen = () => {
     responseType: ResponseType.Token,
     scopes: ["profile", "email"],
     redirectUri: makeRedirectUri({
-      native: "com.googleusercontent.apps.2278465694-cut7quuif1m2uc9v7rjvpmca3v31o53c://",
-      useProxy: true
+      native:
+        "com.googleusercontent.apps.2278465694-cut7quuif1m2uc9v7rjvpmca3v31o53c://",
+      useProxy: true,
     }),
   });
 
   useEffect(() => {
-    console.log("Google response:", response);
     if (response?.type === "success") {
       const { authentication } = response;
       handleGoogleSignIn(authentication.accessToken);
     } else if (response?.type === "error") {
       console.error("Google Sign-In error:", response.error);
-      // More detailed error message to help diagnose the issue
-      const errorMessage = response.error?.message || t.googleSignInError;
-      const errorDetails = response.error?.code ? `\nError code: ${response.error.code}` : '';
-      Alert.alert(
-        t.error, 
-        `${errorMessage}${errorDetails}\n\nPlease try again or use email login instead.`
-      );
+      const errorMessage = response.error?.code === "auth/network-request-failed"
+        ? t.networkError || "Network error, please check your connection"
+        : response.error?.message || t.googleSignInError;
+      Alert.alert(t.error, `${errorMessage}\n\n${t.tryAgain || "Please try again or use email login instead."}`);
     }
-  }, [response]);
+  }, [response, t]);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -117,93 +114,35 @@ const LoginScreen = () => {
     setIsLoading(true);
 
     try {
-      const db = await getDb();
-      const user = await db.getFirstAsync(
-        `SELECT * FROM Users WHERE email = ? AND password = ?`,
-        [email, password]
-      );
-
-      if (!user) {
-        Alert.alert(t.error, t.invalidCredentials);
-        setIsLoading(false);
-        return;
-      }
-
-      await AsyncStorage.setItem(
-        "userProfileData",
-        JSON.stringify({ fullName: user.fullName, email })
-      );
-
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
       navigation.navigate("MainApp", {
-        userData: { fullName: user.fullName, email },
+        userData: { fullName: user.displayName || "User", email: user.email },
       });
     } catch (error) {
       console.error("Login error:", error);
-      Alert.alert(t.error, t.error);
+      const errorMessage = error.code === "auth/wrong-password" || error.code === "auth/user-not-found"
+        ? t.invalidCredentials
+        : error.message || t.error;
+      Alert.alert(t.error, errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleSignIn = async (accessToken) => {
+  const handleGoogleSignIn = async (idToken) => {
     setIsLoading(true);
     try {
-      console.log("Attempting to fetch user info with token:", accessToken.substring(0, 10) + "...");
-      
-      // Get user info from Google
-      const userInfoResponse = await fetch(
-        "https://www.googleapis.com/userinfo/v2/me",
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
-      
-      if (!userInfoResponse.ok) {
-        const errorText = await userInfoResponse.text();
-        console.error("Google API error:", errorText);
-        throw new Error(`Google API error: ${userInfoResponse.status} ${errorText}`);
-      }
-      
-      const userInfo = await userInfoResponse.json();
-      console.log("User info received:", { name: userInfo.name, email: userInfo.email });
-
-      if (userInfo.error) {
-        throw new Error(userInfo.error.message);
-      }
-
-      // Save user data to database
-      const db = await getDb();
-      try {
-        await db.runAsync(
-          `INSERT INTO Users (fullName, email, createdAt) VALUES (?,?,?)`,
-          [userInfo.name, userInfo.email, new Date().toISOString()]
-        );
-        console.log("User saved to database");
-      } catch (error) {
-        if (!error.message.includes("UNIQUE constraint failed")) {
-          console.error("Database error:", error);
-          Alert.alert(t.error, t.databaseError || "Failed to save user data");
-          return;
-        } else {
-          console.log("User already exists in database");
-        }
-      }
-
-      await AsyncStorage.setItem(
-        "userProfileData",
-        JSON.stringify({ fullName: userInfo.name, email: userInfo.email })
-      );
-      console.log("User data saved to AsyncStorage");
-
+      const credential = GoogleAuthProvider.credential(idToken);
+      const userCredential = await signInWithCredential(auth, credential);
+      const user = userCredential.user;
+      console.log("Firebase user signed in:", user.email);
       navigation.navigate("MainApp", {
-        userData: { fullName: userInfo.name, email: userInfo.email },
+        userData: { fullName: user.displayName || "User", email: user.email },
       });
     } catch (error) {
-      console.error("Google Sign-In Error:", error);
-      Alert.alert(
-        t.error, 
-        `${t.googleSignInError}\n\n${error.message}\n\nPlease try again or use email login instead.`
-      );
+      console.error("Firebase sign-in failed:", error);
+      Alert.alert(t.error, `Google sign-in failed: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -304,9 +243,11 @@ const LoginScreen = () => {
             activeOpacity={0.8}
             disabled={isLoading}
           >
-            <Text style={styles.loginButtonText}>
-              {isLoading ? t.processing : t.signIn}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.loginButtonText}>{t.signIn}</Text>
+            )}
           </TouchableOpacity>
 
           <View style={styles.dividerContainer}>
@@ -325,7 +266,7 @@ const LoginScreen = () => {
                 console.error("Error starting Google Sign-In:", error);
                 Alert.alert(
                   t.error,
-                  "Failed to start Google Sign-In. Please try again or use email login."
+                  `${t.googleSignInError || "Failed to start Google Sign-In. Please try again or use email login."}`
                 );
               }
             }}
@@ -340,10 +281,10 @@ const LoginScreen = () => {
             />
             <Text style={styles.googleButtonText}>{t.continueWithGoogle}</Text>
           </TouchableOpacity>
-          
+
           {response?.type === "error" && (
             <Text style={styles.errorHelpText}>
-              If you're having trouble with Google Sign-In, please try using email login instead.
+              {t.googleSignInHelp || "If you're having trouble with Google Sign-In, please try using email login instead."}
             </Text>
           )}
 
