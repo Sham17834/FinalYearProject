@@ -14,8 +14,8 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import Icon from "react-native-vector-icons/FontAwesome";
-import { auth } from "../firebaseConfig";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { getDb } from "./db";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -80,17 +80,30 @@ const LoginScreen = () => {
     setIsLoading(true);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const db = await getDb();
+      const user = await db.getFirstAsync(
+        `SELECT * FROM Users WHERE email = ? AND password = ?`,
+        [email, password]
+      );
+
+      if (!user) {
+        Alert.alert(t.error, t.invalidCredentials || "Invalid email or password");
+        setIsLoading(false);
+        return;
+      }
+
+      // Save to AsyncStorage for consistency with RegisterScreen
+      await AsyncStorage.setItem(
+        "userProfileData",
+        JSON.stringify({ fullName: user.fullName, email: user.email })
+      );
+
       navigation.navigate("MainApp", {
-        userData: { fullName: user.displayName || "User", email: user.email },
+        userData: { fullName: user.fullName, email: user.email },
       });
     } catch (error) {
       console.error("Login error:", error);
-      const errorMessage = error.code === "auth/wrong-password" || error.code === "auth/user-not-found"
-        ? t.invalidCredentials
-        : error.message || t.error;
-      Alert.alert(t.error, errorMessage);
+      Alert.alert(t.error, error.message || t.error);
     } finally {
       setIsLoading(false);
     }
