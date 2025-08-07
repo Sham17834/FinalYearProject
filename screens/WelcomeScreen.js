@@ -8,6 +8,7 @@ import {
   Alert,
   Image,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
@@ -53,16 +54,59 @@ const WelcomeScreen = () => {
           </View>
           <View style={styles.welcomeSection}>
             <Text style={styles.welcomeSectionTitle}>{t.chooseLanguage}</Text>
-            <View style={styles.pickerContainer}>
+            <View style={[styles.pickerContainer, {}]}>
               <Picker
                 selectedValue={language}
-                style={styles.welcomePicker}
+                style={[
+                  styles.welcomePicker,
+                  {
+                    color: "#000000ff",
+                    backgroundColor: "white",
+                    paddingRight: 40,
+                  },
+                ]}
                 onValueChange={(itemValue) => changeLanguage(itemValue)}
+                mode="dropdown"
+                dropdownIconColor="#ffffffff"
               >
-                <Picker.Item label="English" value="English" />
-                <Picker.Item label="中文" value="Chinese" />
-                <Picker.Item label="Bahasa Malaysia" value="Malay" />
+                <Picker.Item
+                  label="English"
+                  value="English"
+                  color="#ffffffff"
+                  backgroundColor="white"
+                />
+                <Picker.Item
+                  label="中文"
+                  value="Chinese"
+                  color="#ffffffff"
+                  backgroundColor="white"
+                />
+                <Picker.Item
+                  label="Bahasa Malaysia"
+                  value="Malay"
+                  color="#ffffffff"
+                  backgroundColor="white"
+                />
               </Picker>
+              <View
+                style={{
+                  position: "absolute",
+                  right: 15,
+                  top: "50%",
+                  transform: [{ translateY: -8 }],
+                  pointerEvents: "none",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: "#000000ff",
+                    fontWeight: "bold",
+                  }}
+                >
+                  ▼
+                </Text>
+              </View>
             </View>
           </View>
           <View style={styles.privacyContainer}>

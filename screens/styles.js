@@ -265,14 +265,18 @@ export const styles = StyleSheet.create({
   },
 
   pickerContainer: {
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+backgroundColor: '#ffffff', // Changed to white
+              borderWidth: 1,
+              borderColor: '#e9ecef',
+              borderRadius: 8,
+              minHeight: 50,
+              justifyContent: 'center',
+              marginVertical: 10,
+              position: 'relative'
   },
 
   privacyContainer: {
-    marginBottom: 28,
+    marginBottom: 10
   },
 
   checkboxRow: {

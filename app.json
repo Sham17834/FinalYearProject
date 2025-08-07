@@ -3,7 +3,7 @@
     "name": "HealthApps",
     "slug": "HealthApps",
     "version": "1.0.0",
-    "scheme": "com.googleusercontent.apps.2278465694-cut7quuif1m2uc9v7rjvpmca3v31o53c",
+    "scheme": "com.fyp.healthapps",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -23,7 +23,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.fyp.healthapps" 
+      "package": "com.fyp.healthapps"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -31,6 +31,12 @@
     "plugins": [
       "expo-sqlite",
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8546214e-ae5a-4dbc-a027-2ac361a4539b"
+      }
+    },
+    "owner": "sham_17834"
   }
 }
