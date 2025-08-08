@@ -92,7 +92,6 @@ const LoginScreen = () => {
         return;
       }
 
-      // Save to AsyncStorage for consistency with RegisterScreen
       await AsyncStorage.setItem(
         "userProfileData",
         JSON.stringify({ fullName: user.fullName, email: user.email })
