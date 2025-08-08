@@ -252,7 +252,7 @@ export const styles = StyleSheet.create({
 
   welcomeSection: {
     marginBottom: 10,
-    paddingleft: 100
+    paddingleft: 100,
   },
 
   welcomeSectionTitle: {
@@ -265,18 +265,18 @@ export const styles = StyleSheet.create({
   },
 
   pickerContainer: {
-backgroundColor: '#ffffff', // Changed to white
-              borderWidth: 1,
-              borderColor: '#e9ecef',
-              borderRadius: 8,
-              minHeight: 50,
-              justifyContent: 'center',
-              marginVertical: 10,
-              position: 'relative'
+    backgroundColor: "#ffffff", // Changed to white
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    borderRadius: 8,
+    minHeight: 50,
+    justifyContent: "center",
+    marginVertical: 10,
+    position: "relative",
   },
 
   privacyContainer: {
-    marginBottom: 10
+    marginBottom: 10,
   },
 
   checkboxRow: {
