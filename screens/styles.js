@@ -265,8 +265,7 @@ export const styles = StyleSheet.create({
   },
 
   pickerContainer: {
-    backgroundColor: "#ffffff", // Changed to white
-    borderWidth: 1,
+    backgroundColor: "#ffffff",
     borderColor: "#e9ecef",
     borderRadius: 8,
     minHeight: 50,
@@ -398,33 +397,6 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
     gap: 8,
-  },
-
-  inputGroup: {
-    gap: 12,
-  },
-
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f9fafb",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-  },
-
-  inputIcon: {
-    marginRight: 10,
-    color: "#6b7280",
-  },
-
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: "#1f2937",
-    paddingVertical: 0,
   },
 
   switchContainer: {

@@ -10,17 +10,20 @@ import {
   Alert,
   StyleSheet,
   ActivityIndicator,
-  Dimensions,
+  Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import Icon from "react-native-vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { signInWithEmailAndPassword, signInWithCredential, GoogleAuthProvider } from "firebase/auth";
-import { auth } from "../firebaseConfig"; 
-
-const { height } = Dimensions.get('window');
+import {
+  signInWithEmailAndPassword,
+  signInWithCredential,
+  GoogleAuthProvider,
+} from "firebase/auth";
+import { auth } from "../firebaseConfig";
+import { getDb } from "./db";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -37,9 +40,10 @@ const LoginScreen = () => {
   const { t } = useContext(LanguageContext);
 
   GoogleSignin.configure({
-    webClientId: "197590438015-jkpo6rbjq2icl5uqsqkkik3r85q3s19k.apps.googleusercontent.com",
-    offlineAccess: true, 
-    forceCodeForRefreshToken: true, 
+    webClientId:
+      "197590438015-jkpo6rbjq2icl5uqsqkkik3r85q3s19k.apps.googleusercontent.com",
+    offlineAccess: true,
+    forceCodeForRefreshToken: true,
   });
 
   const validateEmail = (email) => {
@@ -55,18 +59,18 @@ const LoginScreen = () => {
     };
 
     if (!email.trim()) {
-      newErrors.email = t.validFillAllFields;
+      newErrors.email = t.validFillAllFields || "Please fill in all fields";
       isValid = false;
     } else if (!validateEmail(email)) {
-      newErrors.email = t.invalidEmail;
+      newErrors.email = t.invalidEmail || "Invalid email format";
       isValid = false;
     }
 
     if (!password) {
-      newErrors.password = t.validFillAllFields;
+      newErrors.password = t.validFillAllFields || "Please fill in all fields";
       isValid = false;
     } else if (password.length < 6) {
-      newErrors.password = t.invalidPassword;
+      newErrors.password = t.invalidPassword || "Password must be at least 6 characters";
       isValid = false;
     }
 
@@ -86,6 +90,20 @@ const LoginScreen = () => {
     }
   };
 
+  const checkIfFirstTimeUser = async (userEmail) => {
+    try {
+      const db = await getDb();
+      const result = await db.getFirstAsync(
+        `SELECT * FROM UserProfile WHERE email = ?`,
+        [userEmail]
+      );
+      return !result;
+    } catch (error) {
+      console.error("Error checking user profile:", error);
+      return false; 
+    }
+  };
+
   const handleLogin = async () => {
     if (!validateForm()) return;
     setIsLoading(true);
@@ -96,23 +114,34 @@ const LoginScreen = () => {
 
       await AsyncStorage.setItem(
         "userProfileData",
-        JSON.stringify({ fullName: user.displayName || "User", email: user.email })
+        JSON.stringify({
+          fullName: user.displayName || "User",
+          email: user.email,
+        })
       );
 
-      navigation.navigate("MainApp", {
-        userData: { fullName: user.displayName || "User", email: user.email },
-      });
+      const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
+
+      navigation.navigate(
+        isFirstTimeUser ? "LifestyleDataInput" : "MainApp",
+        {
+          userData: { fullName: user.displayName || "User", email: user.email },
+        }
+      );
     } catch (error) {
       console.error("Email/Password Login error:", error);
-      let errorMessage = t.invalidCredentials;
-      if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
-        errorMessage = t.invalidCredentials;
+      let errorMessage = t.invalidCredentials || "Invalid email or password";
+      if (
+        error.code === "auth/user-not-found" ||
+        error.code === "auth/wrong-password"
+      ) {
+        errorMessage = t.invalidCredentials || "Invalid email or password";
       } else if (error.code === "auth/too-many-requests") {
-        errorMessage = t.troubleSigningIn;
+        errorMessage = t.troubleSigningIn || "Too many attempts, try again later";
       } else {
-        errorMessage = error.message || t.error;
+        errorMessage = error.message || t.error || "An error occurred";
       }
-      Alert.alert(t.error, errorMessage);
+      Alert.alert(t.error || "Error", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -121,86 +150,68 @@ const LoginScreen = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      
       await GoogleSignin.signOut();
-      
       const userInfo = await GoogleSignin.signIn();
-      
-      console.log("Google Sign-In Response:", JSON.stringify(userInfo, null, 2));
-      
-      // Validate the response structure
-      if (!userInfo) {
-        throw new Error("No user info received from Google Sign-In");
-      }
 
-      // Check for idToken in different possible locations
-      let idToken = userInfo.idToken;
-      
-      // Sometimes the token is nested differently
-      if (!idToken && userInfo.data && userInfo.data.idToken) {
-        idToken = userInfo.data.idToken;
-      }
-      
+      // Check for idToken in the data object
+      const idToken = userInfo.data?.idToken || userInfo.idToken;
       if (!idToken) {
-        console.error("Full userInfo object:", userInfo);
-        throw new Error("No ID token received from Google Sign-In. Please check your configuration.");
+        console.error("Google Sign-In error: No ID token received", userInfo);
+        throw new Error("No ID token received from Google Sign-In");
       }
 
-      console.log("ID Token received:", idToken ? "✓" : "✗");
-      console.log("Access Token received:", userInfo.accessToken ? "✓" : "✗");
-
-      // Create Firebase credential
-      const credential = GoogleAuthProvider.credential(idToken, userInfo.accessToken);
-      
-      // Sign in with Firebase
+      const accessToken = userInfo.data?.accessToken || userInfo.accessToken;
+      const credential = GoogleAuthProvider.credential(idToken, accessToken);
       const userCredential = await signInWithCredential(auth, credential);
       const user = userCredential.user;
 
-      console.log("Firebase user:", user.displayName, user.email);
-
-      // Extract user data with multiple fallbacks
       const userData = {
-        fullName: user.displayName || 
-                 userInfo.user?.name || 
-                 userInfo.user?.givenName + " " + userInfo.user?.familyName || 
-                 "Google User",
-        email: user.email || userInfo.user?.email
+        fullName:
+          user.displayName ||
+          userInfo.user?.name ||
+          (userInfo.user?.givenName && userInfo.user?.familyName
+            ? `${userInfo.user.givenName} ${userInfo.user.familyName}`
+            : "Google User"),
+        email: user.email || userInfo.user?.email,
       };
 
-      // Store user data in AsyncStorage
       await AsyncStorage.setItem("userProfileData", JSON.stringify(userData));
 
-      // Show success message
-      Alert.alert(t.success, t.googleSignInSuccess || "Successfully signed in with Google!");
+      const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
 
-      // Navigate to MainApp
-      navigation.navigate("MainApp", { userData });
+      Alert.alert(
+        t.success || "Success",
+        t.googleSignInSuccess || "Successfully signed in with Google!"
+      );
 
+      navigation.navigate(
+        isFirstTimeUser ? "LifestyleDataInput" : "MainApp",
+        { userData }
+      );
     } catch (error) {
       console.error("Google Sign-In error:", error);
-      
-      // Handle specific error cases
       let errorMessage = t.googleSignInError || "Google sign-in failed";
-      
       if (error.code === 12501) {
-        // User cancelled the sign-in flow - don't show error
         console.log("User cancelled Google Sign-In");
         return;
-      } else if (error.code === 'auth/argument-error') {
-        errorMessage = "Authentication configuration error. Please check your Google Sign-In setup.";
-        console.error("Auth argument error - likely missing or invalid ID token");
-      } else if (error.code === 'auth/network-request-failed') {
-        errorMessage = "Network error. Please check your internet connection.";
+      } else if (error.code === "auth/argument-error") {
+        errorMessage =
+          t.googleSignInError ||
+          "Authentication configuration error. Please check your Google Sign-In setup.";
+      } else if (error.code === "auth/network-request-failed") {
+        errorMessage =
+          t.networkError || "Network error. Please check your internet connection.";
       } else if (error.code === 10) {
-        errorMessage = "Google Sign-In configuration error. Please contact support.";
+        errorMessage =
+          t.googleSignInError || "Google Sign-In configuration error. Please contact support.";
       } else if (error.message && error.message.includes("DEVELOPER_ERROR")) {
-        errorMessage = "Configuration error. Please check SHA-1 fingerprint and package name.";
+        errorMessage =
+          t.googleSignInError ||
+          "Configuration error. Please check SHA-1 fingerprint and package name.";
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
       Alert.alert(t.error || "Error", errorMessage);
     } finally {
       setIsLoading(false);
@@ -210,146 +221,146 @@ const LoginScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
-      <View style={styles.content}>
-        {/* Header Section */}
-        <View style={styles.headerSection}>
-          <View style={styles.welcomeContainer}>
-            <Text style={styles.welcomeTitle}>{t.loginTitle}</Text>
-            <Text style={styles.welcomeSubtitle}>{t.loginSubtitle}</Text>
-          </View>
-        </View>
-
-        {/* Main Content Section */}
-        <View style={styles.contentSection}>
-          <View style={styles.formCard}>
-            {/* Input Fields Section */}
-            <View style={styles.inputSection}>
-              {/* Email Input */}
-              <View style={styles.inputWrapper}>
-                <Text style={styles.inputLabel}>{t.email}</Text>
-                <View
-                  style={[
-                    styles.inputField,
-                    isEmailFocused && styles.inputFocused,
-                    errors.email && styles.inputError,
-                  ]}
-                >
-                  <Icon name="envelope-o" size={18} color="#9ca3af" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder={t.email}
-                    placeholderTextColor="#9ca3af"
-                    keyboardType="email-address"
-                    value={email}
-                    onChangeText={(text) => handleInputChange("email", text)}
-                    onFocus={() => setEmailFocused(true)}
-                    onBlur={() => setEmailFocused(false)}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    editable={!isLoading}
-                  />
-                </View>
-                {errors.email ? (
-                  <Text style={styles.errorMessage}>{errors.email}</Text>
-                ) : null}
-              </View>
-
-              {/* Password Input */}
-              <View style={styles.inputWrapper}>
-                <Text style={styles.inputLabel}>{t.password}</Text>
-                <View
-                  style={[
-                    styles.inputField,
-                    isPasswordFocused && styles.inputFocused,
-                    errors.password && styles.inputError,
-                  ]}
-                >
-                  <Icon name="lock" size={18} color="#9ca3af" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder={t.password}
-                    placeholderTextColor="#9ca3af"
-                    secureTextEntry={!showPassword}
-                    value={password}
-                    onChangeText={(text) => handleInputChange("password", text)}
-                    onFocus={() => setPasswordFocused(true)}
-                    onBlur={() => setPasswordFocused(false)}
-                    editable={!isLoading}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    disabled={isLoading}
-                    style={styles.passwordToggle}
-                  >
-                    <Icon
-                      name={showPassword ? "eye-slash" : "eye"}
-                      size={18}
-                      color="#008080"
-                    />
-                  </TouchableOpacity>
-                </View>
-                {errors.password ? (
-                  <Text style={styles.errorMessage}>{errors.password}</Text>
-                ) : null}
-                
-                {/* Forgot Password Link - moved here */}
-                <TouchableOpacity
-                  style={styles.forgotPasswordLink}
-                  onPress={() => !isLoading && navigation.navigate("ForgotPassword")}
-                  disabled={isLoading}
-                >
-                  <Text style={styles.forgotPasswordText}>{t.forgotPassword}</Text>
-                </TouchableOpacity>
-              </View>
+      <View style={styles.header}>
+        <Text style={styles.appName}>{t.loginTitle || "Welcome Back"}</Text>
+        <Text style={styles.appTagline}>
+          {t.loginSubtitle || "Sign in to continue your health journey"}
+        </Text>
+      </View>
+      <ScrollView style={styles.content}>
+        <View style={styles.section}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>{t.email || "Email"}</Text>
+            <View
+              style={[
+                styles.input,
+                isEmailFocused && styles.inputFocused,
+                errors.email && styles.inputError,
+              ]}
+            >
+              <Icon
+                name="envelope-o"
+                size={18}
+                color="#6b7280"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.textInput}
+                placeholder={t.email || "Enter your email"}
+                placeholderTextColor="#6b7280"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={(text) => handleInputChange("email", text)}
+                onFocus={() => setEmailFocused(true)}
+                onBlur={() => setEmailFocused(false)}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isLoading}
+              />
             </View>
+            {errors.email ? (
+              <Text style={styles.errorMessage}>{errors.email}</Text>
+            ) : null}
+          </View>
 
-            {/* Sign In Button */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>{t.password || "Password"}</Text>
+            <View
+              style={[
+                styles.input,
+                isPasswordFocused && styles.inputFocused,
+                errors.password && styles.inputError,
+              ]}
+            >
+              <Icon
+                name="lock"
+                size={18}
+                color="#6b7280"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.textInput}
+                placeholder={t.password || "Enter your password"}
+                placeholderTextColor="#6b7280"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={(text) => handleInputChange("password", text)}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
+                editable={!isLoading}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
+                style={styles.passwordToggle}
+              >
+                <Icon
+                  name={showPassword ? "eye-slash" : "eye"}
+                  size={18}
+                  color="#008080"
+                />
+              </TouchableOpacity>
+            </View>
+            {errors.password ? (
+              <Text style={styles.errorMessage}>{errors.password}</Text>
+            ) : null}
             <TouchableOpacity
-              style={[styles.signInButton, isLoading && styles.disabledButton]}
-              onPress={handleLogin}
-              activeOpacity={0.8}
+              style={styles.forgotPasswordLink}
+              onPress={() => !isLoading && navigation.navigate("ForgotPassword")}
               disabled={isLoading}
             >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <Text style={styles.signInButtonText}>{t.signIn}</Text>
-              )}
-            </TouchableOpacity>
-
-            {/* Divider */}
-            <View style={styles.dividerContainer}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>{t.or}</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Google Sign In Button */}
-            <TouchableOpacity
-              style={[styles.googleSignInButton, isLoading && styles.disabledButton]}
-              onPress={handleGoogleSignIn}
-              activeOpacity={0.8}
-              disabled={isLoading}
-            >
-              <Icon name="google" size={18} color="#DB4437" />
-              <Text style={styles.googleSignInText}>{t.continueWithGoogle}</Text>
+              <Text style={styles.linkText}>
+                {t.forgotPassword || "Forgot Password?"}
+              </Text>
             </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Footer Section */}
-        <View style={styles.footerSection}>
+          <TouchableOpacity
+            style={[styles.primaryButton, isLoading && styles.disabledButton]}
+            onPress={handleLogin}
+            activeOpacity={0.8}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Text style={styles.primaryButtonText}>
+                {t.signIn || "Sign In"}
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.secondaryText}>{t.or || "or"}</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.googleSignInButton, isLoading && styles.disabledButton]}
+            onPress={handleGoogleSignIn}
+            activeOpacity={0.8}
+            disabled={isLoading}
+          >
+            <Icon name="google" size={18} color="#DB4437" />
+            <Text style={styles.googleSignInText}>
+              {t.continueWithGoogle || "Continue with Google"}
+            </Text>
+          </TouchableOpacity>
+
           <View style={styles.signUpPrompt}>
-            <Text style={styles.signUpPromptText}>{t.noAccount} </Text>
+            <Text style={styles.secondaryText}>
+              {t.noAccount || "Don't have an account?"}{" "}
+            </Text>
             <TouchableOpacity
               onPress={() => !isLoading && navigation.navigate("Register")}
               disabled={isLoading}
             >
-              <Text style={styles.signUpLink}>{t.signUp}</Text>
+              <Text style={styles.linkText}>{t.signUp || "Sign Up"}</Text>
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -357,76 +368,67 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f8fafc",
+  },
+  header: {
+    padding: 20,
+    paddingTop: Platform.OS === "ios" ? 40 : StatusBar.currentHeight + 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+    backgroundColor: "#008080",
+    alignItems: "center",
+  },
+  appName: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#ffffff",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  appTagline: {
+    fontSize: 16,
+    color: "rgba(255, 255, 255, 0.9)",
+    textAlign: "center",
+    lineHeight: 20,
   },
   content: {
     flex: 1,
-  },
-  
-  // Header Section
-  headerSection: {
-    paddingTop: 80,
-    paddingBottom: 20,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-  },
-  welcomeContainer: {
-    alignItems: 'center',
-  },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#1f2937",
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  welcomeSubtitle: {
-    fontSize: 14,
-    color: "#6b7280",
-    textAlign: "center",
-    lineHeight: 18,
-    marginHorizontal: 20,
-  },
-
-  // Content Section
-  contentSection: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 20,
-  },
-  formCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
     padding: 20,
+  },
+  section: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 24,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    borderColor: "#e5e7eb",
+    borderWidth: 1,
   },
-
-  // Input Section
-  inputSection: {
-    marginBottom: 16,
-  },
-  inputWrapper: {
-    marginBottom: 14,
+  inputContainer: {
+    marginBottom: 24,
   },
   inputLabel: {
-    fontSize: 13,
-    color: "#374151",
-    marginBottom: 6,
-    fontWeight: "600",
+    fontSize: 16,
+    color: "#1f2937",
+    marginBottom: 8,
+    fontWeight: "500",
+    paddingLeft: 4,
   },
-  inputField: {
-    borderWidth: 1.5,
+  input: {
+    height: 50,
     borderColor: "#e5e7eb",
-    borderRadius: 12,
-    padding: 14,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fafafa",
-    minHeight: 50,
+    backgroundColor: "#ffffff",
   },
   inputFocused: {
     borderColor: "#008080",
@@ -447,7 +449,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     color: "#1f2937",
     paddingVertical: 0,
   },
@@ -464,38 +466,35 @@ const styles = StyleSheet.create({
   },
   forgotPasswordLink: {
     alignSelf: "flex-end",
-    marginTop: 6,
-    padding: 2,
+    marginTop: 8,
+    padding: 4,
   },
-  forgotPasswordText: {
-    color: "#008080",
-    fontSize: 13,
-    fontWeight: "600",
+  linkText: {
+    color: "#3b82f6",
+    fontSize: 16,
+    fontWeight: "500",
   },
-
-  // Buttons
-  signInButton: {
-    backgroundColor: "#008080",
-    borderRadius: 12,
-    padding: 14,
+  primaryButton: {
+    paddingVertical: 14,
+    borderRadius: 8,
     alignItems: "center",
-    marginBottom: 16,
+    justifyContent: "center",
+    backgroundColor: "#008080",
     shadowColor: "#008080",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
   },
-  signInButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "700",
-    letterSpacing: 0.5,
+  primaryButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   googleSignInButton: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 1.5,
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    borderWidth: 1,
     borderColor: "#DB4437",
     padding: 14,
     flexDirection: "row",
@@ -506,55 +505,40 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    marginVertical: 20,
   },
   googleSignInText: {
     color: "#DB4437",
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
     marginLeft: 10,
-    letterSpacing: 0.3,
   },
   disabledButton: {
-    opacity: 0.6,
+    backgroundColor: "#d1d5db",
+    shadowOpacity: 0,
+    elevation: 0,
   },
-
-  // Divider
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 14,
+    marginVertical: 20,
   },
   dividerLine: {
     flex: 1,
     height: 1,
     backgroundColor: "#e5e7eb",
   },
-  dividerText: {
+  secondaryText: {
     marginHorizontal: 12,
     color: "#6b7280",
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "500",
-  },
-
-  // Footer Section
-  footerSection: {
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 120,
-    alignItems: 'center',
   },
   signUpPrompt: {
     flexDirection: "row",
-    alignItems: 'center',
-  },
-  signUpPromptText: {
-    color: "#6b7280",
-    fontSize: 13,
-  },
-  signUpLink: {
-    color: "#008080",
-    fontWeight: "600",
-    fontSize: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 20,
   },
 });
 

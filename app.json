@@ -32,11 +32,7 @@
       "expo-sqlite",
       "expo-web-browser"
     ],
-    "extra": {
-      "eas": {
-        "projectId": "8546214e-ae5a-4dbc-a027-2ac361a4539b"
-      }
-    },
+    "extra": {},
     "owner": "sham_17834"
   }
 }
