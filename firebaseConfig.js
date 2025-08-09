@@ -2,12 +2,12 @@ import { getAuth } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDvR_NpBPzjZ_E0a_f9NUvIPltFR9LLfKo",
-  authDomain: "healthtrack-472c7.firebaseapp.com",
-  projectId: "healthtrack-472c7",
-  storageBucket: "healthtrack-472c7.firebasestorage.app",
-  messagingSenderId: "201040809867",
-  appId: "1:201040809867:web:596236ca16cb4d1d10698e",
+  apiKey: "AIzaSyAJeklmwOGNdKJgjPdWGCaOYV5-GlZt6D0",
+  authDomain: "fyp-9fbae.firebaseapp.com",
+  projectId: "fyp-9fbae",
+  storageBucket: "fyp-9fbae.firebasestorage.app",
+  messagingSenderId: "197590438015",
+  appId: "1:197590438015:web:8f656921e2ddb4eb9a2f4a",
 };
 
 const app = initializeApp(firebaseConfig);

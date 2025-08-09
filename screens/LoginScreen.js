@@ -36,9 +36,11 @@ const LoginScreen = () => {
   const navigation = useNavigation();
   const { t } = useContext(LanguageContext);
 
-  // Configure Google Signin
+  // Enhanced Google Sign-In Configuration
   GoogleSignin.configure({
-    webClientId: "201040809867-al40so5evbse3gibsbas7cc67hsl90aa.apps.googleusercontent.com", 
+    webClientId: "197590438015-jkpo6rbjq2icl5uqsqkkik3r85q3s19k.apps.googleusercontent.com",
+    offlineAccess: true, // Important for getting refresh token
+    forceCodeForRefreshToken: true, // Forces a refresh token to be returned
   });
 
   const validateEmail = (email) => {
@@ -123,32 +125,89 @@ const LoginScreen = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      // Get Google ID token
-      await GoogleSignin.hasPlayServices();
+      // First check if Google Play Services are available
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      
+      // Sign out any existing Google session to force fresh sign-in
+      await GoogleSignin.signOut();
+      
+      // Perform Google Sign-In
       const userInfo = await GoogleSignin.signIn();
-      const idToken = userInfo.idToken;
+      
+      console.log("Google Sign-In Response:", JSON.stringify(userInfo, null, 2));
+      
+      // Validate the response structure
+      if (!userInfo) {
+        throw new Error("No user info received from Google Sign-In");
+      }
 
+      // Check for idToken in different possible locations
+      let idToken = userInfo.idToken;
+      
+      // Sometimes the token is nested differently
+      if (!idToken && userInfo.data && userInfo.data.idToken) {
+        idToken = userInfo.data.idToken;
+      }
+      
+      if (!idToken) {
+        console.error("Full userInfo object:", userInfo);
+        throw new Error("No ID token received from Google Sign-In. Please check your configuration.");
+      }
+
+      console.log("ID Token received:", idToken ? "✓" : "✗");
+      console.log("Access Token received:", userInfo.accessToken ? "✓" : "✗");
+
+      // Create Firebase credential
+      const credential = GoogleAuthProvider.credential(idToken, userInfo.accessToken);
+      
       // Sign in with Firebase
-      const credential = GoogleAuthProvider.credential(idToken);
       const userCredential = await signInWithCredential(auth, credential);
       const user = userCredential.user;
 
+      console.log("Firebase user:", user.displayName, user.email);
+
+      // Extract user data with multiple fallbacks
+      const userData = {
+        fullName: user.displayName || 
+                 userInfo.user?.name || 
+                 userInfo.user?.givenName + " " + userInfo.user?.familyName || 
+                 "Google User",
+        email: user.email || userInfo.user?.email
+      };
+
       // Store user data in AsyncStorage
-      await AsyncStorage.setItem(
-        "userProfileData",
-        JSON.stringify({ fullName: user.displayName || "Google User", email: user.email })
-      );
+      await AsyncStorage.setItem("userProfileData", JSON.stringify(userData));
 
       // Show success message
-      Alert.alert(t.success, t.googleSignInSuccess);
+      Alert.alert(t.success, t.googleSignInSuccess || "Successfully signed in with Google!");
 
       // Navigate to MainApp
-      navigation.navigate("MainApp", {
-        userData: { fullName: user.displayName || "Google User", email: user.email },
-      });
+      navigation.navigate("MainApp", { userData });
+
     } catch (error) {
       console.error("Google Sign-In error:", error);
-      Alert.alert(t.error, t.googleSignInError || "Google sign-in failed");
+      
+      // Handle specific error cases
+      let errorMessage = t.googleSignInError || "Google sign-in failed";
+      
+      if (error.code === 12501) {
+        // User cancelled the sign-in flow - don't show error
+        console.log("User cancelled Google Sign-In");
+        return;
+      } else if (error.code === 'auth/argument-error') {
+        errorMessage = "Authentication configuration error. Please check your Google Sign-In setup.";
+        console.error("Auth argument error - likely missing or invalid ID token");
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = "Network error. Please check your internet connection.";
+      } else if (error.code === 10) {
+        errorMessage = "Google Sign-In configuration error. Please contact support.";
+      } else if (error.message && error.message.includes("DEVELOPER_ERROR")) {
+        errorMessage = "Configuration error. Please check SHA-1 fingerprint and package name.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert(t.error || "Error", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -487,7 +546,7 @@ const styles = StyleSheet.create({
   footerSection: {
     paddingHorizontal: 24,
     paddingTop: 8,
-    paddingBottom: 150,
+    paddingBottom: 120,
     alignItems: 'center',
   },
   signUpPrompt: {
