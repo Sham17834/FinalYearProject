@@ -283,6 +283,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
+    marginBottom: 8,
     fontWeight: "700",
     color: "#333",
   },
@@ -290,6 +291,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     textAlign: "center",
+    lineHeight: 22,
   },
   formContainer: {
     width: "100%",

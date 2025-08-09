@@ -499,7 +499,6 @@ const styles = StyleSheet.create({
   },
   forgotPasswordButton: {
     alignSelf: 'flex-end',
-    padding: 8,
   },
   forgotPasswordText: {
     color: '#008080', 
@@ -590,9 +589,7 @@ const styles = StyleSheet.create({
   },
   signUpLinkText: {
     color: '#008080', 
-    fontSize: 18, 
     fontWeight: '700',
-    textDecorationLine: 'underline',
   },
 });
 

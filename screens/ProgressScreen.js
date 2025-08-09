@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: "#008080",
     width: "100%",
-    paddingTop: 19,
+    paddingTop: 20,
     paddingBottom: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -53,14 +53,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     position: "absolute",
-    top: 0,
-    zIndex: 10,
+    paddingTop: 40,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#ffffff",
-    marginBottom: 5,
     textAlign: "center",
   },
   headerSubtitle: {
@@ -75,7 +73,7 @@ const styles = StyleSheet.create({
   topSection: {
     flexDirection: "row",
     gap: 12,
-    marginBottom: 16,
+    paddingTop: 20,
   },
   quickStatsCard: {
     flex: 1,
@@ -87,6 +85,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 3,
+    marginBottom: 16
   },
   timeRangeCard: {
     backgroundColor: "#ffffff",

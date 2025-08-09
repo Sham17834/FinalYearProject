@@ -41,7 +41,7 @@ const styles = {
     shadowRadius: 12,
     elevation: 8,
     marginBottom: 8,
-    paddingTop: Platform.OS === "ios" ? 50 : 20,
+    paddingTop: 40,
     alignItems: "center",
     justifyContent: "center",
     transition: "all 0.2s ease",

@@ -22,182 +22,268 @@ import { getDb } from "./db";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f8fafc",
   },
   header: {
-    padding: 20,
-    paddingTop: Platform.OS === "ios" ? 40 : 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
+    paddingTop: 50,
     backgroundColor: "#008080",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     color: "#ffffff",
-    marginBottom: 4,
+    marginBottom: 8,
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
     color: "#ffffff",
+    marginBottom: 24,
+    textAlign: "center",
+    opacity: 0.9,
+  },
+  progressContainer: {
+    alignItems: "center",
     marginBottom: 16,
   },
   progressBarContainer: {
-    height: 6,
+    height: 8,
+    width: "80%",
     backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderRadius: 3,
+    borderRadius: 4,
     overflow: "hidden",
   },
   progressBar: {
     height: "100%",
     backgroundColor: "#ffffff",
-    borderRadius: 3,
+    borderRadius: 4,
     transitionProperty: "width",
     transitionDuration: "300ms",
   },
+  progressText: {
+    color: "#ffffff",
+    fontSize: 14,
+    marginTop: 8,
+    opacity: 0.8,
+  },
   content: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
-  section: {
+  stepCard: {
     backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-    borderColor: "#e5e7eb",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    borderColor: "#e2e8f0",
     borderWidth: 1,
   },
-  inputContainer: {
+  stepTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#008080",
     marginBottom: 20,
+    textAlign: "center",
+  },
+  inputGroup: {
+    marginBottom: 24,
   },
   inputLabel: {
     fontSize: 16,
-    color: "#333",
-    marginBottom: 8,
-    fontWeight: "500",
-    paddingLeft: 4,
+    color: "#1e293b",
+    marginBottom: 12,
+    fontWeight: "600",
+  },
+  inputContainer: {
+    position: "relative",
   },
   input: {
-    height: 50,
-    borderColor: "#e5e7eb",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
+    height: 56,
+    borderColor: "#e2e8f0",
+    borderWidth: 2,
+    borderRadius: 12,
+    paddingHorizontal: 20,
     fontSize: 16,
-    color: "#333",
+    color: "#1e293b",
     backgroundColor: "#ffffff",
+  },
+  inputFocused: {
+    borderColor: "#008080",
+    backgroundColor: "#f0fdfa",
   },
   picker: {
-    height: 50,
-    width: "100%",
-    color: "#333",
+    height: 56,
+    borderColor: "#e2e8f0",
+    borderWidth: 2,
+    borderRadius: 12,
     backgroundColor: "#ffffff",
+    color: "#1e293b",
   },
-  buttonContainer: {
-    flexDirection: "row",
-    marginTop: 20,
+  pickerContainer: {
+    borderColor: "#e2e8f0",
+    borderWidth: 2,
+    borderRadius: 12,
+    backgroundColor: "#ffffff",
+    overflow: "hidden",
+    position: "relative",
   },
-  registerButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#008080",
+  dropdownIcon: {
+    position: "absolute",
+    right: 16,
+    top: "50%",
+    transform: [{ translateY: -6 }],
+    width: 0,
+    height: 0,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 8,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderTopColor: "#64748b",
+    zIndex: 1,
   },
-  registerButtonText: {
-    color: "#ffffff",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  secondaryButton: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    borderColor: "#e5e7eb",
+  sliderGroup: {
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: "#f8fafc",
+    borderRadius: 16,
+    borderColor: "#e2e8f0",
     borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#ffffff",
-  },
-  secondaryButtonText: {
-    color: "#333",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  submitButton: {
-    backgroundColor: "#008080",
-  },
-  disabledButton: {
-    backgroundColor: "#d1d5db",
-  },
-  bottomText: {
-    color: "#666",
-    fontSize: 16,
-    textAlign: "center",
-    marginTop: 16,
-  },
-  bottomTextLink: {
-    color: "#008080",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  errorText: {
-    color: "#ef4444",
-    fontSize: 12,
-    marginTop: 4,
-    paddingLeft: 4,
-  },
-  sliderContainer: {
-    marginBottom: 20,
-    paddingVertical: 10,
   },
   slider: {
     width: "100%",
-    height: 40,
+    height: 48,
+    marginVertical: 8,
   },
   sliderValue: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 20,
+    fontWeight: "700",
     color: "#008080",
     textAlign: "center",
-    marginTop: 8,
+    marginTop: 12,
+    paddingVertical: 8,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    borderColor: "#008080",
+    borderWidth: 1,
   },
   sliderLabelRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 4,
+    marginTop: 4,
   },
   sliderMinMaxLabel: {
     fontSize: 12,
-    color: "#666",
+    color: "#64748b",
+    fontWeight: "500",
+  },
+  switchGroup: {
+    marginBottom: 20,
+    padding: 20,
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    borderColor: "#e2e8f0",
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   switchContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
   },
   switchLabel: {
     fontSize: 16,
-    color: "#333",
+    color: "#1e293b",
+    fontWeight: "500",
+    flex: 1,
+    marginRight: 16,
+  },
+  switchToggle: {
+    transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }],
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    marginTop: 32,
+    marginBottom: 20,
+    gap: 12,
+  },
+  button: {
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  primaryButton: {
+    flex: 1,
+    backgroundColor: "#008080",
+  },
+  secondaryButton: {
+    paddingHorizontal: 24,
+    backgroundColor: "#ffffff",
+    borderColor: "#e2e8f0",
+    borderWidth: 2,
+  },
+  primaryButtonText: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  secondaryButtonText: {
+    color: "#1e293b",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  disabledButton: {
+    backgroundColor: "#94a3b8",
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  errorText: {
+    color: "#ef4444",
+    fontSize: 12,
+    marginTop: 6,
+    fontWeight: "500",
   },
   stressLevelIndicator: {
     flexDirection: "row",
-    height: 8,
-    borderRadius: 4,
-    marginVertical: 8,
+    height: 12,
+    borderRadius: 6,
+    marginTop: 12,
     overflow: "hidden",
+    gap: 2,
   },
   stressLevelColor: {
     flex: 1,
+    borderRadius: 2,
+  },
+  bmiContainer: {
+    backgroundColor: "#f0fdfa",
+    borderColor: "#14b8a6",
+    borderWidth: 1,
+  },
+  bmiText: {
+    color: "#0d9488",
+    fontWeight: "600",
   },
 });
 
@@ -229,6 +315,12 @@ const LifestyleDataInputScreen = () => {
   const [ageError, setAgeError] = useState("");
   const [heightError, setHeightError] = useState("");
   const [weightError, setWeightError] = useState("");
+
+  const stepTitles = [
+    t.personalInfoTitle || "Personal Information",
+    t.healthHabitsTitle || "Health & Activity",
+    t.lifestyleTitle || "Lifestyle & Wellness"
+  ];
 
   const genderOptions = [
     { label: t.male || "Male", value: "Male" },
@@ -417,101 +509,117 @@ const LifestyleDataInputScreen = () => {
           {t.lifestyleDataTitle || "Lifestyle Assessment"}
         </Text>
         <Text style={styles.subtitle}>
-          {formatString
-            ? formatString(
-                t.lifestyleDataTagline || "Step {currentStep} of {totalSteps}",
-                { currentStep, totalSteps }
-              )
-            : `Step ${currentStep} of ${totalSteps}`}
+          {stepTitles[currentStep - 1]}
         </Text>
-        <View style={styles.progressBarContainer}>
-          <View
-            style={[
-              styles.progressBar,
-              { width: `${(currentStep / totalSteps) * 100}%` },
-            ]}
-          />
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBarContainer}>
+            <View
+              style={[
+                styles.progressBar,
+                { width: `${(currentStep / totalSteps) * 100}%` },
+              ]}
+            />
+          </View>
+          <Text style={styles.progressText}>
+            {formatString
+              ? formatString(
+                  t.lifestyleDataTagline || "Step {currentStep} of {totalSteps}",
+                  { currentStep, totalSteps }
+                )
+              : `Step ${currentStep} of ${totalSteps}`}
+          </Text>
         </View>
       </View>
 
-      <ScrollView style={styles.content}>
-        <View style={styles.section}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.stepCard}>
+          <Text style={styles.stepTitle}>{stepTitles[currentStep - 1]}</Text>
+          
           {currentStep === 1 && (
             <>
-              <View style={styles.inputContainer}>
+              <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>{t.age || "Age"}</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder={t.enterAge || "Enter your age"}
-                  placeholderTextColor="#999"
-                  keyboardType="numeric"
-                  value={age}
-                  onChangeText={setAge}
-                />
-                {ageError ? <Text style={styles.errorText}>{ageError}</Text> : null}
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={[styles.input, ageError && { borderColor: "#ef4444" }]}
+                    placeholder={t.enterAge || "Enter your age"}
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="numeric"
+                    value={age}
+                    onChangeText={setAge}
+                  />
+                  {ageError ? <Text style={styles.errorText}>{ageError}</Text> : null}
+                </View>
               </View>
 
-              <View style={styles.inputContainer}>
+              <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>{t.gender || "Gender"}</Text>
-                <Picker
-                  selectedValue={gender}
-                  style={styles.picker}
-                  onValueChange={(itemValue) => setGender(itemValue)}
-                >
-                  {genderOptions.map((option) => (
-                    <Picker.Item
-                      key={option.value}
-                      label={option.label}
-                      value={option.value}
-                    />
-                  ))}
-                </Picker>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={gender}
+                    style={styles.picker}
+                    onValueChange={(itemValue) => setGender(itemValue)}
+                  >
+                    {genderOptions.map((option) => (
+                      <Picker.Item
+                        key={option.value}
+                        label={option.label}
+                        value={option.value}
+                      />
+                    ))}
+                  </Picker>
+                  <View style={styles.dropdownIcon} />
+                </View>
               </View>
 
-              <View style={styles.inputContainer}>
+              <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>
                   {t.heightCm || "Height (cm)"}
                 </Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder={t.enterHeight || "Enter your height in cm"}
-                  placeholderTextColor="#999"
-                  keyboardType="numeric"
-                  value={heightCm}
-                  onChangeText={(text) => {
-                    setHeightCm(text);
-                    if (text && weightKg) calculateBMI(text, weightKg);
-                  }}
-                />
-                {heightError ? <Text style={styles.errorText}>{heightError}</Text> : null}
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={[styles.input, heightError && { borderColor: "#ef4444" }]}
+                    placeholder={t.enterHeight || "Enter your height in cm"}
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="numeric"
+                    value={heightCm}
+                    onChangeText={(text) => {
+                      setHeightCm(text);
+                      if (text && weightKg) calculateBMI(text, weightKg);
+                    }}
+                  />
+                  {heightError ? <Text style={styles.errorText}>{heightError}</Text> : null}
+                </View>
               </View>
 
-              <View style={styles.inputContainer}>
+              <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>
                   {t.weightKg || "Weight (kg)"}
                 </Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder={t.enterWeight || "Enter your weight in kg"}
-                  placeholderTextColor="#999"
-                  keyboardType="numeric"
-                  value={weightKg}
-                  onChangeText={(text) => {
-                    setWeightKg(text);
-                    if (heightCm && text) calculateBMI(heightCm, text);
-                  }}
-                />
-                {weightError ? <Text style={styles.errorText}>{weightError}</Text> : null}
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={[styles.input, weightError && { borderColor: "#ef4444" }]}
+                    placeholder={t.enterWeight || "Enter your weight in kg"}
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="numeric"
+                    value={weightKg}
+                    onChangeText={(text) => {
+                      setWeightKg(text);
+                      if (heightCm && text) calculateBMI(heightCm, text);
+                    }}
+                  />
+                  {weightError ? <Text style={styles.errorText}>{weightError}</Text> : null}
+                </View>
               </View>
 
-              <View style={styles.inputContainer}>
+              <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>{t.bmi || "BMI"}</Text>
                 <TextInput
-                  style={[styles.input, { backgroundColor: "#f1f5f9" }]}
+                  style={[styles.input, styles.bmiContainer]}
                   value={bmi}
                   editable={false}
                   placeholder={t.bmiPlaceholder || "Calculated automatically"}
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#14b8a6"
                 />
               </View>
             </>
@@ -519,26 +627,29 @@ const LifestyleDataInputScreen = () => {
 
           {currentStep === 2 && (
             <>
-              <View style={styles.inputContainer}>
+              <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>
                   {t.chronicDisease || "Chronic Disease"}
                 </Text>
-                <Picker
-                  selectedValue={chronicDisease}
-                  style={styles.picker}
-                  onValueChange={(itemValue) => setChronicDisease(itemValue)}
-                >
-                  {chronicDiseaseOptions.map((option) => (
-                    <Picker.Item
-                      key={option.value}
-                      label={option.label}
-                      value={option.value}
-                    />
-                  ))}
-                </Picker>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={chronicDisease}
+                    style={styles.picker}
+                    onValueChange={(itemValue) => setChronicDisease(itemValue)}
+                  >
+                    {chronicDiseaseOptions.map((option) => (
+                      <Picker.Item
+                        key={option.value}
+                        label={option.label}
+                        value={option.value}
+                      />
+                    ))}
+                  </Picker>
+                  <View style={styles.dropdownIcon} />
+                </View>
               </View>
 
-              <View style={styles.sliderContainer}>
+              <View style={styles.sliderGroup}>
                 <Text style={styles.inputLabel}>
                   {t.dailySteps || "Daily Steps"}
                 </Text>
@@ -549,7 +660,8 @@ const LifestyleDataInputScreen = () => {
                   step={100}
                   value={dailySteps}
                   minimumTrackTintColor="#008080"
-                  maximumTrackTintColor="#e5e7eb"
+                  maximumTrackTintColor="#e2e8f0"
+                  thumbTintColor="#008080"
                   onValueChange={(value) => setDailySteps(value)}
                 />
                 <View style={styles.sliderLabelRow}>
@@ -561,7 +673,7 @@ const LifestyleDataInputScreen = () => {
                 </Text>
               </View>
 
-              <View style={styles.sliderContainer}>
+              <View style={styles.sliderGroup}>
                 <Text style={styles.inputLabel}>
                   {t.exerciseFrequency || "Exercise Frequency (days/week)"}
                 </Text>
@@ -572,7 +684,8 @@ const LifestyleDataInputScreen = () => {
                   step={1}
                   value={exerciseFrequency}
                   minimumTrackTintColor="#008080"
-                  maximumTrackTintColor="#e5e7eb"
+                  maximumTrackTintColor="#e2e8f0"
+                  thumbTintColor="#008080"
                   onValueChange={(value) => setExerciseFrequency(value)}
                 />
                 <View style={styles.sliderLabelRow}>
@@ -588,7 +701,7 @@ const LifestyleDataInputScreen = () => {
                 </Text>
               </View>
 
-              <View style={styles.sliderContainer}>
+              <View style={styles.sliderGroup}>
                 <Text style={styles.inputLabel}>
                   {t.sleepHours || "Sleep Hours"}
                 </Text>
@@ -599,7 +712,8 @@ const LifestyleDataInputScreen = () => {
                   step={0.5}
                   value={sleepHours}
                   minimumTrackTintColor="#008080"
-                  maximumTrackTintColor="#e5e7eb"
+                  maximumTrackTintColor="#e2e8f0"
+                  thumbTintColor="#008080"
                   onValueChange={(value) => setSleepHours(value)}
                 />
                 <View style={styles.sliderLabelRow}>
@@ -611,54 +725,63 @@ const LifestyleDataInputScreen = () => {
                 </Text>
               </View>
 
-              <View style={styles.switchContainer}>
-                <Text style={styles.switchLabel}>
-                  {t.alcoholConsumption || "Alcohol Consumption"}
-                </Text>
-                <Switch
-                  value={alcoholConsumption}
-                  onValueChange={setAlcoholConsumption}
-                  trackColor={{ false: "#e5e7eb", true: "#008080" }}
-                  thumbColor={alcoholConsumption ? "#ffffff" : "#f4f3f4"}
-                />
+              <View style={styles.switchGroup}>
+                <View style={styles.switchContainer}>
+                  <Text style={styles.switchLabel}>
+                    {t.alcoholConsumption || "Alcohol Consumption"}
+                  </Text>
+                  <Switch
+                    style={styles.switchToggle}
+                    value={alcoholConsumption}
+                    onValueChange={setAlcoholConsumption}
+                    trackColor={{ false: "#e2e8f0", true: "#14b8a6" }}
+                    thumbColor={alcoholConsumption ? "#ffffff" : "#f4f3f4"}
+                  />
+                </View>
               </View>
 
-              <View style={styles.switchContainer}>
-                <Text style={styles.switchLabel}>
-                  {t.smokingHabit || "Smoking Habit"}
-                </Text>
-                <Switch
-                  value={smokingHabit}
-                  onValueChange={setSmokingHabit}
-                  trackColor={{ false: "#e5e7eb", true: "#008080" }}
-                  thumbColor={smokingHabit ? "#ffffff" : "#f4f3f4"}
-                />
+              <View style={styles.switchGroup}>
+                <View style={styles.switchContainer}>
+                  <Text style={styles.switchLabel}>
+                    {t.smokingHabit || "Smoking Habit"}
+                  </Text>
+                  <Switch
+                    style={styles.switchToggle}
+                    value={smokingHabit}
+                    onValueChange={setSmokingHabit}
+                    trackColor={{ false: "#e2e8f0", true: "#14b8a6" }}
+                    thumbColor={smokingHabit ? "#ffffff" : "#f4f3f4"}
+                  />
+                </View>
               </View>
             </>
           )}
 
           {currentStep === 3 && (
             <>
-              <View style={styles.inputContainer}>
+              <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>
                   {t.dietQuality || "Diet Quality"}
                 </Text>
-                <Picker
-                  selectedValue={dietQuality}
-                  style={styles.picker}
-                  onValueChange={(itemValue) => setDietQuality(itemValue)}
-                >
-                  {dietQualityOptions.map((option) => (
-                    <Picker.Item
-                      key={option.value}
-                      label={option.label}
-                      value={option.value}
-                    />
-                  ))}
-                </Picker>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={dietQuality}
+                    style={styles.picker}
+                    onValueChange={(itemValue) => setDietQuality(itemValue)}
+                  >
+                    {dietQualityOptions.map((option) => (
+                      <Picker.Item
+                        key={option.value}
+                        label={option.label}
+                        value={option.value}
+                      />
+                    ))}
+                  </Picker>
+                  <View style={styles.dropdownIcon} />
+                </View>
               </View>
 
-              <View style={styles.sliderContainer}>
+              <View style={styles.sliderGroup}>
                 <Text style={styles.inputLabel}>
                   {t.fruitsVeggies || "Fruits & Vegetables (servings/day)"}
                 </Text>
@@ -669,7 +792,8 @@ const LifestyleDataInputScreen = () => {
                   step={1}
                   value={fruitsVeggies}
                   minimumTrackTintColor="#008080"
-                  maximumTrackTintColor="#e5e7eb"
+                  maximumTrackTintColor="#e2e8f0"
+                  thumbTintColor="#008080"
                   onValueChange={(value) => setFruitsVeggies(value)}
                 />
                 <View style={styles.sliderLabelRow}>
@@ -681,7 +805,7 @@ const LifestyleDataInputScreen = () => {
                 </Text>
               </View>
 
-              <View style={styles.sliderContainer}>
+              <View style={styles.sliderGroup}>
                 <Text style={styles.inputLabel}>
                   {t.stressLevel || "Stress Level"}
                 </Text>
@@ -692,7 +816,8 @@ const LifestyleDataInputScreen = () => {
                   step={1}
                   value={stressLevel}
                   minimumTrackTintColor="#008080"
-                  maximumTrackTintColor="#e5e7eb"
+                  maximumTrackTintColor="#e2e8f0"
+                  thumbTintColor="#008080"
                   onValueChange={(value) => setStressLevel(value)}
                 />
                 <View style={styles.sliderLabelRow}>
@@ -714,7 +839,7 @@ const LifestyleDataInputScreen = () => {
                 </View>
               </View>
 
-              <View style={styles.sliderContainer}>
+              <View style={styles.sliderGroup}>
                 <Text style={styles.inputLabel}>
                   {t.screenTimeHours || "Screen Time (hours/day)"}
                 </Text>
@@ -725,7 +850,8 @@ const LifestyleDataInputScreen = () => {
                   step={0.5}
                   value={screenTimeHours}
                   minimumTrackTintColor="#008080"
-                  maximumTrackTintColor="#e5e7eb"
+                  maximumTrackTintColor="#e2e8f0"
+                  thumbTintColor="#008080"
                   onValueChange={(value) => setScreenTimeHours(value)}
                 />
                 <View style={styles.sliderLabelRow}>
@@ -742,7 +868,7 @@ const LifestyleDataInputScreen = () => {
           <View style={styles.buttonContainer}>
             {currentStep > 1 && (
               <TouchableOpacity
-                style={[styles.secondaryButton, { marginRight: 12 }]}
+                style={[styles.button, styles.secondaryButton]}
                 onPress={handlePrevious}
               >
                 <Text style={styles.secondaryButtonText}>
@@ -753,24 +879,24 @@ const LifestyleDataInputScreen = () => {
 
             {currentStep < totalSteps ? (
               <TouchableOpacity
-                style={styles.registerButton}
+                style={[styles.button, styles.primaryButton]}
                 onPress={handleNext}
               >
-                <Text style={styles.registerButtonText}>
+                <Text style={styles.primaryButtonText}>
                   {t.next || "Next"}
                 </Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 style={[
-                  styles.registerButton,
-                  styles.submitButton,
+                  styles.button,
+                  styles.primaryButton,
                   isSubmitting && styles.disabledButton,
                 ]}
                 onPress={handleSubmit}
                 disabled={isSubmitting}
               >
-                <Text style={styles.registerButtonText}>
+                <Text style={styles.primaryButtonText}>
                   {isSubmitting
                     ? t.submitting || "Submitting..."
                     : t.submit || "Submit"}
@@ -778,18 +904,6 @@ const LifestyleDataInputScreen = () => {
               </TouchableOpacity>
             )}
           </View>
-
-          {currentStep === 1 && (
-            <Text style={styles.bottomText}>
-              {t.alreadyHaveAccount || "Already have an account?"}{" "}
-              <Text
-                style={styles.bottomTextLink}
-                onPress={() => navigation.goBack()}
-              >
-                {t.signIn || "Sign In"}
-              </Text>
-            </Text>
-          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -797,4 +911,3 @@ const LifestyleDataInputScreen = () => {
 };
 
 export default LifestyleDataInputScreen;
-
