@@ -36,11 +36,10 @@ const LoginScreen = () => {
   const navigation = useNavigation();
   const { t } = useContext(LanguageContext);
 
-  // Enhanced Google Sign-In Configuration
   GoogleSignin.configure({
     webClientId: "197590438015-jkpo6rbjq2icl5uqsqkkik3r85q3s19k.apps.googleusercontent.com",
-    offlineAccess: true, // Important for getting refresh token
-    forceCodeForRefreshToken: true, // Forces a refresh token to be returned
+    offlineAccess: true, 
+    forceCodeForRefreshToken: true, 
   });
 
   const validateEmail = (email) => {
@@ -92,17 +91,14 @@ const LoginScreen = () => {
     setIsLoading(true);
 
     try {
-      // Sign in with Firebase email/password
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Store user data in AsyncStorage
       await AsyncStorage.setItem(
         "userProfileData",
         JSON.stringify({ fullName: user.displayName || "User", email: user.email })
       );
 
-      // Navigate to MainApp
       navigation.navigate("MainApp", {
         userData: { fullName: user.displayName || "User", email: user.email },
       });
@@ -125,13 +121,11 @@ const LoginScreen = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      // First check if Google Play Services are available
+
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
       
-      // Sign out any existing Google session to force fresh sign-in
       await GoogleSignin.signOut();
       
-      // Perform Google Sign-In
       const userInfo = await GoogleSignin.signIn();
       
       console.log("Google Sign-In Response:", JSON.stringify(userInfo, null, 2));
