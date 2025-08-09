@@ -25,10 +25,11 @@ const getCurrentDate = () => {
   return `${day}-${month}-${year}`;
 };
 
+
 const styles = {
   container: {
     flex: 1,
-    backgroundColor: "#ffffff", 
+    backgroundColor: "#f1f5f9",
   },
   header: {
     backgroundColor: "#008080",
@@ -46,14 +47,14 @@ const styles = {
     transition: "all 0.2s ease",
   },
   appName: {
-    fontSize: 28, 
+    fontSize: 24,
     fontWeight: "bold",
-    color: "#333", 
+    color: "#ffffff",
     marginBottom: 4,
   },
   appTagline: {
-    fontSize: 16, 
-    color: "#666", 
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.9)",
     marginBottom: 16,
   },
   content: {
@@ -74,14 +75,14 @@ const styles = {
     borderLeftColor: "#008080",
   },
   recordTitle: {
-    fontSize: 16, 
+    fontSize: 18,
     fontWeight: "700",
-    color: "#666", 
+    color: "#1e293b",
     marginBottom: 4,
   },
   recordDate: {
-    fontSize: 16, 
-    color: "#666", 
+    fontSize: 14,
+    color: "#64748b",
     fontWeight: "500",
   },
   sectionCard: {
@@ -97,7 +98,7 @@ const styles = {
     overflow: "hidden",
   },
   sectionHeader: {
-    backgroundColor: "#ffffff", 
+    backgroundColor: "#f8fafc",
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
@@ -106,7 +107,7 @@ const styles = {
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#666", 
+    color: "#334155",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
@@ -117,17 +118,17 @@ const styles = {
     marginBottom: 24,
   },
   fieldLabel: {
-    fontSize: 16, 
+    fontSize: 14,
     fontWeight: "600",
-    color: "#666", 
+    color: "#374151",
     marginBottom: 8,
     textTransform: "uppercase",
     letterSpacing: 0.3,
   },
   fieldValue: {
-    fontSize: 16, 
-    color: "#666", 
-    backgroundColor: "#ffffff", 
+    fontSize: 15,
+    color: "#1f2937",
+    backgroundColor: "#f9fafb",
     borderWidth: 1,
     borderColor: "#d1d5db",
     borderRadius: 8,
@@ -136,16 +137,16 @@ const styles = {
     minHeight: 48,
   },
   readOnlyField: {
-    backgroundColor: "#ffffff", 
-    color: "#666", 
+    backgroundColor: "#f1f5f9",
+    color: "#6b7280",
   },
   picker: {
     height: 50,
-    backgroundColor: "#ffffff", 
+    backgroundColor: "#f9fafb",
     borderWidth: 1,
     borderColor: "#d1d5db",
     borderRadius: 8,
-    color: "#666", 
+    color: "#1f2937",
   },
   switchRow: {
     flexDirection: "row",
@@ -155,9 +156,9 @@ const styles = {
     paddingHorizontal: 4,
   },
   switchLabel: {
-    fontSize: 16, 
+    fontSize: 14,
     fontWeight: "500",
-    color: "#666", 
+    color: "#374151",
     flex: 1,
   },
   switchIndicator: {
@@ -167,7 +168,7 @@ const styles = {
     marginBottom: 6,
   },
   sliderContainer: {
-    backgroundColor: "#ffffff", 
+    backgroundColor: "#f9fafb",
     borderRadius: 8,
     padding: 16,
     borderWidth: 1,
@@ -196,8 +197,8 @@ const styles = {
     marginBottom: 4,
   },
   rangeLabel: {
-    fontSize: 16, 
-    color: "#666", 
+    fontSize: 11,
+    color: "#6b7280",
     fontWeight: "500",
   },
   stressIndicator: {
@@ -240,14 +241,14 @@ const styles = {
   },
   submitButtonText: {
     color: "#ffffff",
-    fontSize: 18, 
+    fontSize: 16,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   validationNote: {
-    fontSize: 16, 
-    color: "#666", 
+    fontSize: 12,
+    color: "#6b7280",
     marginTop: 12,
     textAlign: "center",
     fontStyle: "italic",
@@ -404,10 +405,10 @@ const TrackScreen = () => {
 
       await db.runAsync(
         `INSERT INTO HealthRecords (
-          date, daily_steps, sleep_hours, bmi, age, gender, height_cm, weight_kg,
-          chronic_disease, exercise_frequency, alcohol_consumption, smoking_habit,
-          diet_quality, fruits_veggies, stress_level, screen_time_hours
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        date, daily_steps, sleep_hours, bmi, age, gender, height_cm, weight_kg,
+        chronic_disease, exercise_frequency, alcohol_consumption, smoking_habit,
+        diet_quality, fruits_veggies, stress_level, screen_time_hours
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           data.date,
           data.daily_steps,
@@ -427,73 +428,82 @@ const TrackScreen = () => {
           data.screen_time_hours,
         ]
       );
+      console.log("Health record saved to database:", data);
 
-      console.log("Health record saved successfully:", data);
-      Alert.alert(
-        t.success || "Success",
-        t.recordSaved || "Health record saved successfully",
-        [
-          {
-            text: t.ok || "OK",
-            onPress: () => navigation.navigate("Progress"),
-          },
-        ]
-      );
+      navigation.navigate("MainApp", {
+        screen: "Progress",
+        params: { newRecord: data },
+      });
     } catch (error) {
-      console.error("Error saving health record:", error);
+      console.error(
+        "Error saving data to database:",
+        error.message,
+        error.stack
+      );
       Alert.alert(
         t.error || "Error",
-        t.errorSaving || "Failed to save health record"
+        t.errorSaving || "Failed to save health record: " + error.message
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const currentDate = getCurrentDate();
+  const recordId = `HR-${Date.now().toString().slice(-6)}`;
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
       <ScrollView
         style={styles.content}
-        showsVerticalScrollIndicator={false}
-        onScroll={(event) => setScrollY(event.nativeEvent.contentOffset.y)}
+        onScroll={(e) => setScrollY(e.nativeEvent.contentOffset.y)}
         scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
+        <View
+          style={[
+            styles.header,
+            {
+              paddingTop:
+                Platform.OS === "ios"
+                  ? Math.max(50 - scrollY / 3, 20)
+                  : Math.max(20 - scrollY / 3, 10),
+              opacity: Math.max(1 - scrollY / 200, 0.7),
+              transform: [{ scale: Math.max(1 - scrollY / 1000, 0.9) }],
+            },
+          ]}
+        >
           <Text style={styles.appName}>
-            {t.trackHealth || "Track Your Health"}
+            {t.trackHealthTitle || "Track Your Health"}
           </Text>
           <Text style={styles.appTagline}>
-            {t.trackTagline || "Record your health metrics and lifestyle habits"}
+            {t.trackTagline || "Record your health metrics"}
           </Text>
         </View>
         <View style={styles.recordHeader}>
           <Text style={styles.recordTitle}>
-            {t.healthRecord || "Health Record"}
+            {t.healthAssessmentRecord || "Health Assessment Record"}
           </Text>
-          <Text style={styles.recordDate}>{getCurrentDate()}</Text>
+          <Text style={styles.recordDate}>
+            {t.date || "Date"}: {currentDate}
+          </Text>
         </View>
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              {t.basicInfo || "Basic Information"}
+              {t.personalInfo || "Personal Information"}
             </Text>
           </View>
           <View style={styles.sectionContent}>
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>{t.age || "Age"}</Text>
               <TextInput
-                style={[styles.fieldValue, styles.readOnlyField]}
+                style={styles.fieldValue}
                 placeholder={t.enterAge || "Enter your age"}
-                placeholderTextColor="#999" // Added
-                value={age}
-                onChangeText={(text) => {
-                  setAge(text);
-                  if (heightCm && weightKg) {
-                    calculateBMI(heightCm, weightKg);
-                  }
-                }}
                 keyboardType="numeric"
+                value={age}
+                onChangeText={setAge}
               />
             </View>
             <View style={styles.fieldGroup}>
@@ -512,48 +522,65 @@ const TrackScreen = () => {
                 ))}
               </Picker>
             </View>
+          </View>
+        </View>
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>
+              {t.physicalMeasurements || "Physical Measurements"}
+            </Text>
+          </View>
+          <View style={styles.sectionContent}>
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>{t.height || "Height (cm)"}</Text>
+              <Text style={styles.fieldLabel}>
+                {t.heightCm || "Height (cm)"}
+              </Text>
               <TextInput
-                style={[styles.fieldValue]}
-                placeholder={t.enterHeight || "Enter height in cm"}
-                placeholderTextColor="#999" 
+                style={styles.fieldValue}
+                placeholder={t.enterHeight || "Enter your height in cm"}
+                keyboardType="numeric"
                 value={heightCm}
                 onChangeText={(text) => {
                   setHeightCm(text);
-                  if (text && weightKg) {
-                    calculateBMI(text, weightKg);
-                  }
+                  if (text && weightKg) calculateBMI(text, weightKg);
                 }}
-                keyboardType="numeric"
               />
             </View>
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>{t.weight || "Weight (kg)"}</Text>
+              <Text style={styles.fieldLabel}>
+                {t.weightKg || "Weight (kg)"}
+              </Text>
               <TextInput
                 style={styles.fieldValue}
-                placeholder={t.enterWeight || "Enter weight in kg"}
-                placeholderTextColor="#999" 
+                placeholder={t.enterWeight || "Enter your weight in kg"}
+                keyboardType="numeric"
                 value={weightKg}
                 onChangeText={(text) => {
                   setWeightKg(text);
-                  if (heightCm && text) {
-                    calculateBMI(heightCm, text);
-                  }
+                  if (heightCm && text) calculateBMI(heightCm, text);
                 }}
-                keyboardType="numeric"
               />
             </View>
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>{t.bmi || "BMI"}</Text>
+              <Text style={styles.fieldLabel}>
+                {t.bmi || "BMI (calculated)"}
+              </Text>
               <TextInput
                 style={[styles.fieldValue, styles.readOnlyField]}
                 value={bmi}
                 editable={false}
-                placeholder={t.calculated || "Calculated"}
-                placeholderTextColor="#999" 
+                placeholder={t.bmiPlaceholder || "Calculated automatically"}
               />
             </View>
+          </View>
+        </View>
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>
+              {t.medicalHistory || "Medical History"}
+            </Text>
+          </View>
+          <View style={styles.sectionContent}>
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>
                 {t.chronicDisease || "Chronic Disease"}
@@ -577,19 +604,17 @@ const TrackScreen = () => {
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              {t.physicalActivity || "Physical Activity"}
+              {t.activityExercise || "Activity & Exercise"}
             </Text>
           </View>
           <View style={styles.sectionContent}>
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>
-                {t.dailySteps || "Daily Steps"}
-              </Text>
+              <Text style={styles.fieldLabel}>{t.steps || "Daily Steps"}</Text>
               <View style={styles.sliderContainer}>
                 <Slider
                   style={styles.slider}
                   minimumValue={0}
-                  maximumValue={20000}
+                  maximumValue={50000}
                   step={100}
                   value={dailySteps}
                   minimumTrackTintColor="#008080"
@@ -597,10 +622,8 @@ const TrackScreen = () => {
                   onValueChange={(value) => setDailySteps(value)}
                 />
                 <View style={styles.sliderRange}>
-                  <Text style={styles.rangeLabel}>
-                    {t.inactive || "Inactive"}
-                  </Text>
-                  <Text style={styles.rangeLabel}>{t.active || "Active"}</Text>
+                  <Text style={styles.rangeLabel}>0</Text>
+                  <Text style={styles.rangeLabel}>50,000+</Text>
                 </View>
                 <Text style={styles.sliderValue}>
                   {Math.round(dailySteps).toLocaleString()} {t.steps || "steps"}
