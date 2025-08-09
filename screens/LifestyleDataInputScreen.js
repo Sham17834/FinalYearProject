@@ -22,7 +22,7 @@ import { getDb } from "./db";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff",
   },
   header: {
     padding: 20,
@@ -34,15 +34,15 @@ const styles = StyleSheet.create({
     elevation: 4,
     backgroundColor: "#008080",
   },
-  appName: {
-    fontSize: 24,
+  title: {
+    fontSize: 28,
     fontWeight: "bold",
     color: "#ffffff",
     marginBottom: 4,
   },
-  appTagline: {
+  subtitle: {
     fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
+    color: "#ffffff",
     marginBottom: 16,
   },
   progressBarContainer: {
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 16,
-    color: "#1f2937",
+    color: "#333",
     marginBottom: 8,
     fontWeight: "500",
     paddingLeft: 4,
@@ -91,20 +91,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: "#1f2937",
+    color: "#333",
     backgroundColor: "#ffffff",
   },
   picker: {
     height: 50,
     width: "100%",
-    color: "#1f2937",
+    color: "#333",
     backgroundColor: "#ffffff",
   },
   buttonContainer: {
     flexDirection: "row",
     marginTop: 20,
   },
-  primaryButton: {
+  registerButton: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 8,
@@ -112,9 +112,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#008080",
   },
-  primaryButtonText: {
+  registerButtonText: {
     color: "#ffffff",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600",
   },
   secondaryButton: {
@@ -128,24 +128,32 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   secondaryButtonText: {
-    color: "#000000ff",
+    color: "#333",
     fontSize: 16,
     fontWeight: "600",
   },
   submitButton: {
-    backgroundColor: "#10b981",
+    backgroundColor: "#008080",
   },
   disabledButton: {
     backgroundColor: "#d1d5db",
   },
-  linkText: {
-    color: "#3b82f6",
+  bottomText: {
+    color: "#666",
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 16,
+  },
+  bottomTextLink: {
+    color: "#008080",
     fontSize: 16,
     fontWeight: "500",
   },
-  secondaryText: {
-    color: "#6b7280",
-    fontSize: 14,
+  errorText: {
+    color: "#ef4444",
+    fontSize: 12,
+    marginTop: 4,
+    paddingLeft: 4,
   },
   sliderContainer: {
     marginBottom: 20,
@@ -169,7 +177,7 @@ const styles = StyleSheet.create({
   },
   sliderMinMaxLabel: {
     fontSize: 12,
-    color: "#6b7280",
+    color: "#666",
   },
   switchContainer: {
     flexDirection: "row",
@@ -179,7 +187,7 @@ const styles = StyleSheet.create({
   },
   switchLabel: {
     fontSize: 16,
-    color: "#1f2937",
+    color: "#333",
   },
   stressLevelIndicator: {
     flexDirection: "row",
@@ -217,6 +225,11 @@ const LifestyleDataInputScreen = () => {
   const [stressLevel, setStressLevel] = useState(5);
   const [screenTimeHours, setScreenTimeHours] = useState(4);
 
+  // Error states for validation
+  const [ageError, setAgeError] = useState("");
+  const [heightError, setHeightError] = useState("");
+  const [weightError, setWeightError] = useState("");
+
   const genderOptions = [
     { label: t.male || "Male", value: "Male" },
     { label: t.female || "Female", value: "Female" },
@@ -247,13 +260,16 @@ const LifestyleDataInputScreen = () => {
   };
 
   const validateStep = (step) => {
+    let isValid = true;
+    
+    setAgeError("");
+    setHeightError("");
+    setWeightError("");
+
     if (step === 1) {
       if (!age || isNaN(age) || parseInt(age) < 18 || parseInt(age) > 120) {
-        Alert.alert(
-          t.error || "Error",
-          t.errorAge || "Please enter a valid age (18 - 120)"
-        );
-        return false;
+        setAgeError("Please enter a valid age (18 - 120)");
+        isValid = false;
       }
       if (
         !heightCm ||
@@ -261,11 +277,8 @@ const LifestyleDataInputScreen = () => {
         parseFloat(heightCm) < 100 ||
         parseFloat(heightCm) > 250
       ) {
-        Alert.alert(
-          t.error || "Error",
-          t.errorHeight || "Please enter a valid height (100 - 250 cm)"
-        );
-        return false;
+        setHeightError("Please enter a valid height (100 - 250 cm)");
+        isValid = false;
       }
       if (
         !weightKg ||
@@ -273,14 +286,11 @@ const LifestyleDataInputScreen = () => {
         parseFloat(weightKg) < 20 ||
         parseFloat(weightKg) > 300
       ) {
-        Alert.alert(
-          t.error || "Error",
-          t.errorWeight || "Please enter a valid weight (20 - 300 kg)"
-        );
-        return false;
+        setWeightError("Please enter a valid weight (20 - 300 kg)");
+        isValid = false;
       }
     }
-    return true;
+    return isValid;
   };
 
   const handleNext = () => {
@@ -322,7 +332,6 @@ const LifestyleDataInputScreen = () => {
     };
 
     try {
-      // Fetch prediction data
       const response = await fetch(
         "https://finalyearproject-c5hy.onrender.com/predict",
         {
@@ -335,7 +344,6 @@ const LifestyleDataInputScreen = () => {
 
       const predictionData = await response.json();
 
-      // Prepare data with predictions for UserProfile table
       const fullData = {
         ...data,
         Obesity_Flag: JSON.stringify(predictionData.Obesity_Flag || {}),
@@ -343,7 +351,6 @@ const LifestyleDataInputScreen = () => {
         Stroke_Flag: JSON.stringify(predictionData.Stroke_Flag || {}),
       };
 
-      // Insert into UserProfile table
       const db = await getDb();
       await db.runAsync(
         `INSERT INTO UserProfile (
@@ -376,7 +383,6 @@ const LifestyleDataInputScreen = () => {
         ]
       );
 
-      // Navigate to HealthHomeScreen with both lifestyle and prediction data
       navigation.navigate("MainApp", {
         lifestyleData: data,
         predictionData: predictionData,
@@ -389,14 +395,28 @@ const LifestyleDataInputScreen = () => {
     }
   };
 
+  const getStressLevelColors = (level) => {
+    const colors = [];
+    for (let i = 1; i <= 10; i++) {
+      if (i <= level) {
+        if (i <= 3) colors.push("#10b981"); 
+        else if (i <= 6) colors.push("#f59e0b"); 
+        else colors.push("#ef4444"); 
+      } else {
+        colors.push("#e5e7eb"); 
+      }
+    }
+    return colors;
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
       <View style={styles.header}>
-        <Text style={styles.appName}>
+        <Text style={styles.title}>
           {t.lifestyleDataTitle || "Lifestyle Assessment"}
         </Text>
-        <Text style={styles.appTagline}>
+        <Text style={styles.subtitle}>
           {formatString
             ? formatString(
                 t.lifestyleDataTagline || "Step {currentStep} of {totalSteps}",
@@ -423,10 +443,12 @@ const LifestyleDataInputScreen = () => {
                 <TextInput
                   style={styles.input}
                   placeholder={t.enterAge || "Enter your age"}
+                  placeholderTextColor="#999"
                   keyboardType="numeric"
                   value={age}
                   onChangeText={setAge}
                 />
+                {ageError ? <Text style={styles.errorText}>{ageError}</Text> : null}
               </View>
 
               <View style={styles.inputContainer}>
@@ -453,6 +475,7 @@ const LifestyleDataInputScreen = () => {
                 <TextInput
                   style={styles.input}
                   placeholder={t.enterHeight || "Enter your height in cm"}
+                  placeholderTextColor="#999"
                   keyboardType="numeric"
                   value={heightCm}
                   onChangeText={(text) => {
@@ -460,6 +483,7 @@ const LifestyleDataInputScreen = () => {
                     if (text && weightKg) calculateBMI(text, weightKg);
                   }}
                 />
+                {heightError ? <Text style={styles.errorText}>{heightError}</Text> : null}
               </View>
 
               <View style={styles.inputContainer}>
@@ -469,6 +493,7 @@ const LifestyleDataInputScreen = () => {
                 <TextInput
                   style={styles.input}
                   placeholder={t.enterWeight || "Enter your weight in kg"}
+                  placeholderTextColor="#999"
                   keyboardType="numeric"
                   value={weightKg}
                   onChangeText={(text) => {
@@ -476,6 +501,7 @@ const LifestyleDataInputScreen = () => {
                     if (heightCm && text) calculateBMI(heightCm, text);
                   }}
                 />
+                {weightError ? <Text style={styles.errorText}>{weightError}</Text> : null}
               </View>
 
               <View style={styles.inputContainer}>
@@ -485,6 +511,7 @@ const LifestyleDataInputScreen = () => {
                   value={bmi}
                   editable={false}
                   placeholder={t.bmiPlaceholder || "Calculated automatically"}
+                  placeholderTextColor="#999"
                 />
               </View>
             </>
@@ -553,13 +580,11 @@ const LifestyleDataInputScreen = () => {
                     {t.sedentary || "Sedentary"}
                   </Text>
                   <Text style={styles.sliderMinMaxLabel}>
-                    {t.daily || "Daily"}
+                    {t.veryActive || "Very Active"}
                   </Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {exerciseFrequency === 1
-                    ? `${exerciseFrequency} ${t.day || "day"}`
-                    : `${exerciseFrequency} ${t.days || "days"}`}
+                  {exerciseFrequency} {t.daysPerWeek || "days/week"}
                 </Text>
               </View>
 
@@ -569,8 +594,8 @@ const LifestyleDataInputScreen = () => {
                 </Text>
                 <Slider
                   style={styles.slider}
-                  minimumValue={0}
-                  maximumValue={24}
+                  minimumValue={3}
+                  maximumValue={12}
                   step={0.5}
                   value={sleepHours}
                   minimumTrackTintColor="#008080"
@@ -578,12 +603,8 @@ const LifestyleDataInputScreen = () => {
                   onValueChange={(value) => setSleepHours(value)}
                 />
                 <View style={styles.sliderLabelRow}>
-                  <Text style={styles.sliderMinMaxLabel}>
-                    {t.poor || "Poor"}
-                  </Text>
-                  <Text style={styles.sliderMinMaxLabel}>
-                    {t.excessive || "Excessive"}
-                  </Text>
+                  <Text style={styles.sliderMinMaxLabel}>3h</Text>
+                  <Text style={styles.sliderMinMaxLabel}>12h</Text>
                 </View>
                 <Text style={styles.sliderValue}>
                   {sleepHours} {t.hours || "hours"}
@@ -596,9 +617,21 @@ const LifestyleDataInputScreen = () => {
                 </Text>
                 <Switch
                   value={alcoholConsumption}
-                  onValueChange={(value) => setAlcoholConsumption(value)}
+                  onValueChange={setAlcoholConsumption}
                   trackColor={{ false: "#e5e7eb", true: "#008080" }}
-                  thumbColor={alcoholConsumption ? "#ffffff" : "#ffffff"}
+                  thumbColor={alcoholConsumption ? "#ffffff" : "#f4f3f4"}
+                />
+              </View>
+
+              <View style={styles.switchContainer}>
+                <Text style={styles.switchLabel}>
+                  {t.smokingHabit || "Smoking Habit"}
+                </Text>
+                <Switch
+                  value={smokingHabit}
+                  onValueChange={setSmokingHabit}
+                  trackColor={{ false: "#e5e7eb", true: "#008080" }}
+                  thumbColor={smokingHabit ? "#ffffff" : "#f4f3f4"}
                 />
               </View>
             </>
@@ -606,18 +639,6 @@ const LifestyleDataInputScreen = () => {
 
           {currentStep === 3 && (
             <>
-              <View style={styles.switchContainer}>
-                <Text style={styles.switchLabel}>
-                  {t.smokingHabit || "Smoking Habit"}
-                </Text>
-                <Switch
-                  value={smokingHabit}
-                  onValueChange={(value) => setSmokingHabit(value)}
-                  trackColor={{ false: "#e5e7eb", true: "#008080" }}
-                  thumbColor={smokingHabit ? "#ffffff" : "#ffffff"}
-                />
-              </View>
-
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>
                   {t.dietQuality || "Diet Quality"}
@@ -644,7 +665,7 @@ const LifestyleDataInputScreen = () => {
                 <Slider
                   style={styles.slider}
                   minimumValue={0}
-                  maximumValue={20}
+                  maximumValue={10}
                   step={1}
                   value={fruitsVeggies}
                   minimumTrackTintColor="#008080"
@@ -652,21 +673,17 @@ const LifestyleDataInputScreen = () => {
                   onValueChange={(value) => setFruitsVeggies(value)}
                 />
                 <View style={styles.sliderLabelRow}>
-                  <Text style={styles.sliderMinMaxLabel}>{t.low || "Low"}</Text>
-                  <Text style={styles.sliderMinMaxLabel}>
-                    {t.high || "High"}
-                  </Text>
+                  <Text style={styles.sliderMinMaxLabel}>0</Text>
+                  <Text style={styles.sliderMinMaxLabel}>10+</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {fruitsVeggies === 1
-                    ? `${fruitsVeggies} ${t.serving || "serving"}`
-                    : `${fruitsVeggies} ${t.servings || "servings"}`}
+                  {fruitsVeggies} {t.servingsPerDay || "servings/day"}
                 </Text>
               </View>
 
               <View style={styles.sliderContainer}>
                 <Text style={styles.inputLabel}>
-                  {t.stressLevel || "Stress Level (1-10)"}
+                  {t.stressLevel || "Stress Level"}
                 </Text>
                 <Slider
                   style={styles.slider}
@@ -674,43 +691,27 @@ const LifestyleDataInputScreen = () => {
                   maximumValue={10}
                   step={1}
                   value={stressLevel}
-                  minimumTrackTintColor="#10b981"
-                  maximumTrackTintColor="#ef4444"
+                  minimumTrackTintColor="#008080"
+                  maximumTrackTintColor="#e5e7eb"
                   onValueChange={(value) => setStressLevel(value)}
                 />
-                <View style={styles.stressLevelIndicator}>
-                  <View
-                    style={[
-                      styles.stressLevelColor,
-                      { backgroundColor: "#10b981" },
-                    ]}
-                  />
-                  <View
-                    style={[
-                      styles.stressLevelColor,
-                      { backgroundColor: "#a3e635" },
-                    ]}
-                  />
-                  <View
-                    style={[
-                      styles.stressLevelColor,
-                      { backgroundColor: "#f59e0b" },
-                    ]}
-                  />
-                  <View
-                    style={[
-                      styles.stressLevelColor,
-                      { backgroundColor: "#ef4444" },
-                    ]}
-                  />
-                </View>
                 <View style={styles.sliderLabelRow}>
-                  <Text style={styles.sliderMinMaxLabel}>{t.low || "Low"}</Text>
                   <Text style={styles.sliderMinMaxLabel}>
-                    {t.high || "High"}
+                    {t.lowStress || "Low"}
+                  </Text>
+                  <Text style={styles.sliderMinMaxLabel}>
+                    {t.highStress || "High"}
                   </Text>
                 </View>
-                <Text style={styles.sliderValue}>{stressLevel}</Text>
+                <Text style={styles.sliderValue}>{stressLevel}/10</Text>
+                <View style={styles.stressLevelIndicator}>
+                  {getStressLevelColors(stressLevel).map((color, index) => (
+                    <View
+                      key={index}
+                      style={[styles.stressLevelColor, { backgroundColor: color }]}
+                    />
+                  ))}
+                </View>
               </View>
 
               <View style={styles.sliderContainer}>
@@ -720,7 +721,7 @@ const LifestyleDataInputScreen = () => {
                 <Slider
                   style={styles.slider}
                   minimumValue={0}
-                  maximumValue={24}
+                  maximumValue={16}
                   step={0.5}
                   value={screenTimeHours}
                   minimumTrackTintColor="#008080"
@@ -728,15 +729,11 @@ const LifestyleDataInputScreen = () => {
                   onValueChange={(value) => setScreenTimeHours(value)}
                 />
                 <View style={styles.sliderLabelRow}>
-                  <Text style={styles.sliderMinMaxLabel}>
-                    {t.minimal || "Minimal"}
-                  </Text>
-                  <Text style={styles.sliderMinMaxLabel}>
-                    {t.extensive || "Extensive"}
-                  </Text>
+                  <Text style={styles.sliderMinMaxLabel}>0h</Text>
+                  <Text style={styles.sliderMinMaxLabel}>16h</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {screenTimeHours} {t.hours || "hours"}
+                  {screenTimeHours} {t.hoursPerDay || "hours/day"}
                 </Text>
               </View>
             </>
@@ -745,9 +742,8 @@ const LifestyleDataInputScreen = () => {
           <View style={styles.buttonContainer}>
             {currentStep > 1 && (
               <TouchableOpacity
-                style={[styles.secondaryButton, { marginRight: 8 }]}
+                style={[styles.secondaryButton, { marginRight: 12 }]}
                 onPress={handlePrevious}
-                disabled={isSubmitting}
               >
                 <Text style={styles.secondaryButtonText}>
                   {t.previous || "Previous"}
@@ -757,30 +753,43 @@ const LifestyleDataInputScreen = () => {
 
             {currentStep < totalSteps ? (
               <TouchableOpacity
-                style={styles.primaryButton}
+                style={styles.registerButton}
                 onPress={handleNext}
-                disabled={isSubmitting}
               >
-                <Text style={styles.primaryButtonText}>{t.next || "Next"}</Text>
+                <Text style={styles.registerButtonText}>
+                  {t.next || "Next"}
+                </Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 style={[
-                  styles.primaryButton,
+                  styles.registerButton,
                   styles.submitButton,
                   isSubmitting && styles.disabledButton,
                 ]}
                 onPress={handleSubmit}
                 disabled={isSubmitting}
               >
-                <Text style={styles.primaryButtonText}>
+                <Text style={styles.registerButtonText}>
                   {isSubmitting
-                    ? t.processing || "Processing..."
-                    : t.saveAndCalculate || "Save Data"}
+                    ? t.submitting || "Submitting..."
+                    : t.submit || "Submit"}
                 </Text>
               </TouchableOpacity>
             )}
           </View>
+
+          {currentStep === 1 && (
+            <Text style={styles.bottomText}>
+              {t.alreadyHaveAccount || "Already have an account?"}{" "}
+              <Text
+                style={styles.bottomTextLink}
+                onPress={() => navigation.goBack()}
+              >
+                {t.signIn || "Sign In"}
+              </Text>
+            </Text>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -788,3 +797,4 @@ const LifestyleDataInputScreen = () => {
 };
 
 export default LifestyleDataInputScreen;
+

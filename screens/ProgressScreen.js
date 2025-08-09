@@ -19,7 +19,6 @@ import {
   Modal,
 } from "react-native";
 import { LanguageContext } from "./LanguageContext";
-import * as SQLite from "expo-sqlite";
 import { useRoute } from "@react-navigation/native";
 import { getDb } from "./db";
 import { LineChart } from "react-native-chart-kit";
@@ -40,7 +39,7 @@ const formatDate = (dateStr) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff", 
   },
   header: {
     backgroundColor: "#008080",
@@ -57,15 +56,15 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28, 
     fontWeight: "bold",
-    color: "#ffffff",
+    color: "#333", 
     marginBottom: 5,
     textAlign: "center",
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: "#e0f2f1",
+    fontSize: 16, 
+    color: "#666", 
     textAlign: "center",
   },
   mainContent: {
@@ -142,7 +141,7 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: "row",
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff",
     borderBottomWidth: 1,
     borderBottomColor: "#e2e8f0",
   },
@@ -156,9 +155,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#008080",
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 16, 
     fontWeight: "500",
-    color: "#64748b",
+    color: "#666", 
   },
   activeTabText: {
     color: "#ffffff",
@@ -173,7 +172,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   compactStatItem: {
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff", 
     borderRadius: 12,
     padding: 12,
     minWidth: "30%",
@@ -186,21 +185,21 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   compactStatLabel: {
-    fontSize: 8,
-    color: "#64748b",
+    fontSize: 16, 
+    color: "#666", 
     textAlign: "center",
   },
   chartTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1e293b",
+    color: "#666", 
     marginBottom: 12,
     textAlign: "center",
   },
   smallChartTitle: {
-    fontSize: 14,
+    fontSize: 16, 
     fontWeight: "600",
-    color: "#1e293b",
+    color: "#666", 
     marginBottom: 8,
     textAlign: "center",
   },
@@ -221,7 +220,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f5f9",
   },
   timeRangeText: {
-    fontSize: 13,
+    fontSize: 18, 
     fontWeight: "500",
   },
   activeTimeRange: {
@@ -231,7 +230,7 @@ const styles = StyleSheet.create({
     color: "#ffffff",
   },
   inactiveTimeRangeText: {
-    color: "#64748b",
+    color: "#666", 
   },
   factorItem: {
     flexDirection: "row",
@@ -243,12 +242,12 @@ const styles = StyleSheet.create({
     borderBottomColor: "#f0f0f0",
   },
   factorName: {
-    fontSize: 13,
-    color: "#334155",
+    fontSize: 16, 
+    color: "#666", 
     flex: 1,
   },
   factorValue: {
-    fontSize: 13,
+    fontSize: 16, 
     fontWeight: "600",
     color: "#008080",
     minWidth: 50,
@@ -263,7 +262,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   progressDate: {
-    fontSize: 13,
+    fontSize: 16, 
     fontWeight: "600",
     color: "#008080",
     marginBottom: 6,
@@ -275,8 +274,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   progressDetailItem: {
-    fontSize: 11,
-    color: "#475569",
+    fontSize: 16, 
+    color: "#666", 
     width: "48%",
   },
   riskIndicator: {
@@ -285,17 +284,17 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 6,
     paddingHorizontal: 8,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff", 
     borderRadius: 8,
     marginBottom: 4,
   },
   riskName: {
-    fontSize: 12,
-    color: "#334155",
+    fontSize: 16, 
+    color: "#666", 
     flex: 1,
   },
   riskValue: {
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: "600",
     color: "#008080",
   },
@@ -306,7 +305,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   trendText: {
-    fontSize: 11,
+    fontSize: 16, 
     marginLeft: 4,
   },
   positiveTrend: {
@@ -316,7 +315,7 @@ const styles = StyleSheet.create({
     color: "#ef4444",
   },
   neutralTrend: {
-    color: "#64748b",
+    color: "#666",
   },
   errorText: {
     fontSize: 12,
@@ -325,8 +324,8 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
   loadingText: {
-    fontSize: 12,
-    color: "#64748b",
+    fontSize: 16, 
+    color: "#666", 
     textAlign: "center",
     fontStyle: "italic",
   },
@@ -345,9 +344,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#008080",
   },
   controlButtonText: {
-    fontSize: 13,
+    fontSize: 18, 
     fontWeight: "500",
-    color: "#64748b",
+    color: "#666", 
   },
   activeControlButtonText: {
     color: "#ffffff",
@@ -358,7 +357,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   deleteButtonText: {
-    fontSize: 12,
+    fontSize: 18, 
     color: "#ffffff",
     fontWeight: "500",
   },
@@ -382,12 +381,12 @@ const styles = StyleSheet.create({
   tooltipTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1e293b",
+    color: "#666", 
     marginBottom: 8,
   },
   tooltipText: {
-    fontSize: 14,
-    color: "#334155",
+    fontSize: 16, 
+    color: "#666", 
   },
   tooltipCloseButton: {
     marginTop: 12,
@@ -397,6 +396,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   tooltipCloseText: {
+    fontSize: 18, 
     color: "#ffffff",
     fontWeight: "500",
   },

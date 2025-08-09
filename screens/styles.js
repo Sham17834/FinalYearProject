@@ -6,7 +6,7 @@ const isIOS = Platform.OS === "ios";
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff", 
   },
 
   scrollContainer: {
@@ -35,15 +35,15 @@ export const styles = StyleSheet.create({
   },
 
   appName: {
-    fontSize: 24,
+    fontSize: 28, 
     fontWeight: "700",
-    color: "#ffffff",
+    color: "#333",
     marginBottom: 4,
   },
 
   appTagline: {
-    fontSize: 14,
-    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: 16, 
+    color: "#666", 
     fontWeight: "500",
   },
 
@@ -78,7 +78,7 @@ export const styles = StyleSheet.create({
   timeRangeText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1f2937",
+    color: "#666", 
   },
 
   activeTimeRangeText: {
@@ -91,9 +91,9 @@ export const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16, 
     fontWeight: "600",
-    color: "#1f2937",
+    color: "#666", 
     lineHeight: 24,
   },
 
@@ -122,11 +122,11 @@ export const styles = StyleSheet.create({
   shapFactor: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#1f2937",
+    color: "#666", 
   },
 
   shapValue: {
-    fontSize: 14,
+    fontSize: 16, 
     fontWeight: "600",
     color: "#008080",
   },
@@ -143,7 +143,7 @@ export const styles = StyleSheet.create({
   progressDate: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1f2937",
+    color: "#666", 
     marginBottom: 8,
     lineHeight: 22,
   },
@@ -153,14 +153,14 @@ export const styles = StyleSheet.create({
   },
 
   progressMetric: {
-    fontSize: 14,
-    color: "#6b7280",
+    fontSize: 16, 
+    color: "#666", 
     marginBottom: 4,
     lineHeight: 20,
   },
 
   primaryActionButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#008080", 
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,
@@ -171,7 +171,7 @@ export const styles = StyleSheet.create({
   },
 
   primaryActionText: {
-    fontSize: 16,
+    fontSize: 18, 
     fontWeight: "700",
     color: "#ffffff",
     letterSpacing: 0.5,
@@ -205,7 +205,7 @@ export const styles = StyleSheet.create({
   welcomeAppName: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#ffffff",
+    color: "#333", 
     marginBottom: 6,
     letterSpacing: 1,
     textAlign: "center",
@@ -213,8 +213,8 @@ export const styles = StyleSheet.create({
   },
 
   welcomeTagline: {
-    fontSize: 14,
-    color: "rgba(255, 255, 255, 0.9)",
+    fontSize: 16, 
+    color: "#666", 
     textAlign: "center",
     fontWeight: "400",
     lineHeight: 20,
@@ -236,15 +236,15 @@ export const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#1f2937",
+    color: "#333", 
     marginBottom: 10,
     textAlign: "center",
     lineHeight: 30,
   },
 
   welcomeDescription: {
-    fontSize: 14,
-    color: "#6b7280",
+    fontSize: 16, 
+    color: "#666", 
     textAlign: "center",
     lineHeight: 20,
     paddingHorizontal: 16,
@@ -258,7 +258,7 @@ export const styles = StyleSheet.create({
   welcomeSectionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1f2937",
+    color: "#666", 
     marginBottom: 14,
     textAlign: "center",
     lineHeight: 22,
@@ -309,14 +309,14 @@ export const styles = StyleSheet.create({
   },
 
   privacyText: {
-    fontSize: 12,
-    color: "#6b7280",
+    fontSize: 16, 
+    color: "#666", 
     lineHeight: 30,
     flex: 1,
   },
 
   linkText: {
-    color: "#3b82f6",
+    color: "#008080", 
     fontWeight: "600",
   },
 
@@ -339,7 +339,7 @@ export const styles = StyleSheet.create({
   },
 
   getStartedButtonText: {
-    fontSize: 16,
+    fontSize: 18, 
     fontWeight: "bold",
     color: "#ffffff",
     letterSpacing: 0.5,
@@ -348,12 +348,12 @@ export const styles = StyleSheet.create({
   },
 
   disabledButtonText: {
-    color: "#6b7280",
+    color: "#666", 
   },
 
   footerText: {
-    fontSize: 13,
-    color: "#6b7280",
+    fontSize: 16, 
+    color: "#666", 
     textAlign: "center",
     fontStyle: "italic",
     lineHeight: 18,
@@ -361,17 +361,17 @@ export const styles = StyleSheet.create({
   },
 
   authTitle: {
-    fontSize: 22,
+    fontSize: 28, 
     fontWeight: "bold",
-    color: "#1f2937",
+    color: "#333", 
     marginBottom: 14,
     textAlign: "center",
     lineHeight: 28,
   },
 
   authDescription: {
-    fontSize: 14,
-    color: "#6b7280",
+    fontSize: 16, 
+    color: "#666", 
     textAlign: "center",
     marginBottom: 28,
     lineHeight: 20,
@@ -409,7 +409,7 @@ export const styles = StyleSheet.create({
 
   switchLabel: {
     fontSize: 16,
-    color: "#1f2937",
+    color: "#666", 
     flex: 1,
     marginLeft: 10,
   },
@@ -424,11 +424,11 @@ export const styles = StyleSheet.create({
   },
 
   secondaryActionButton: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#ffffff", 
     borderColor: "#e5e7eb",
   },
 
   secondaryActionText: {
-    color: "#000000ff",
+    color: "#666", 
   },
 });

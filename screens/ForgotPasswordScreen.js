@@ -121,7 +121,7 @@ const ForgotPasswordScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#ffffff", 
   },
   content: {
     flexGrow: 1,
@@ -134,13 +134,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: 20,
+    fontSize: 28, 
     fontWeight: "bold",
-    color: "#000",
+    color: "#333", 
   },
   subtitle: {
-    fontSize: 14,
-    color: "#6b7280",
+    fontSize: 16, 
+    color: "#666", 
     marginTop: 4,
     textAlign: "center",
   },
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: "#ffffff", 
     borderRadius: 6,
     padding: 10,
     flexDirection: "row",
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   },
   inputText: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16, 
   },
   errorText: {
     color: "#ef4444",
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
   resetButtonText: {
     color: "#fff",
-    fontSize: 15,
+    fontSize: 18, 
     fontWeight: "800",
   },
   footer: {
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   footerLink: {
     color: "#008080",
     fontWeight: "500",
-    fontSize: 13,
+    fontSize: 16, 
   },
 });
 

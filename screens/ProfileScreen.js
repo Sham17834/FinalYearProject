@@ -26,14 +26,14 @@ const COLORS = {
   success: "#10b981",
   danger: "#ef4444",
   warning: "#f59e0b",
-  background: "#f8fafc",
+  background: "#ffffff", 
   surface: "#ffffff",
   surfaceElevated: "#ffffff",
   border: "#e5e7eb",
   borderLight: "#f3f4f6",
-  text: "#1f2937",
-  textSecondary: "#6b7280",
-  textMuted: "#9ca3af",
+  text: "#333", 
+  textSecondary: "#666", 
+  textMuted: "#666", 
   textInverse: "#ffffff",
   overlay: "rgba(0, 0, 0, 0.1)",
   shadow: "rgba(0, 0, 0, 0.08)",
@@ -251,7 +251,7 @@ const ProfileScreen = () => {
                 <TextInput
                   style={[styles.input, errors.name && styles.inputError]}
                   placeholder={t.enterFullName || "Enter your full name"}
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor="#999" // Updated from #9ca3af to #999
                   value={name}
                   onChangeText={(text) => {
                     setName(text);
@@ -265,7 +265,7 @@ const ProfileScreen = () => {
                 <TextInput
                   style={[styles.input, errors.email && styles.inputError]}
                   placeholder={t.enterEmail || "Enter your email"}
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor="#999" // Updated from #9ca3af to #999
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={email}
@@ -405,16 +405,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   appName: {
-    fontSize: 24,
+    fontSize: 28, 
     fontWeight: "800",
-    color: COLORS.textInverse,
+    color: COLORS.text, 
     textAlign: "center",
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   appTagline: {
-    fontSize: 14,
-    color: "rgba(255, 255, 255, 0.85)",
+    fontSize: 16, 
+    color: COLORS.textSecondary, 
     fontWeight: "500",
     textAlign: "center",
     letterSpacing: 0.2,
@@ -428,9 +428,9 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 16, 
     fontWeight: "700",
-    color: COLORS.text,
+    color: COLORS.textSecondary, 
     marginBottom: 16,
     letterSpacing: -0.3,
   },
@@ -475,14 +475,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   inputLabel: {
-    fontSize: 14,
+    fontSize: 16, 
     fontWeight: "600",
-    color: COLORS.text,
+    color: COLORS.textSecondary, 
     marginBottom: 8,
     letterSpacing: 0.1,
   },
   input: {
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.background, 
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   pickerButton: {
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.background, 
     borderRadius: 12,
     borderWidth: 2,
     borderColor: COLORS.border,
@@ -522,11 +522,11 @@ const styles = StyleSheet.create({
   },
   pickerButtonText: {
     fontSize: 16,
-    color: COLORS.text,
+    color: COLORS.textSecondary, 
   },
   pickerArrow: {
     fontSize: 12,
-    color: COLORS.textMuted,
+    color: COLORS.textMuted, 
   },
   modalOverlay: {
     flex: 1,
@@ -548,9 +548,9 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 16, 
     fontWeight: "700",
-    color: COLORS.text,
+    color: COLORS.textSecondary, 
     textAlign: "center",
     marginBottom: 20,
   },
@@ -568,7 +568,7 @@ const styles = StyleSheet.create({
   },
   modalOptionText: {
     fontSize: 16,
-    color: COLORS.text,
+    color: COLORS.textSecondary, 
   },
   modalOptionTextSelected: {
     fontWeight: "600",
@@ -578,8 +578,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   languageSubtext: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
+    fontSize: 16, 
+    color: COLORS.textSecondary, 
     marginTop: 2,
   },
   languageSubtextSelected: {
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.background, 
     alignItems: "center",
     justifyContent: "center",
     marginRight: 16,
@@ -613,12 +613,12 @@ const styles = StyleSheet.create({
   securityTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: COLORS.text,
+    color: COLORS.textSecondary, 
     marginBottom: 2,
   },
   securityDescription: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
+    fontSize: 16, 
+    color: COLORS.textSecondary, 
   },
   securityStatus: {
     backgroundColor: COLORS.success,
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   primaryButtonText: {
-    fontSize: 16,
+    fontSize: 18, 
     fontWeight: "700",
     color: COLORS.textInverse,
     letterSpacing: 0.3,
@@ -671,9 +671,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   secondaryButtonText: {
-    fontSize: 16,
+    fontSize: 18, 
     fontWeight: "600",
-    color: COLORS.text,
+    color: COLORS.primary, 
     letterSpacing: 0.2,
   },
   dangerButton: {
@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   dangerButtonText: {
-    fontSize: 16,
+    fontSize: 18, 
     fontWeight: "600",
     color: COLORS.danger,
     letterSpacing: 0.2,
