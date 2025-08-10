@@ -25,7 +25,6 @@ const getCurrentDate = () => {
   return `${day}-${month}-${year}`;
 };
 
-
 const styles = {
   container: {
     flex: 1,
@@ -33,15 +32,14 @@ const styles = {
   },
   header: {
     backgroundColor: "#008080",
-    paddingBottom: 4,
-    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 8,
     marginBottom: 8,
-    paddingTop: 40,
     alignItems: "center",
     justifyContent: "center",
     transition: "all 0.2s ease",
@@ -50,12 +48,10 @@ const styles = {
     fontSize: 24,
     fontWeight: "bold",
     color: "#ffffff",
-    marginBottom: 4,
   },
   appTagline: {
     fontSize: 14,
     color: "rgba(255, 255, 255, 0.9)",
-    marginBottom: 16,
   },
   content: {
     flex: 1,
@@ -71,14 +67,11 @@ const styles = {
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
-    borderLeftWidth: 4,
-    borderLeftColor: "#008080",
   },
   recordTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: "#1e293b",
-    marginBottom: 4,
   },
   recordDate: {
     fontSize: 14,
@@ -465,12 +458,6 @@ const TrackScreen = () => {
           style={[
             styles.header,
             {
-              paddingTop:
-                Platform.OS === "ios"
-                  ? Math.max(50 - scrollY / 3, 20)
-                  : Math.max(20 - scrollY / 3, 10),
-              opacity: Math.max(1 - scrollY / 200, 0.7),
-              transform: [{ scale: Math.max(1 - scrollY / 1000, 0.9) }],
             },
           ]}
         >

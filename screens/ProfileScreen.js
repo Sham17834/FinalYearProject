@@ -11,7 +11,6 @@ import {
   Alert,
   Modal,
   StyleSheet,
-  Platform,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
@@ -389,15 +388,14 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     backgroundColor: "#008080",
-    paddingBottom: 20,
-    paddingHorizontal: 16,
+    width: "100%",
+    paddingTop: 20,
+    paddingBottom: 8,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-    marginBottom: 8,
-    paddingTop: Platform.OS === "ios" ? 50 : 20,
+    shadowRadius: 4,
+    elevation: 3,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -406,18 +404,14 @@ const styles = StyleSheet.create({
   },
   appName: {
     fontSize: 24,
-    fontWeight: "800",
+    fontWeight: "bold",
     color: COLORS.textInverse,
     textAlign: "center",
-    letterSpacing: -0.5,
-    marginBottom: 4,
   },
   appTagline: {
     fontSize: 14,
     color: "rgba(255, 255, 255, 0.85)",
-    fontWeight: "500",
     textAlign: "center",
-    letterSpacing: 0.2,
   },
   scrollContent: {
     flex: 1,
@@ -425,14 +419,13 @@ const styles = StyleSheet.create({
     paddingTop: 24,
   },
   section: {
-    marginBottom: 32,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "700",
     color: COLORS.text,
-    marginBottom: 16,
-    letterSpacing: -0.3,
+    marginBottom: 4,
   },
   formCard: {
     backgroundColor: COLORS.surface,

@@ -62,15 +62,18 @@ const RegisterScreen = () => {
       newErrors.password = t.validFillAllFields || "Please fill in all fields";
       isValid = false;
     } else if (password.length < 6) {
-      newErrors.password = t.invalidPassword || "Password must be at least 6 characters long";
+      newErrors.password =
+        t.invalidPassword || "Password must be at least 6 characters long";
       isValid = false;
     }
 
     if (!confirmPassword) {
-      newErrors.confirmPassword = t.validFillAllFields || "Please fill in all fields";
+      newErrors.confirmPassword =
+        t.validFillAllFields || "Please fill in all fields";
       isValid = false;
     } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = t.validPasswordMatch || "Passwords do not match";
+      newErrors.confirmPassword =
+        t.validPasswordMatch || "Passwords do not match";
       isValid = false;
     }
 
@@ -87,7 +90,6 @@ const RegisterScreen = () => {
     };
     setters[field](value);
 
-    // Validate the changed field
     const newErrors = { ...errors };
     if (field === "fullName" && value.trim()) {
       newErrors.fullName = "";
@@ -124,7 +126,6 @@ const RegisterScreen = () => {
     try {
       const db = await getDb();
 
-      // Check if email already exists
       const existingUser = await db.getFirstAsync(
         `SELECT * FROM Users WHERE email = ?`,
         [email]
@@ -141,24 +142,23 @@ const RegisterScreen = () => {
         return;
       }
 
-      // Save to Users table
       await db.runAsync(
         `INSERT INTO Users (fullName, email, password, createdAt) VALUES (?, ?, ?, ?)`,
         [fullName, email, password, new Date().toISOString()]
       );
 
-      // Save to AsyncStorage
-      await AsyncStorage.setItem(
-        "userProfileData",
-        JSON.stringify({ fullName, email })
-      );
-
       console.log("Register:", { fullName, email, password });
       Alert.alert(
         t.success || "Success",
-        t.registrationSuccess || "Registration successful"
+        t.registrationSuccess ||
+          "Registration successful! Please login to continue.",
+        [
+          {
+            text: t.ok || "OK",
+            onPress: () => navigation.navigate("Login"),
+          },
+        ]
       );
-      navigation.navigate("MainApp", { userData: { fullName, email } });
     } catch (error) {
       console.error("Error saving user data:", error);
       Alert.alert(
@@ -188,7 +188,10 @@ const RegisterScreen = () => {
           <View style={styles.formContainer}>
             <View style={styles.inputWrapper}>
               <TextInput
-                style={[styles.input, errors.fullName ? styles.inputError : null]}
+                style={[
+                  styles.input,
+                  errors.fullName ? styles.inputError : null,
+                ]}
                 placeholder={t.fullName || "Full Name"}
                 placeholderTextColor="#999"
                 value={fullName}
@@ -215,7 +218,10 @@ const RegisterScreen = () => {
             </View>
             <View style={styles.inputWrapper}>
               <TextInput
-                style={[styles.input, errors.password ? styles.inputError : null]}
+                style={[
+                  styles.input,
+                  errors.password ? styles.inputError : null,
+                ]}
                 placeholder={t.passwordPlaceholder || "Password"}
                 placeholderTextColor="#999"
                 secureTextEntry
@@ -228,12 +234,17 @@ const RegisterScreen = () => {
             </View>
             <View style={styles.inputWrapper}>
               <TextInput
-                style={[styles.input, errors.confirmPassword ? styles.inputError : null]}
+                style={[
+                  styles.input,
+                  errors.confirmPassword ? styles.inputError : null,
+                ]}
                 placeholder={t.confirmPassword || "Confirm Password"}
                 placeholderTextColor="#999"
                 secureTextEntry
                 value={confirmPassword}
-                onChangeText={(text) => handleInputChange("confirmPassword", text)}
+                onChangeText={(text) =>
+                  handleInputChange("confirmPassword", text)
+                }
               />
               {errors.confirmPassword ? (
                 <Text style={styles.errorText}>{errors.confirmPassword}</Text>

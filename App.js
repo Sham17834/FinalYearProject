@@ -1,10 +1,9 @@
-import React, { useContext } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useContext, useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, ActivityIndicator, View } from 'react-native';
 import WelcomeScreen from './screens/WelcomeScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -16,6 +15,7 @@ import TrackScreen from './screens/TrackScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import { LanguageProvider, LanguageContext } from './screens/LanguageContext';
 import { getTranslations } from './screens/translations';
+import { auth } from './firebaseConfig';
 import "setimmediate";
 
 const Stack = createStackNavigator();
@@ -74,41 +74,50 @@ const MainApp = () => {
   );
 };
 
+const AuthStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="LifestyleDataInput" component={LifestyleDataInputScreen} />
+    </Stack.Navigator>
+  );
+};
+
 const AppNavigator = () => {
   const { language } = useContext(LanguageContext);
-  const t = getTranslations(language);
+  const [initializing, setInitializing] = useState(true);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+      if (initializing) setInitializing(false);
+    });
+
+    return unsubscribe; 
+  }, []);
+
+  if (initializing) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#008080" />
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="Welcome"
-        screenOptions={{ headerShown: false }}
-      >
-        <Stack.Screen
-          name="Welcome"
-          component={WelcomeScreen}
-        />
-        <Stack.Screen
-          name="Register"
-          component={RegisterScreen}
-        />
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-        />
-        <Stack.Screen
-          name="ForgotPassword"
-          component={ForgotPasswordScreen}
-        />
-        <Stack.Screen
-          name="LifestyleDataInput"
-          component={LifestyleDataInputScreen}
-        />
-        <Stack.Screen
-          name="MainApp"
-          component={MainApp}
-        />
-      </Stack.Navigator>
+      {user ? (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="MainApp" component={MainApp} />
+          <Stack.Screen name="LifestyleDataInput" component={LifestyleDataInputScreen} />
+        </Stack.Navigator>
+      ) : (
+        <AuthStack />
+      )}
     </NavigationContainer>
   );
 };
@@ -127,6 +136,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#d1d5db',
     paddingBottom: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
   },
 });
 

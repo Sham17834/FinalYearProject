@@ -10,13 +10,11 @@ import {
   Alert,
   StyleSheet,
   ActivityIndicator,
-  Platform,
   Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import Icon from "react-native-vector-icons/FontAwesome";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import {
   signInWithEmailAndPassword,
@@ -25,8 +23,6 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebaseConfig";
 import { getDb } from "./db";
-
-const { width, height } = Dimensions.get('window');
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -47,6 +43,7 @@ const LoginScreen = () => {
       "197590438015-jkpo6rbjq2icl5uqsqkkik3r85q3s19k.apps.googleusercontent.com",
     offlineAccess: true,
     forceCodeForRefreshToken: true,
+    scopes: ['email', 'profile'],
   });
 
   const validateEmail = (email) => {
@@ -102,7 +99,6 @@ const LoginScreen = () => {
       );
       return !result;
     } catch (error) {
-      console.error("Error checking user profile:", error);
       return false;
     }
   };
@@ -115,14 +111,6 @@ const LoginScreen = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      await AsyncStorage.setItem(
-        "userProfileData",
-        JSON.stringify({
-          fullName: user.displayName || "User",
-          email: user.email,
-        })
-      );
-
       const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
 
       navigation.navigate(
@@ -132,7 +120,6 @@ const LoginScreen = () => {
         }
       );
     } catch (error) {
-      console.error("Email/Password Login error:", error);
       let errorMessage = t.invalidCredentials || "Invalid email or password";
       if (
         error.code === "auth/user-not-found" ||
@@ -142,7 +129,7 @@ const LoginScreen = () => {
       } else if (error.code === "auth/too-many-requests") {
         errorMessage = t.troubleSigningIn || "Too many attempts, try again later";
       } else {
-        errorMessage = error.message || t.error || "An error occurred";
+        errorMessage = t.error || "An error occurred";
       }
       Alert.alert(t.error || "Error", errorMessage);
     } finally {
@@ -154,16 +141,15 @@ const LoginScreen = () => {
     setIsLoading(true);
     try {
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      await GoogleSignin.signOut();
       const userInfo = await GoogleSignin.signIn();
 
       const idToken = userInfo.data?.idToken || userInfo.idToken;
+      const accessToken = userInfo.data?.accessToken || userInfo.accessToken;
+
       if (!idToken) {
-        console.error("Google Sign-In error: No ID token received", userInfo);
         throw new Error("No ID token received from Google Sign-In");
       }
 
-      const accessToken = userInfo.data?.accessToken || userInfo.accessToken;
       const credential = GoogleAuthProvider.credential(idToken, accessToken);
       const userCredential = await signInWithCredential(auth, credential);
       const user = userCredential.user;
@@ -177,8 +163,6 @@ const LoginScreen = () => {
             : "Google User"),
         email: user.email || userInfo.user?.email,
       };
-
-      await AsyncStorage.setItem("userProfileData", JSON.stringify(userData));
 
       const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
 
@@ -199,29 +183,6 @@ const LoginScreen = () => {
         { userData }
       );
     } catch (error) {
-      console.error("Google Sign-In error:", error);
-      let errorMessage = t.googleSignInError || "Google sign-in failed";
-      if (error.code === 12501) {
-        console.log("User cancelled Google Sign-In");
-        return;
-      } else if (error.code === "auth/argument-error") {
-        errorMessage =
-          t.googleSignInError ||
-          "Authentication configuration error. Please check your Google Sign-In setup.";
-      } else if (error.code === "auth/network-request-failed") {
-        errorMessage =
-          t.networkError || "Network error. Please check your internet connection.";
-      } else if (error.code === 10) {
-        errorMessage =
-          t.googleSignInError || "Google Sign-In configuration error. Please contact support.";
-      } else if (error.message && error.message.includes("DEVELOPER_ERROR")) {
-        errorMessage =
-          t.googleSignInError ||
-          "Configuration error. Please check SHA-1 fingerprint and package name.";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      Alert.alert(t.error || "Error", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -398,7 +359,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingTop: Platform.OS === 'ios' ? 60 : StatusBar.currentHeight + 20,
+    paddingTop: StatusBar.currentHeight + 20,
   },
   headerSection: {
     alignItems: 'center',

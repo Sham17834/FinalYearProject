@@ -4,12 +4,10 @@ import {
   Text,
   FlatList,
   SafeAreaView,
-  StatusBar,
   TouchableOpacity,
   Animated,
   StyleSheet,
   Dimensions,
-  Platform,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -18,49 +16,46 @@ import { LanguageContext } from "./LanguageContext";
 import { getDb } from "./db.js";
 
 const { width } = Dimensions.get("window");
-const isIOS = Platform.OS === "ios";
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F7FA",
+    backgroundColor: "#ffffffff",
   },
   scrollContainer: {
     paddingBottom: 20,
   },
   headerContainer: {
     backgroundColor: "#008080",
-    paddingBottom: 30,
-    paddingHorizontal: 20,
+    width: "100%",
+    paddingTop: 20,
+    paddingBottom: 8,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-    marginBottom: 8,
-    paddingTop: 30,
+    shadowRadius: 4,
+    elevation: 3,
     alignItems: "center",
     justifyContent: "center",
-    transition: "all 0.2s ease",
   },
   greeting: {
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: "bold",
     color: "#ffffff",
-    marginBottom: 4,
+    textAlign: "center",
   },
   appTagline: {
     fontSize: 14,
-    color: "rgba(255, 255, 255, 0.8)",
-    fontWeight: "500",
+    color: "#e0f2f1",
+    textAlign: "center",
   },
   scoreContainer: {
     alignItems: "center",
     paddingVertical: 32,
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
-    marginHorizontal: 16,
-    marginVertical: 12,
+    marginHorizontal: 10,
+    marginVertical: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -89,7 +84,7 @@ const styles = StyleSheet.create({
   progressNumber: {
     fontSize: 32,
     fontWeight: "700",
-    fontFamily: isIOS ? "SF Pro Display" : "Roboto-Bold",
+    fontFamily: "Roboto-Bold",
     color: "#1D3557",
   },
   progressSubtext: {
@@ -100,14 +95,14 @@ const styles = StyleSheet.create({
   progressLabel: {
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: isIOS ? "SF Pro Display" : "Roboto-Medium",
+    fontFamily: "Roboto-Medium",
     color: "#457B9D",
     marginTop: 16,
   },
   riskStatusText: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: isIOS ? "SF Pro Display" : "Roboto-Medium",
+    fontFamily: "Roboto-Medium",
     marginTop: 8,
   },
   section: {
@@ -117,9 +112,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17,
     fontWeight: "700",
-    fontFamily: isIOS ? "SF Pro Display" : "Roboto-Bold",
+    fontFamily: "Roboto-Bold",
     color: "#1D3557",
-    marginBottom: 12,
     paddingLeft: 4,
   },
   metricsGrid: {
@@ -141,19 +135,19 @@ const styles = StyleSheet.create({
   },
   metricTitle: {
     fontSize: 13,
-    fontFamily: isIOS ? "SF Pro Display" : "Roboto-Medium",
+    fontFamily: "Roboto-Medium",
     color: "#457B9D",
     marginBottom: 4,
   },
   metricValue: {
     fontSize: 20,
     fontWeight: "700",
-    fontFamily: isIOS ? "SF Pro Display" : "Roboto-Bold",
+    fontFamily: "Roboto-Bold",
     color: "#1D3557",
   },
   metricSubtext: {
     fontSize: 11,
-    fontFamily: isIOS ? "SF Pro Display" : "Roboto",
+    fontFamily: "Roboto",
     color: "#457B9D",
     marginTop: 4,
   },
@@ -186,14 +180,14 @@ const styles = StyleSheet.create({
   riskTitle: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: isIOS ? "SF Pro Display" : "Roboto-Medium",
+    fontFamily: "Roboto-Medium",
     color: "#1D3557",
     marginBottom: 4,
   },
   riskStatus: {
     fontSize: 13,
     fontWeight: "500",
-    fontFamily: isIOS ? "SF Pro Display" : "Roboto",
+    fontFamily: "Roboto",
   },
   riskProgressBar: {
     height: 6,
@@ -222,7 +216,7 @@ const styles = StyleSheet.create({
   },
   tipText: {
     fontSize: 15,
-    fontFamily: isIOS ? "SF Pro Display" : "Roboto",
+    fontFamily: "Roboto",
     color: "#1D3557",
     flex: 1,
   },
@@ -246,7 +240,7 @@ const styles = StyleSheet.create({
   recalculateButtonText: {
     fontSize: 17,
     fontWeight: "700",
-    fontFamily: isIOS ? "SF Pro Display" : "Roboto-Bold",
+    fontFamily: "Roboto-Bold",
     color: "#FFFFFF",
   },
   fullWidthCard: {
@@ -363,9 +357,9 @@ const AnimatedProgressCircle = ({
 
   const getScoreColor = (score) => {
     if (!score) return "#34C759";
-    if (score >= 80) return "#34C759";
-    if (score >= 60) return "#FFD60A";
-    return "#FF3B30";
+    if (score >= 80) return "#34C759"; 
+    if (score >= 60) return "#FFD60A"; 
+    return "#FF3B30"; 
   };
 
   const color = getScoreColor(percentage);
@@ -459,15 +453,19 @@ const HealthHomeScreen = () => {
           Salt_Intake: record.Salt_Intake || "Moderate",
         };
 
-        // Parse prediction data from JSON strings
         prediction = {
-          Obesity_Flag: record.Obesity_Flag ? JSON.parse(record.Obesity_Flag) : null,
-          Hypertension_Flag: record.Hypertension_Flag ? JSON.parse(record.Hypertension_Flag) : null,
-          Stroke_Flag: record.Stroke_Flag ? JSON.parse(record.Stroke_Flag) : null,
+          Obesity_Flag: record.Obesity_Flag
+            ? JSON.parse(record.Obesity_Flag)
+            : null,
+          Hypertension_Flag: record.Hypertension_Flag
+            ? JSON.parse(record.Hypertension_Flag)
+            : null,
+          Stroke_Flag: record.Stroke_Flag
+            ? JSON.parse(record.Stroke_Flag)
+            : null,
         };
       }
 
-      // Fallback to route.params if no database records
       const navLifestyleData = route.params?.lifestyleData;
       const navPredictionData = route.params?.predictionData;
 
@@ -519,9 +517,7 @@ const HealthHomeScreen = () => {
           hypertension: Number(
             (prediction.Hypertension_Flag.probability * 100).toFixed(2)
           ),
-          stroke: Number(
-            (prediction.Stroke_Flag.probability * 100).toFixed(2)
-          ),
+          stroke: Number((prediction.Stroke_Flag.probability * 100).toFixed(2)),
         });
       }
     } catch (error) {
@@ -881,12 +877,7 @@ const HealthHomeScreen = () => {
     switch (item.type) {
       case "header":
         return (
-          <Animated.View
-            style={[
-              styles.headerContainer,
-              { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-            ]}
-          >
+          <Animated.View style={[styles.headerContainer]}>
             <Text style={styles.greeting}>
               {t.homeTitle || "Health Dashboard"}
             </Text>
@@ -1049,12 +1040,7 @@ const HealthHomeScreen = () => {
         );
       case "recalculate":
         return (
-          <Animated.View
-            style={[
-              styles.recalculateContainer,
-              { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-            ]}
-          >
+          <Animated.View style={[styles.recalculateContainer]}>
             <TouchableOpacity
               style={styles.recalculateButton}
               onPress={() => navigation.navigate("LifestyleDataInput")}
@@ -1073,7 +1059,6 @@ const HealthHomeScreen = () => {
   return (
     <ErrorBoundary>
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#F5F7FA" />
         <FlatList
           data={data}
           renderItem={renderItem}

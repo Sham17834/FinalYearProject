@@ -19,7 +19,6 @@ import {
   Modal,
 } from "react-native";
 import { LanguageContext } from "./LanguageContext";
-import * as SQLite from "expo-sqlite";
 import { useRoute } from "@react-navigation/native";
 import { getDb } from "./db";
 import { LineChart } from "react-native-chart-kit";
@@ -46,14 +45,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#008080",
     width: "100%",
     paddingTop: 20,
-    paddingBottom: 20,
+    paddingBottom: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
     position: "absolute",
-    paddingTop: 40,
+
   },
   headerTitle: {
     fontSize: 24,
@@ -73,7 +72,6 @@ const styles = StyleSheet.create({
   topSection: {
     flexDirection: "row",
     gap: 12,
-    paddingTop: 20,
   },
   quickStatsCard: {
     flex: 1,
