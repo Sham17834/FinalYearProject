@@ -357,9 +357,9 @@ const AnimatedProgressCircle = ({
 
   const getScoreColor = (score) => {
     if (!score) return "#34C759";
-    if (score >= 80) return "#34C759"; 
-    if (score >= 60) return "#FFD60A"; 
-    return "#FF3B30"; 
+    if (score >= 80) return "#34C759";
+    if (score >= 60) return "#FFD60A";
+    return "#FF3B30";
   };
 
   const color = getScoreColor(percentage);
@@ -423,7 +423,6 @@ const HealthHomeScreen = () => {
     try {
       const db = await getDb();
 
-      // Fetch the latest record from UserProfile
       const userProfileData = await db.getAllAsync(
         "SELECT * FROM UserProfile ORDER BY id DESC LIMIT 1"
       );
@@ -783,15 +782,16 @@ const HealthHomeScreen = () => {
     </Animated.View>
   );
 
-  const renderRiskCard = ({ item }) => {
-    const riskPercentage = diseaseRisks[item.key];
+  const renderRiskCard = ({ item }, t) => {
+    const riskPercentage = diseaseRisks[item.key] || 0;
+    const progress = riskPercentage / 100;
     const color = getRiskColor(riskPercentage);
-    const progress = getRiskProgress(riskPercentage);
-    const predictionStatus = predictionData?.[
-      `${item.key.charAt(0).toUpperCase() + item.key.slice(1)}_Flag`
-    ]?.prediction
-      ? t.highRisk || "High Risk"
-      : t.lowRisk || "Low Risk";
+    const predictionStatus =
+      riskPercentage >= 67
+        ? t.high || "High"
+        : riskPercentage >= 34
+          ? t.medium || "Medium"
+          : t.low || "Low";
 
     return (
       <Animated.View
@@ -929,8 +929,8 @@ const HealthHomeScreen = () => {
               {renderMetricCard(
                 t.sleep || "Sleep",
                 lifestyleData?.Sleep_Hours !== undefined
-                  ? `${lifestyleData.Sleep_Hours}h`
-                  : `0${t.hours?.toLowerCase() || "h"}`,
+                  ? `${lifestyleData.Sleep_Hours}${t.hrs || "h"}`
+                  : `0${t.hrs || "h"}`,
                 getSleepStatus(lifestyleData?.Sleep_Hours) ?? t.unknown,
                 "bed",
                 "#8A2BE2"
@@ -956,7 +956,10 @@ const HealthHomeScreen = () => {
             </Text>
             {renderFullWidthMetricCard(
               t.dietQuality || "Diet Quality",
-              lifestyleData?.Diet_Quality ?? t.unknown,
+              lifestyleData?.Diet_Quality
+                ? t[lifestyleData.Diet_Quality.toLowerCase()] ||
+                    lifestyleData.Diet_Quality
+                : t.unknown || "Unknown",
               "",
               "restaurant",
               "#4CAF50"
@@ -984,7 +987,7 @@ const HealthHomeScreen = () => {
             {renderFullWidthMetricCard(
               t.screenTime || "Screen Time",
               lifestyleData?.Screen_Time_Hours !== undefined
-                ? `${lifestyleData.Screen_Time_Hours}h`
+                ? `${lifestyleData.Screen_Time_Hours}${t.hrs.toLowerCase() || "h"}`
                 : `0${t.hours?.toLowerCase() || "h"}`,
               t.perDay || "per day",
               "devices",
@@ -1016,7 +1019,7 @@ const HealthHomeScreen = () => {
                   icon: "local-hospital",
                 },
               ]}
-              renderItem={renderRiskCard}
+              renderItem={(props) => renderRiskCard(props, t)}
               keyExtractor={(item) => item.key}
               contentContainerStyle={{ paddingHorizontal: 0 }}
               ItemSeparatorComponent={() => <View style={{ height: 12 }} />}

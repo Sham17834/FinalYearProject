@@ -454,13 +454,7 @@ const TrackScreen = () => {
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
       >
-        <View
-          style={[
-            styles.header,
-            {
-            },
-          ]}
-        >
+        <View style={[styles.header, {}]}>
           <Text style={styles.appName}>
             {t.trackHealthTitle || "Track Your Health"}
           </Text>

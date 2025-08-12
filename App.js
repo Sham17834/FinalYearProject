@@ -21,59 +21,6 @@ import "setimmediate";
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const MainApp = () => {
-  const { language } = useContext(LanguageContext);
-  const t = getTranslations(language);
-
-  return (
-    <Tab.Navigator
-      initialRouteName="Home"
-      screenOptions={{
-        tabBarActiveTintColor: '#008080',
-        tabBarInactiveTintColor: '#9ca3af',
-        tabBarStyle: styles.tabBar,
-      }}
-    >
-      <Tab.Screen
-        name="Home"
-        component={HealthTrackHomeScreen}
-        options={{
-          tabBarLabel: t.healthHome || "Home",
-          tabBarIcon: ({ color }) => <Icon name="home" color={color} size={24} />,
-          headerShown: false,
-        }}
-      />
-      <Tab.Screen
-        name="Progress"
-        component={ProgressScreen}
-        options={{
-          tabBarLabel: t.progress || "Progress",
-          tabBarIcon: ({ color }) => <Icon name="analytics" color={color} size={24} />,
-          headerShown: false,
-        }}
-      />
-      <Tab.Screen
-        name="Track"
-        component={TrackScreen}
-        options={{
-          tabBarLabel: t.track || "Track",
-          tabBarIcon: ({ color }) => <Icon name="track-changes" color={color} size={24} />,
-          headerShown: false,
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          tabBarLabel: t.profile || "Profile",
-          tabBarIcon: ({ color }) => <Icon name="person" color={color} size={24} />,
-          headerShown: false,
-        }}
-      />
-    </Tab.Navigator>
-  );
-};
-
 const AuthStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -88,6 +35,7 @@ const AuthStack = () => {
 
 const AppNavigator = () => {
   const { language } = useContext(LanguageContext);
+  const t = getTranslations(language);
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState(null);
 
@@ -97,7 +45,7 @@ const AppNavigator = () => {
       if (initializing) setInitializing(false);
     });
 
-    return unsubscribe; 
+    return unsubscribe;
   }, []);
 
   if (initializing) {
@@ -112,7 +60,55 @@ const AppNavigator = () => {
     <NavigationContainer>
       {user ? (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="MainApp" component={MainApp} />
+          <Stack.Screen name="MainApp">
+            {() => (
+              <Tab.Navigator
+                initialRouteName="Home"
+                screenOptions={{
+                  tabBarActiveTintColor: '#008080',
+                  tabBarInactiveTintColor: '#9ca3af',
+                  tabBarStyle: styles.tabBar,
+                }}
+              >
+                <Tab.Screen
+                  name="Home"
+                  component={HealthTrackHomeScreen}
+                  options={{
+                    tabBarLabel: t.tabHome || "Home",
+                    tabBarIcon: ({ color }) => <Icon name="home" color={color} size={24} />,
+                    headerShown: false,
+                  }}
+                />
+                <Tab.Screen
+                  name="Progress"
+                  component={ProgressScreen}
+                  options={{
+                    tabBarLabel: t.tabProgress || "Progress",
+                    tabBarIcon: ({ color }) => <Icon name="analytics" color={color} size={24} />,
+                    headerShown: false,
+                  }}
+                />
+                <Tab.Screen
+                  name="Track"
+                  component={TrackScreen}
+                  options={{
+                    tabBarLabel: t.tabTrack || "Track",
+                    tabBarIcon: ({ color }) => <Icon name="track-changes" color={color} size={24} />,
+                    headerShown: false,
+                  }}
+                />
+                <Tab.Screen
+                  name="Profile"
+                  component={ProfileScreen}
+                  options={{
+                    tabBarLabel: t.tabProfile || "Profile",
+                    tabBarIcon: ({ color }) => <Icon name="person" color={color} size={24} />,
+                    headerShown: false,
+                  }}
+                />
+              </Tab.Navigator>
+            )}
+          </Stack.Screen>
           <Stack.Screen name="LifestyleDataInput" component={LifestyleDataInputScreen} />
         </Stack.Navigator>
       ) : (

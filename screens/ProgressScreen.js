@@ -52,7 +52,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     position: "absolute",
-
   },
   headerTitle: {
     fontSize: 24,
@@ -83,7 +82,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 3,
-    marginBottom: 16
+    marginBottom: 16,
   },
   timeRangeCard: {
     backgroundColor: "#ffffff",
@@ -936,8 +935,8 @@ const ProgressScreen = () => {
         avgLatestRisk < avgPreviousRisk
           ? "improved"
           : avgLatestRisk > avgPreviousRisk
-          ? "worsened"
-          : "stable";
+            ? "worsened"
+            : "stable";
     }
 
     return {
@@ -1234,14 +1233,7 @@ const ProgressScreen = () => {
         </View>
       </View>
     ),
-    [
-      stepsData,
-      sleepData,
-      filteredData,
-      chartConfig,
-      summaryStats,
-      t,
-    ]
+    [stepsData, sleepData, filteredData, chartConfig, summaryStats, t]
   );
 
   const renderTooltip = useCallback(() => {
@@ -1506,8 +1498,11 @@ const ProgressScreen = () => {
                           {t.stress || "Stress"}: {item.stress_level || 0}/10
                         </Text>
                         <Text style={styles.progressDetailItem}>
-                          {t.dietQuality || "Diet"}:{" "}
-                          {item.diet_quality || "N/A"}
+                          {t.dietQuality.label || "Diet"}:{" "}
+                          {item.diet_quality
+                            ? t.dietQuality[item.diet_quality.toLowerCase()] ||
+                              item.diet_quality
+                            : t.dietQuality.unknown || "N/A"}
                         </Text>
                         <Text style={styles.progressDetailItem}>
                           {t.screenTime || "Screen"}:{" "}
@@ -1626,22 +1621,22 @@ const ProgressScreen = () => {
             index === 0
               ? 120
               : index === 1
-              ? 60
-              : index === 2
-              ? 240
-              : index === 3
-              ? 220
-              : 300,
+                ? 60
+                : index === 2
+                  ? 240
+                  : index === 3
+                    ? 220
+                    : 300,
           offset:
             index === 0
               ? 0
               : index === 1
-              ? 120
-              : index === 2
-              ? 180
-              : index === 3
-              ? 420
-              : 640,
+                ? 120
+                : index === 2
+                  ? 180
+                  : index === 3
+                    ? 420
+                    : 640,
           index,
         })}
       />
