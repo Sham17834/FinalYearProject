@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,9 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import { formatString } from "./translations";
 import { getDb } from "./db";
+import * as ort from "onnxruntime-react-native";
+import * as FileSystem from "expo-file-system";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const styles = StyleSheet.create({
   container: {
@@ -293,6 +296,7 @@ const LifestyleDataInputScreen = () => {
   const route = useRoute();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
   const totalSteps = 3;
 
   const [age, setAge] = useState("");
@@ -315,6 +319,18 @@ const LifestyleDataInputScreen = () => {
   const [ageError, setAgeError] = useState("");
   const [heightError, setHeightError] = useState("");
   const [weightError, setWeightError] = useState("");
+
+  useEffect(() => {
+    const loadOfflineMode = async () => {
+      try {
+        const offlineMode = await AsyncStorage.getItem("offlineMode");
+        setIsOfflineMode(offlineMode === "true");
+      } catch (error) {
+        console.error("Error loading offline mode:", error);
+      }
+    };
+    loadOfflineMode();
+  }, []);
 
   const stepTitles = [
     t.personalInfoTitle || "Personal Information",
@@ -424,25 +440,94 @@ const LifestyleDataInputScreen = () => {
     };
 
     try {
-      const response = await fetch(
-        "https://finalyearproject-c5hy.onrender.com/predict",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        }
-      );
-      if (!response.ok) throw new Error(await response.text());
+      let predictions;
 
-      const predictionData = await response.json();
+      if (isOfflineMode) {
+        // Offline mode: Use ONNX models
+        const labelEncoders = JSON.parse(
+          await FileSystem.readAsStringAsync(
+            `${FileSystem.documentDirectory}label_encoders.json`
+          )
+        );
+        const scaler = JSON.parse(
+          await FileSystem.readAsStringAsync(
+            `${FileSystem.documentDirectory}scaler.json`
+          )
+        );
+        const selectedFeatures = JSON.parse(
+          await FileSystem.readAsStringAsync(
+            `${FileSystem.documentDirectory}selected_features.json`
+          )
+        );
+
+        // Preprocess input data
+        const inputData = { ...data };
+        inputData.Gender = labelEncoders.Gender[data.Gender] || 0;
+        inputData.Chronic_Disease =
+          labelEncoders.Chronic_Disease[data.Chronic_Disease] || 0;
+        inputData.Alcohol_Consumption =
+          labelEncoders.Alcohol_Consumption[data.Alcohol_Consumption] || 0;
+        inputData.Smoking_Habit =
+          labelEncoders.Smoking_Habit[data.Smoking_Habit] || 0;
+        inputData.Diet_Quality =
+          labelEncoders.Diet_Quality[data.Diet_Quality] || 0;
+
+        const featureArray = selectedFeatures.map(
+          (feature) => inputData[feature]
+        );
+
+        const scaledFeatures = featureArray.map((value, index) => {
+          const mean = scaler.mean[index];
+          const std = scaler.std[index];
+          return (value - mean) / std;
+        });
+
+        const inputTensor = new ort.Tensor(
+          "float32",
+          new Float32Array(scaledFeatures),
+          [1, scaledFeatures.length]
+        );
+
+        const modelPaths = [
+          `${FileSystem.documentDirectory}xgb_model_output_0.onnx`,
+          `${FileSystem.documentDirectory}xgb_model_output_1.onnx`,
+          `${FileSystem.documentDirectory}xgb_model_output_2.onnx`,
+        ];
+        predictions = {};
+
+        for (let i = 0; i < modelPaths.length; i++) {
+          const session = await ort.InferenceSession.create(modelPaths[i]);
+          const feeds = { input: inputTensor };
+          const results = await session.run(feeds);
+          const output = results.output.data;
+          const prediction = output[0] > 0.5 ? 1 : 0;
+          predictions[
+            i === 0
+              ? "Obesity_Flag"
+              : i === 1
+              ? "Hypertension_Flag"
+              : "Stroke_Flag"
+          ] = prediction;
+        }
+      } else {
+        // Online mode: Use API
+        const response = await fetch(
+          "https://finalyearproject-c5hy.onrender.com/predict",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          }
+        );
+        if (!response.ok) throw new Error(await response.text());
+        predictions = await response.json();
+      }
 
       const fullData = {
         ...data,
-        Obesity_Flag: JSON.stringify(predictionData.Obesity_Flag || {}),
-        Hypertension_Flag: JSON.stringify(
-          predictionData.Hypertension_Flag || {}
-        ),
-        Stroke_Flag: JSON.stringify(predictionData.Stroke_Flag || {}),
+        Obesity_Flag: JSON.stringify(predictions.Obesity_Flag || {}),
+        Hypertension_Flag: JSON.stringify(predictions.Hypertension_Flag || {}),
+        Stroke_Flag: JSON.stringify(predictions.Stroke_Flag || {}),
       };
 
       const db = await getDb();
@@ -479,7 +564,7 @@ const LifestyleDataInputScreen = () => {
 
       navigation.navigate("MainApp", {
         lifestyleData: data,
-        predictionData: predictionData,
+        predictionData: predictions,
       });
     } catch (error) {
       console.error("Submission error:", error);
