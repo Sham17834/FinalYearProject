@@ -208,8 +208,6 @@ const ProfileScreen = () => {
                 email,
               ]);
 
-              // Sign out from Firebase - this will trigger the auth state change
-              // and automatically show the AuthStack (Welcome screen)
               await auth.signOut();
 
               console.log(
@@ -241,7 +239,6 @@ const ProfileScreen = () => {
             try {
               await AsyncStorage.removeItem("userProfileData");
 
-              // Sign out from Firebase - this will automatically redirect to AuthStack
               await auth.signOut();
 
               console.log("User logged out successfully");
