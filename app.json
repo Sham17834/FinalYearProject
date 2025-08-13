@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fyp.healthapps"
+      "bundleIdentifier": "com.fyp.healthapps",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -32,7 +35,11 @@
       "expo-sqlite",
       "expo-web-browser"
     ],
-    "extra": {},
+    "extra": {
+      "eas": {
+        "projectId": "bdd3ea04-e9e6-40e9-8638-13b9a2cee4f5"
+      }
+    },
     "owner": "sham_17834"
   }
 }
