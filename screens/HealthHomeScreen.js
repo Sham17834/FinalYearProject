@@ -8,12 +8,16 @@ import {
   Animated,
   StyleSheet,
   Dimensions,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import Svg, { Circle } from "react-native-svg";
 import { LanguageContext } from "./LanguageContext";
 import { getDb } from "./db.js";
+import RNHTMLtoPDF from "react-native-html-to-pdf";
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 
 const { width } = Dimensions.get("window");
 
@@ -243,6 +247,25 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto-Bold",
     color: "#FFFFFF",
   },
+  downloadButton: {
+    backgroundColor: "#4CAF50",
+    borderRadius: 16,
+    paddingVertical: 16,
+    width: width - 32,
+    alignItems: "center",
+    shadowColor: "#4CAF50",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+    marginTop: 12,
+  },
+  downloadButtonText: {
+    fontSize: 17,
+    fontWeight: "700",
+    fontFamily: "Roboto-Bold",
+    color: "#FFFFFF",
+  },
   fullWidthCard: {
     width: "100%",
     backgroundColor: "#FFFFFF",
@@ -397,8 +420,10 @@ const AnimatedProgressCircle = ({
         />
       </Svg>
       <View style={{ position: "absolute", alignItems: "center" }}>
-        <Text style={styles.progressNumber}>{percentage || 0}</Text>
-        <Text style={styles.progressSubtext}>{t.outOf100 || "out of 100"}</Text>
+        <Text style={styles.progressNumber}>{percentage ?? 0}</Text>
+        <Text style={styles.progressApproved}>
+          {t.outOf100 ?? "out of 100"}
+        </Text>
       </View>
     </View>
   );
@@ -724,6 +749,100 @@ const HealthHomeScreen = () => {
     return tips.slice(0, 3);
   };
 
+  const generateHealthReportHTML = () => {
+    const tips = generatePersonalizedTips();
+    return `
+      <html>
+        <head>
+          <style>
+            body { font-family: Roboto, Arial, sans-serif; color: #1D3557; padding: 20px; }
+            h1 { color: #008080; text-align: center; }
+            h2 { color: #457B9D; }
+            .section { margin-bottom: 20px; }
+            .metric { margin: 10px 0; }
+            .risk { margin: 10px 0; }
+            .tip { margin: 10px 0; }
+            .label { font-weight: bold; }
+            .value { color: #326db9ff; }
+          </style>
+        </head>
+        <body>
+          <h1>${t.healthReportTitle || "Your Health Report"}</h1>
+          <div class="section">
+            <h2>${t.lifestyleScore || "Lifestyle Score"}</h2>
+            <p class="metric"><span class="label">${t.score || "Score"}:</span> <span class="value">${localScore || 0} ${t.outOf100 || "out of 100"}</span></p>
+            <p class="metric"><span class="label">${t.overallRisk || "Overall Risk"}:</span> <span class="value">${getOverallRiskLevel()}</span></p>
+          </div>
+          <div class="section">
+            <h2>${t.keyMetrics || "Key Metrics"}</h2>
+            <p class="metric">
+  <span class="label">${t.bmiLabel ?? "BMI"}:</span>
+  <span class="value">
+    ${
+      lifestyleData?.BMI != null
+        ? lifestyleData.BMI.toFixed(1)
+        : (t.unknown ?? "Unknown")
+    }
+    (${getBMICategory(lifestyleData?.BMI) ?? "Not available"})
+  </span>
+</p>
+            <p class="metric"><span class="label">${t.steps || "Steps"}:</span> <span class="value">${formatNumber(lifestyleData?.Daily_Steps) ?? "0"} (${t.daily || "Daily"})</span></p>
+            <p class="metric"><span class="label">${t.sleep || "Sleep"}:</span> <span class="value">${lifestyleData?.Sleep_Hours !== undefined ? `${lifestyleData.Sleep_Hours}${t.hrs || "h"}` : `0${t.hrs || "h"}`} (${getSleepStatus(lifestyleData?.Sleep_Hours) || "Not available"})</span></p>
+            <p class="metric"><span class="label">${t.exercise || "Exercise"}:</span> <span class="value">${lifestyleData?.Exercise_Frequency !== undefined ? `${lifestyleData.Exercise_Frequency}/${t.week || "week"}` : `0/${t.week || "week"}`} (${getExerciseStatus(lifestyleData?.Exercise_Frequency) || "Not available"})</span></p>
+          </div>
+          <div class="section">
+            <h2>${t.lifestyleFactors || "Lifestyle Factors"}</h2>
+            <p class="metric"><span class="label">${t.dietQuality || "Diet Quality"}:</span> <span class="value">${lifestyleData?.Diet_Quality ? t[lifestyleData.Diet_Quality.toLowerCase()] || lifestyleData.Diet_Quality : t.unknown || "Unknown"}</span></p>
+            <p class="metric"><span class="label">${t.fruitsVeggies || "Fruits & Vegetables"}:</span> <span class="value">${lifestyleData?.FRUITS_VEGGIES !== undefined ? `${lifestyleData.FRUITS_VEGGIES} ${t.servingsPerDay || "servings/day"}` : `0 ${t.servingsPerDay || "servings/day"}`}</span></p>
+            <p class="metric"><span class="label">${t.stressLevel || "Stress Level"}:</span> <span class="value">${getStressLevelText(lifestyleData?.Stress_Level) || "Not available"} (${lifestyleData?.Stress_Level !== undefined ? `${lifestyleData.Stress_Level}/10` : "0/10"})</span></p>
+            <p class="metric"><span class="label">${t.screenTime || "Screen Time"}:</span> <span class="value">${lifestyleData?.Screen_Time_Hours !== undefined ? `${lifestyleData.Screen_Time_Hours}${t.hrs.toLowerCase() || "h"}` : `0${t.hrs?.toLowerCase() || "h"}`} (${t.perDay || "per day"})</span></p>
+          </div>
+          <div class="section">
+            <h2>${t.chronicDiseaseRisk || "Chronic Disease Risk"}</h2>
+            <p class="risk"><span class="label">${t.obesityRisk || "Obesity Risk"}:</span> <span class="value">${diseaseRisks.obesity.toFixed(2)}% (${diseaseRisks.obesity >= 67 ? t.high || "High" : diseaseRisks.obesity >= 34 ? t.medium || "Medium" : t.low || "Low"})</span></p>
+            <p class="risk"><span class="label">${t.hypertensionRisk || "Hypertension Risk"}:</span> <span class="value">${diseaseRisks.hypertension.toFixed(2)}% (${diseaseRisks.hypertension >= 67 ? t.high || "High" : diseaseRisks.hypertension >= 34 ? t.medium || "Medium" : t.low || "Low"})</span></p>
+            <p class="risk"><span class="label">${t.strokeRisk || "Stroke Risk"}:</span> <span class="value">${diseaseRisks.stroke.toFixed(2)}% (${diseaseRisks.stroke >= 67 ? t.high || "High" : diseaseRisks.stroke >= 34 ? t.medium || "Medium" : t.low || "Low"})</span></p>
+          </div>
+          <div class="section">
+            <h2>${t.personalizedTips || "Personalized Tips"}</h2>
+            ${tips.map((tip) => `<p class="tip"><span class="label">-</span> ${tip.text}</p>`).join("")}
+          </div>
+        </body>
+      </html>
+    `;
+  };
+
+  const downloadHealthReport = async () => {
+    if (!lifestyleData || !predictionData) {
+      Alert.alert(
+        t.error || "Error",
+        t.noDataForReport ||
+          "Please submit lifestyle data to generate a health report."
+      );
+      return;
+    }
+
+    try {
+      const html = generateHealthReportHTML();
+      const { uri } = await Print.printToFileAsync({
+        html,
+        base64: false,
+        fileName: `Health_Report_${new Date().toISOString().split("T")[0]}.pdf`,
+      });
+      await Sharing.shareAsync(uri);
+      Alert.alert(
+        t.success || "Success",
+        t.reportGenerated || "Health report generated and ready to share."
+      );
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      Alert.alert(
+        t.error || "Error",
+        t.reportGenerationFailed || "Failed to generate health report."
+      );
+    }
+  };
+
   const renderMetricCard = (
     title,
     value,
@@ -988,7 +1107,7 @@ const HealthHomeScreen = () => {
               t.screenTime || "Screen Time",
               lifestyleData?.Screen_Time_Hours !== undefined
                 ? `${lifestyleData.Screen_Time_Hours}${t.hrs.toLowerCase() || "h"}`
-                : `0${t.hours?.toLowerCase() || "h"}`,
+                : `0${t.hrs?.toLowerCase() || "h"}`,
               t.perDay || "per day",
               "devices",
               "#607D8B"
@@ -1050,6 +1169,14 @@ const HealthHomeScreen = () => {
             >
               <Text style={styles.recalculateButtonText}>
                 {t.recalculate || "Submit Lifestyle Data"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.downloadButton}
+              onPress={downloadHealthReport}
+            >
+              <Text style={styles.downloadButtonText}>
+                {t.downloadReport || "Download Health Report"}
               </Text>
             </TouchableOpacity>
           </Animated.View>
