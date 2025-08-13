@@ -199,6 +199,7 @@ const styles = StyleSheet.create({
     color: "#1e293b",
     marginBottom: 8,
     textAlign: "center",
+    marginRight: 16
   },
   miniChartContainer: {
     alignItems: "center",
