@@ -47,6 +47,7 @@ const ProfileScreen = () => {
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState({ name: "", email: "" });
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
 
   useEffect(() => {
     const loadProfileData = async () => {
