@@ -21,6 +21,7 @@ import { getDb } from "./db";
 import * as ort from "onnxruntime-react-native";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+console.log('Starting imports...');
 
 const styles = StyleSheet.create({
   container: {

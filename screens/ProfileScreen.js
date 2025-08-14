@@ -814,8 +814,6 @@ const styles = StyleSheet.create({
   switchDescription: {
     fontSize: 12,
     color: COLORS.textSecondary,
-    marginTop: 4,
-    marginLeft: 16,
   },
 });
 
