@@ -3,6 +3,10 @@
     "name": "HealthApps",
     "slug": "HealthApps",
     "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*",
+      "assets/model/"
+    ],
     "scheme": "com.fyp.healthapps",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -33,7 +37,8 @@
     },
     "plugins": [
       "expo-sqlite",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-asset"
     ],
     "extra": {
       "eas": {
