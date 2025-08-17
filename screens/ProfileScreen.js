@@ -17,7 +17,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getDb } from "./db";
-import { auth } from '../firebaseConfig';
+import { auth } from "../firebaseConfig";
 
 const COLORS = {
   primary: "#008080",
@@ -79,7 +79,6 @@ const ProfileScreen = () => {
         const offlineMode = await AsyncStorage.getItem("offlineMode");
         setIsOfflineMode(offlineMode === "true");
       } catch (error) {
-        console.error("Error loading profile data:", error);
         Alert.alert(
           t.error || "Error",
           t.loadProfileError || "Failed to load profile data."
@@ -129,7 +128,6 @@ const ProfileScreen = () => {
         [{ text: t.ok || "OK", style: "default" }]
       );
     } catch (error) {
-      console.error("Error changing language:", error);
       Alert.alert(
         t.error || "Error",
         t.languageChangeError || "Failed to change language. Please try again.",
@@ -175,11 +173,9 @@ const ProfileScreen = () => {
         t.profileSavedMsg || "Profile data saved successfully",
         [{ text: t.ok || "OK", style: "default" }]
       );
-      console.log("Saved:", data);
       setName(data.fullName);
       setEmail(data.email);
     } catch (error) {
-      console.error("Error saving profile data:", error);
       Alert.alert(
         t.error || "Error",
         t.saveProfileError || "Failed to save profile data."
@@ -195,12 +191,13 @@ const ProfileScreen = () => {
       Alert.alert(
         t.offlineModeChanged || "Offline Mode Changed",
         newOfflineMode
-          ? t.offlineModeEnabled || "Offline mode enabled. Predictions will use local models."
-          : t.offlineModeDisabled || "Offline mode disabled. Predictions will use online API.",
+          ? t.offlineModeEnabled ||
+              "Offline mode enabled. Predictions will use local models."
+          : t.offlineModeDisabled ||
+              "Offline mode disabled. Predictions will use online API.",
         [{ text: t.ok || "OK", style: "default" }]
       );
     } catch (error) {
-      console.error("Error toggling offline mode:", error);
       Alert.alert(
         t.error || "Error",
         t.offlineModeError || "Failed to toggle offline mode."
@@ -235,12 +232,7 @@ const ProfileScreen = () => {
               ]);
 
               await auth.signOut();
-
-              console.log(
-                "Account data deleted and user signed out successfully"
-              );
             } catch (error) {
-              console.error("Error deleting account data:", error);
               Alert.alert(
                 t.error || "Error",
                 t.deleteAccountError || "Failed to delete account data."
@@ -266,10 +258,7 @@ const ProfileScreen = () => {
               await AsyncStorage.removeItem("userProfileData");
 
               await auth.signOut();
-
-              console.log("User logged out successfully");
             } catch (error) {
-              console.error("Error during logout:", error);
               Alert.alert(
                 t.error || "Error",
                 t.logoutError || "Failed to log out."

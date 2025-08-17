@@ -1,11 +1,11 @@
-import * as SQLite from 'expo-sqlite';
+import * as SQLite from "expo-sqlite";
 
 let db;
 
 export const getDb = async () => {
   if (db) return db;
 
-  db = await SQLite.openDatabaseAsync('userprofile.db');
+  db = await SQLite.openDatabaseAsync("userprofile.db");
 
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS Users (
@@ -50,8 +50,7 @@ export const getDb = async () => {
       ALTER TABLE UserProfile ADD COLUMN Full_Name TEXT;
     `);
   } catch (error) {
-    if (!error.message.includes('duplicate column name')) {
-      console.error('Error adding Full_Name column:', error);
+    if (!error.message.includes("duplicate column name")) {
     }
   }
 
@@ -60,8 +59,7 @@ export const getDb = async () => {
       ALTER TABLE UserProfile ADD COLUMN email TEXT;
     `);
   } catch (error) {
-    if (!error.message.includes('duplicate column name')) {
-      console.error('Error adding email column:', error);
+    if (!error.message.includes("duplicate column name")) {
     }
   }
 
@@ -70,8 +68,7 @@ export const getDb = async () => {
       ALTER TABLE UserProfile ADD COLUMN date TEXT;
     `);
   } catch (error) {
-    if (!error.message.includes('duplicate column name')) {
-      console.error('Error adding date column:', error);
+    if (!error.message.includes("duplicate column name")) {
     }
   }
 
@@ -80,8 +77,7 @@ export const getDb = async () => {
       ALTER TABLE UserProfile ADD COLUMN Salt_Intake TEXT;
     `);
   } catch (error) {
-    if (!error.message.includes('duplicate column name')) {
-      console.error('Error adding Salt_Intake column:', error);
+    if (!error.message.includes("duplicate column name")) {
     }
   }
 
@@ -90,8 +86,7 @@ export const getDb = async () => {
       ALTER TABLE UserProfile ADD COLUMN Obesity_Flag TEXT;
     `);
   } catch (error) {
-    if (!error.message.includes('duplicate column name')) {
-      console.error('Error adding Obesity_Flag column:', error);
+    if (!error.message.includes("duplicate column name")) {
     }
   }
 
@@ -100,8 +95,7 @@ export const getDb = async () => {
       ALTER TABLE UserProfile ADD COLUMN Hypertension_Flag TEXT;
     `);
   } catch (error) {
-    if (!error.message.includes('duplicate column name')) {
-      console.error('Error adding Hypertension_Flag column:', error);
+    if (!error.message.includes("duplicate column name")) {
     }
   }
 
@@ -110,8 +104,7 @@ export const getDb = async () => {
       ALTER TABLE UserProfile ADD COLUMN Stroke_Flag TEXT;
     `);
   } catch (error) {
-    if (!error.message.includes('duplicate column name')) {
-      console.error('Error adding Stroke_Flag column:', error);
+    if (!error.message.includes("duplicate column name")) {
     }
   }
 

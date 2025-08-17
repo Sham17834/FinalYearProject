@@ -10,7 +10,6 @@ import {
   Alert,
   StyleSheet,
   ActivityIndicator,
-  Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
@@ -43,7 +42,7 @@ const LoginScreen = () => {
       "197590438015-jkpo6rbjq2icl5uqsqkkik3r85q3s19k.apps.googleusercontent.com",
     offlineAccess: true,
     forceCodeForRefreshToken: true,
-    scopes: ['email', 'profile'],
+    scopes: ["email", "profile"],
   });
 
   const validateEmail = (email) => {
@@ -70,7 +69,8 @@ const LoginScreen = () => {
       newErrors.password = t.validFillAllFields || "Please fill in all fields";
       isValid = false;
     } else if (password.length < 6) {
-      newErrors.password = t.invalidPassword || "Password must be at least 6 characters";
+      newErrors.password =
+        t.invalidPassword || "Password must be at least 6 characters";
       isValid = false;
     }
 
@@ -98,9 +98,7 @@ const LoginScreen = () => {
         [userEmail]
       );
       return !result;
-    } catch (error) {
-      return false;
-    }
+    } catch (error) {}
   };
 
   const handleLogin = async () => {
@@ -108,17 +106,23 @@ const LoginScreen = () => {
     setIsLoading(true);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
       const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
 
-      navigation.navigate(
-        isFirstTimeUser ? "LifestyleDataInput" : "MainApp",
-        {
-          userData: { fullName: user.displayName || "User", email: user.email },
-        }
-      );
+      const userData = {
+        fullName: user.displayName || "User",
+        email: user.email,
+      };
+
+      navigation.navigate(isFirstTimeUser ? "LifestyleDataInput" : "MainApp", {
+        userData,
+      });
     } catch (error) {
       let errorMessage = t.invalidCredentials || "Invalid email or password";
       if (
@@ -127,7 +131,8 @@ const LoginScreen = () => {
       ) {
         errorMessage = t.invalidCredentials || "Invalid email or password";
       } else if (error.code === "auth/too-many-requests") {
-        errorMessage = t.troubleSigningIn || "Too many attempts, try again later";
+        errorMessage =
+          t.troubleSigningIn || "Too many attempts, try again later";
       } else {
         errorMessage = t.error || "An error occurred";
       }
@@ -140,7 +145,9 @@ const LoginScreen = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
       const userInfo = await GoogleSignin.signIn();
 
       const idToken = userInfo.data?.idToken || userInfo.idToken;
@@ -178,11 +185,20 @@ const LoginScreen = () => {
         { cancelable: true }
       );
 
-      navigation.navigate(
-        isFirstTimeUser ? "LifestyleDataInput" : "MainApp",
-        { userData }
-      );
+      navigation.navigate(isFirstTimeUser ? "LifestyleDataInput" : "MainApp", {
+        userData,
+      });
     } catch (error) {
+      let errorMessage = t.error || "An error occurred";
+      if (error.code === "auth/invalid-credential") {
+        errorMessage = t.invalidCredentials || "Invalid Google credentials";
+      } else if (error.message.includes("No ID token")) {
+        errorMessage =
+          t.googleSignInError || "Failed to retrieve Google ID token";
+      } else {
+        errorMessage = t.googleSignInError || "Google Sign-In failed";
+      }
+      Alert.alert(t.error || "Error", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -191,15 +207,13 @@ const LoginScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
         <View style={styles.headerSection}>
-          <View style={styles.logoContainer}>
-          </View>
+          <View style={styles.logoContainer}></View>
           <Text style={styles.welcomeText}>
             {t.loginTitle || "Welcome Back"}
           </Text>
@@ -287,7 +301,9 @@ const LoginScreen = () => {
 
             <TouchableOpacity
               style={styles.forgotPasswordButton}
-              onPress={() => !isLoading && navigation.navigate("ForgotPassword")}
+              onPress={() =>
+                !isLoading && navigation.navigate("ForgotPassword")
+              }
               disabled={isLoading}
             >
               <Text style={styles.forgotPasswordText}>
@@ -355,44 +371,31 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff', 
+    backgroundColor: "#ffffff",
   },
   scrollContent: {
     flexGrow: 1,
     paddingTop: StatusBar.currentHeight + 20,
   },
   headerSection: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingHorizontal: 20,
     marginBottom: 40,
   },
   logoContainer: {
     marginBottom: 24,
   },
-  logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
-  },
   welcomeText: {
-    fontSize: 28, 
-    fontWeight: '700',
-    color: '#1f2937', 
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#1f2937",
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitleText: {
-    fontSize: 16, 
-    color: '#6b7280', 
-    textAlign: 'center',
+    fontSize: 16,
+    color: "#6b7280",
+    textAlign: "center",
     lineHeight: 22,
   },
   formContainer: {
@@ -407,69 +410,69 @@ const styles = StyleSheet.create({
   },
   modernInput: {
     height: 56,
-    backgroundColor: '#ffffff', 
+    backgroundColor: "#ffffff",
     borderRadius: 16,
     paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 2,
-    borderColor: '#e5e7eb', 
-    shadowColor: '#000',
+    borderColor: "#e5e7eb",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
   inputFocused: {
-    borderColor: '#3b82f6',
-    backgroundColor: '#ffffff',
+    borderColor: "#3b82f6",
+    backgroundColor: "#ffffff",
     transform: [{ scale: 1.02 }],
-    shadowColor: '#3b82f6',
+    shadowColor: "#3b82f6",
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
   inputError: {
-    borderColor: '#dc2626', 
-    backgroundColor: '#fef2f2',
+    borderColor: "#dc2626",
+    backgroundColor: "#fef2f2",
   },
   inputIcon: {
     marginRight: 12,
   },
   textInput: {
     flex: 1,
-    fontSize: 16, 
-    color: '#1f2937', 
-    fontWeight: '500',
+    fontSize: 16,
+    color: "#1f2937",
+    fontWeight: "500",
   },
   passwordToggle: {
     padding: 8,
     marginLeft: 8,
   },
   errorText: {
-    color: '#dc2626', 
-    fontSize: 12, 
+    color: "#dc2626",
+    fontSize: 12,
     marginTop: 6,
     marginLeft: 4,
-    fontWeight: '600',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: "600",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 4,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   forgotPasswordButton: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
   },
   forgotPasswordText: {
-    color: '#008080', 
-    fontSize: 14, 
-    fontWeight: '600',
+    color: "#008080",
+    fontSize: 14,
+    fontWeight: "600",
   },
   signInButton: {
     borderRadius: 16,
     marginBottom: 24,
-    backgroundColor: '#008080',
+    backgroundColor: "#008080",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
@@ -477,80 +480,80 @@ const styles = StyleSheet.create({
   },
   signInButtonContent: {
     paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   signInButtonText: {
-    color: '#ffffff', 
-    fontSize: 18, 
-    fontWeight: '700',
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "700",
     letterSpacing: 0.5,
   },
   disabledButton: {
     opacity: 0.6,
-    backgroundColor: '#d1d5db', 
+    backgroundColor: "#d1d5db",
   },
   dividerSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 24,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e5e7eb', 
+    backgroundColor: "#e5e7eb",
   },
   dividerTextContainer: {
-    backgroundColor: '#ffffff', 
+    backgroundColor: "#ffffff",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 12,
     marginHorizontal: 16,
   },
   dividerText: {
-    color: '#6b7280', 
-    fontSize: 12, 
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    color: "#6b7280",
+    fontSize: 12,
+    fontWeight: "600",
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   googleButton: {
-    backgroundColor: '#ffffff', 
+    backgroundColor: "#ffffff",
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e5e7eb', 
-    shadowColor: '#000',
+    borderColor: "#e5e7eb",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
   },
   googleButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   googleButtonText: {
-    color: '#1f2937', 
-    fontSize: 18, 
-    fontWeight: '600',
+    color: "#1f2937",
+    fontSize: 18,
+    fontWeight: "600",
     marginLeft: 12,
   },
   signUpSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 24,
     marginBottom: 20,
   },
   signUpPromptText: {
-    color: '#6b7280', 
-    fontSize: 16, 
+    color: "#6b7280",
+    fontSize: 16,
   },
   signUpLinkText: {
-    color: '#008080', 
-    fontWeight: '700',
+    color: "#008080",
+    fontWeight: "700",
   },
 });
 

@@ -21,7 +21,6 @@ import { getDb } from "./db";
 import * as ort from "onnxruntime-react-native";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-console.log('Starting imports...');
 
 const styles = StyleSheet.create({
   container: {
@@ -326,9 +325,7 @@ const LifestyleDataInputScreen = () => {
       try {
         const offlineMode = await AsyncStorage.getItem("offlineMode");
         setIsOfflineMode(offlineMode === "true");
-      } catch (error) {
-        console.error("Error loading offline mode:", error);
-      }
+      } catch (error) {}
     };
     loadOfflineMode();
   }, []);
@@ -506,8 +503,8 @@ const LifestyleDataInputScreen = () => {
             i === 0
               ? "Obesity_Flag"
               : i === 1
-              ? "Hypertension_Flag"
-              : "Stroke_Flag"
+                ? "Hypertension_Flag"
+                : "Stroke_Flag"
           ] = prediction;
         }
       } else {
@@ -568,7 +565,6 @@ const LifestyleDataInputScreen = () => {
         predictionData: predictions,
       });
     } catch (error) {
-      console.error("Submission error:", error);
       Alert.alert("Error", error.message || "Something went wrong");
     } finally {
       setIsSubmitting(false);

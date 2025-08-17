@@ -147,7 +147,6 @@ const RegisterScreen = () => {
         [fullName, email, password, new Date().toISOString()]
       );
 
-      console.log("Register:", { fullName, email, password });
       Alert.alert(
         t.success || "Success",
         t.registrationSuccess ||
@@ -160,7 +159,6 @@ const RegisterScreen = () => {
         ]
       );
     } catch (error) {
-      console.error("Error saving user data:", error);
       Alert.alert(
         t.error || "Error",
         t.saveProfileError || "Failed to save user data"

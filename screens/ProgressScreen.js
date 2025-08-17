@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     color: "#1e293b",
     marginBottom: 8,
     textAlign: "center",
-    marginRight: 16
+    marginRight: 16,
   },
   miniChartContainer: {
     alignItems: "center",
@@ -421,15 +421,8 @@ const ProgressScreen = () => {
         const table =
           item.source === "UserProfile" ? "UserProfile" : "HealthRecords";
         await db.runAsync(`DELETE FROM ${table} WHERE id = ?`, [item.id]);
-        console.log(
-          `Deleted ${table} record with id ${item.id} and date ${item.date}`
-        );
         setRefreshKey((prev) => prev + 1);
       } catch (error) {
-        console.error(
-          `Error deleting ${table} entry with id ${item.id}:`,
-          error
-        );
         Alert.alert(
           t.error || "Error",
           t.deleteError || "Failed to delete entry"
@@ -692,7 +685,6 @@ const ProgressScreen = () => {
         })
       );
     } catch (error) {
-      console.error("Error fetching progress data:", error);
       setError("Failed to load data from database");
       setProgressData(fallbackData);
       setLatestUserProfile(null);

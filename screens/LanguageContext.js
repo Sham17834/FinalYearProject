@@ -1,22 +1,20 @@
-import React, { createContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getTranslations } from './translations';
+import React, { createContext, useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getTranslations } from "./translations";
 
 export const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState('English');
+  const [language, setLanguage] = useState("English");
 
   useEffect(() => {
     const loadLanguage = async () => {
       try {
-        const savedLanguage = await AsyncStorage.getItem('appLanguage');
+        const savedLanguage = await AsyncStorage.getItem("appLanguage");
         if (savedLanguage) {
           setLanguage(savedLanguage);
         }
-      } catch (error) {
-        console.error('Error loading language:', error);
-      }
+      } catch (error) {}
     };
     loadLanguage();
   }, []);
@@ -24,12 +22,9 @@ export const LanguageProvider = ({ children }) => {
   const changeLanguage = async (newLanguage) => {
     setLanguage(newLanguage);
     try {
-      await AsyncStorage.setItem('appLanguage', newLanguage);
-    } catch (error) {
-      console.error('Error saving language:', error);
-    }
+      await AsyncStorage.setItem("appLanguage", newLanguage);
+    } catch (error) {}
   };
-
 
   const t = getTranslations(language);
 

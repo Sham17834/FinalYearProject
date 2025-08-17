@@ -394,7 +394,6 @@ const TrackScreen = () => {
 
     try {
       const db = await getDb();
-      console.log("Database opened successfully");
 
       await db.runAsync(
         `INSERT INTO HealthRecords (
@@ -421,18 +420,12 @@ const TrackScreen = () => {
           data.screen_time_hours,
         ]
       );
-      console.log("Health record saved to database:", data);
 
       navigation.navigate("MainApp", {
         screen: "Progress",
         params: { newRecord: data },
       });
     } catch (error) {
-      console.error(
-        "Error saving data to database:",
-        error.message,
-        error.stack
-      );
       Alert.alert(
         t.error || "Error",
         t.errorSaving || "Failed to save health record: " + error.message

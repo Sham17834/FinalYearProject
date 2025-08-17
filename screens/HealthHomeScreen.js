@@ -16,8 +16,8 @@ import Svg, { Circle } from "react-native-svg";
 import { LanguageContext } from "./LanguageContext";
 import { getDb } from "./db.js";
 import RNHTMLtoPDF from "react-native-html-to-pdf";
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
 
 const { width } = Dimensions.get("window");
 
@@ -519,9 +519,6 @@ const HealthHomeScreen = () => {
         prediction = navPredictionData;
       }
 
-      console.log("Received lifestyleData:", lifestyle);
-      console.log("Received predictionData:", prediction);
-
       if (lifestyle) {
         setLifestyleData(lifestyle);
         calculateLocalScore(lifestyle);
@@ -544,9 +541,7 @@ const HealthHomeScreen = () => {
           stroke: Number((prediction.Stroke_Flag.probability * 100).toFixed(2)),
         });
       }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
+    } catch (error) {}
 
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -835,7 +830,6 @@ const HealthHomeScreen = () => {
         t.reportGenerated || "Health report generated and ready to share."
       );
     } catch (error) {
-      console.error("Error generating PDF:", error);
       Alert.alert(
         t.error || "Error",
         t.reportGenerationFailed || "Failed to generate health report."
