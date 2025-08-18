@@ -8,7 +8,6 @@ import {
   Alert,
   Image,
   ScrollView,
-  Platform,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
@@ -72,19 +71,19 @@ const WelcomeScreen = () => {
                 <Picker.Item
                   label="English"
                   value="English"
-                  color="#ffffffff"
+                  color="#000000ff"
                   backgroundColor="white"
                 />
                 <Picker.Item
                   label="中文"
                   value="Chinese"
-                  color="#ffffffff"
+                  color="#000000ff"
                   backgroundColor="white"
                 />
                 <Picker.Item
                   label="Bahasa Malaysia"
                   value="Malay"
-                  color="#ffffffff"
+                  color="#000000ff"
                   backgroundColor="white"
                 />
               </Picker>

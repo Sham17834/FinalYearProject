@@ -2,7 +2,7 @@ const translations = {
   English: {
     confirmDelete: "Confirm Delete",
     dietQuality: {
-      label: "Diet Quality", // English
+      label: "Diet Quality",
       poor: "Poor",
       average: "Average",
       good: "Good",
@@ -106,6 +106,10 @@ const translations = {
     lowStress: "Low",
     moderateStress: "Moderate",
     highStress: "High",
+    exerciseStatus: {
+      good: "Good",
+      poor: "Poor",
+    },
     lifestyleFactors: "Lifestyle Factors",
     servingsPerDay: "servings/day",
     screenTime: "Screen Time",
@@ -126,7 +130,8 @@ const translations = {
     downloadReport: "Download Health Report",
     veryActive: "Very Active",
     active: "Active",
-    reportGenerated: "Health report has been generated and is ready to share or save",
+    reportGenerated:
+      "Health report has been generated and is ready to share or save",
     lightlyActive: "Lightly Active",
     inactive: "Inactive",
     optimal: "Optimal",
@@ -336,10 +341,10 @@ const translations = {
 
   Chinese: {
     dietQuality: {
-      label: "饮食质量", // Chinese translation
+      label: "饮食质量",
       poor: "差",
       average: "一般",
-      good: "好",
+      good: "良好",
       excellent: "优秀",
       unknown: "未知",
     },
@@ -593,6 +598,10 @@ const translations = {
     bmi: "身体质量指数",
     dietQuality: "饮食质量",
     chronicDisease: "家族病史",
+    exerciseStatus: {
+      good: "良好",
+      poor: "不足",
+    },
     none: "无",
     stroke: "中风",
     hypertension: "高血压",
@@ -782,7 +791,8 @@ const translations = {
     inactive: "Tidak Aktif",
     optimal: "Optimum",
     good: "Baik",
-    reportGenerated: "Laporan kesihatan telah dihasilkan dan sedia untuk dikongsi atau disimpan.",
+    reportGenerated:
+      "Laporan kesihatan telah dihasilkan dan sedia untuk dikongsi atau disimpan.",
     needsImprovement: "Perlu Ditingkatkan",
     unknown: "Tidak Diketahui",
     allSources: "Semua",
@@ -859,6 +869,10 @@ const translations = {
     daily: "Harian",
     weekly: "Mingguan",
     monthly: "Bulanan",
+    exerciseStatus: {
+      good: "Baik",
+      poor: "Kurang",
+    },
     male: "Lelaki",
     female: "Perempuan",
     errorPrivacyPolicy: "Tidak dapat membuka dasar privasi",
@@ -1020,16 +1034,16 @@ const translations = {
     high: "Tinggi",
     bmiPlaceholder: "Dikira Secara Automatik",
     dietQuality: {
-      label: "Kualiti Diet",
-      poor: "Lemah",
+      label: "Kualiti Pemakanan",
+      poor: "Kurang baik",
       average: "Sederhana",
       good: "Baik",
       excellent: "Cemerlang",
-      unknown: "Tidak Diketahui",
-      personalInfoTitle: "Maklumat Peribadi",
-      healthHabitsTitle: "Tabiat Kesihatan & Aktiviti",
-      lifestyleTitle: "Gaya Hidup & Kesejahteraan",
+      unknown: "Tidak diketahui",
     },
+    personalInfoTitle: "Maklumat Peribadi",
+    healthHabitsTitle: "Tabiat Kesihatan & Aktiviti",
+    lifestyleTitle: "Gaya Hidup & Kesejahteraan",
   },
 };
 

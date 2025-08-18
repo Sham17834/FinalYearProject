@@ -120,6 +120,7 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto-Bold",
     color: "#1D3557",
     paddingLeft: 4,
+    marginBottom: 4,
   },
   metricsGrid: {
     flexDirection: "row",
@@ -760,8 +761,7 @@ const HealthHomeScreen = () => {
           Exercise_Frequency: Number(record.Exercise_Frequency) || 0,
           Alcohol_Consumption: record.Alcohol_Consumption || t.no || "No",
           Smoking_Habit: record.Smoking_Habit || t.no || "No",
-          Diet_Quality:
-            record.Diet_Quality || t.dietQuality?.unknown || "Unknown",
+          Diet_Quality: record.Diet_Quality || "unknown",
           FRUITS_VEGGIES: Number(record.FRUITS_VEGGIES) || 0,
           Stress_Level: Number(record.Stress_Level) || 1,
           Screen_Time_Hours: Number(record.Screen_Time_Hours) || 0,
@@ -1022,11 +1022,13 @@ const HealthHomeScreen = () => {
                 "#8A2BE2"
               )}
               {renderMetricCard(
-                t.exercise || "Exercise",
+                t.exercise,
                 lifestyleData?.Exercise_Frequency !== undefined
-                  ? `${lifestyleData.Exercise_Frequency}/${t.daysPerWeek || "week"}`
-                  : `0/${t.daysPerWeek || "week"}`,
-                getExerciseStatus(lifestyleData?.Exercise_Frequency),
+                  ? `${lifestyleData.Exercise_Frequency}/${t.daysPerWeek}`
+                  : `0/${t.daysPerWeek}`,
+                lifestyleData?.Exercise_Frequency >= 3
+                  ? t.exerciseStatus.good
+                  : t.exerciseStatus.poor,
                 "fitness-center",
                 "#FF9500"
               )}
@@ -1040,8 +1042,10 @@ const HealthHomeScreen = () => {
               {t.lifestyleFactors || "Lifestyle Factors"}
             </Text>
             {renderFullWidthMetricCard(
-              t.dietQuality?.label || "Diet Quality",
-              getDietQualityText(lifestyleData?.Diet_Quality),
+              t.dietQuality || "Diet Quality",
+              lifestyleData?.Diet_Quality !== undefined
+                ? getDietQualityText(lifestyleData.Diet_Quality, t)
+                : t.dietQuality?.unknown || "Unknown",
               "",
               "restaurant",
               "#4CAF50"
