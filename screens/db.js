@@ -13,9 +13,20 @@ export const getDb = async () => {
       fullName TEXT,
       email TEXT UNIQUE,
       password TEXT,
-      createdAt TEXT
+      createdAt TEXT,
+      updatedAt TEXT
     );
   `);
+
+  try {
+    await db.execAsync(`
+      ALTER TABLE Users ADD COLUMN updatedAt TEXT;
+    `);
+  } catch (error) {
+    if (!error.message.includes("duplicate column name")) {
+      console.log("updatedAt column may already exist");
+    }
+  }
 
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS UserProfile (

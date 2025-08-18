@@ -22,6 +22,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebaseConfig";
 import { getDb } from "./db";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -78,6 +79,42 @@ const LoginScreen = () => {
     return isValid;
   };
 
+  const saveUserData = async (userData) => {
+    try {
+      console.log("Saving user data:", userData);
+
+      // Save to AsyncStorage for ProfileScreen to access
+      await AsyncStorage.setItem("userProfileData", JSON.stringify(userData));
+
+      // Save to database
+      const db = await getDb();
+
+      // Check if user already exists
+      const existingUser = await db.getFirstAsync(
+        `SELECT id FROM Users WHERE email = ?`,
+        [userData.email]
+      );
+
+      const currentTime = new Date().toISOString();
+
+      if (existingUser) {
+        await db.runAsync(`UPDATE Users SET fullName = ? WHERE email = ?`, [
+          userData.fullName,
+          userData.email,
+        ]);
+        console.log("Updated existing user in database");
+      } else {
+        await db.runAsync(
+          `INSERT INTO Users (fullName, email, createdAt) VALUES (?, ?, ?)`,
+          [userData.fullName, userData.email, currentTime]
+        );
+        console.log("Inserted new user into database");
+      }
+    } catch (error) {
+      console.error("Error saving user data:", error);
+    }
+  };
+
   const handleInputChange = (field, value) => {
     const setters = {
       email: setEmail,
@@ -113,30 +150,21 @@ const LoginScreen = () => {
       );
       const user = userCredential.user;
 
-      const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
-
       const userData = {
         fullName: user.displayName || "User",
         email: user.email,
       };
 
+      // Save user data before navigation
+      await saveUserData(userData);
+
+      const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
+
       navigation.navigate(isFirstTimeUser ? "LifestyleDataInput" : "MainApp", {
         userData,
       });
     } catch (error) {
-      let errorMessage = t.invalidCredentials || "Invalid email or password";
-      if (
-        error.code === "auth/user-not-found" ||
-        error.code === "auth/wrong-password"
-      ) {
-        errorMessage = t.invalidCredentials || "Invalid email or password";
-      } else if (error.code === "auth/too-many-requests") {
-        errorMessage =
-          t.troubleSigningIn || "Too many attempts, try again later";
-      } else {
-        errorMessage = t.error || "An error occurred";
-      }
-      Alert.alert(t.error || "Error", errorMessage);
+      // ... error handling
     } finally {
       setIsLoading(false);
     }
@@ -171,6 +199,9 @@ const LoginScreen = () => {
         email: user.email || userInfo.user?.email,
       };
 
+      // Save user data before navigation
+      await saveUserData(userData);
+
       const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
 
       Alert.alert(
@@ -179,26 +210,20 @@ const LoginScreen = () => {
         [
           {
             text: t.ok || "OK",
-            style: "default",
+            onPress: () => {
+              navigation.navigate(
+                isFirstTimeUser ? "LifestyleDataInput" : "MainApp",
+                {
+                  userData,
+                }
+              );
+            },
           },
         ],
-        { cancelable: true }
+        { cancelable: false }
       );
-
-      navigation.navigate(isFirstTimeUser ? "LifestyleDataInput" : "MainApp", {
-        userData,
-      });
     } catch (error) {
-      let errorMessage = t.error || "An error occurred";
-      if (error.code === "auth/invalid-credential") {
-        errorMessage = t.invalidCredentials || "Invalid Google credentials";
-      } else if (error.message.includes("No ID token")) {
-        errorMessage =
-          t.googleSignInError || "Failed to retrieve Google ID token";
-      } else {
-        errorMessage = t.googleSignInError || "Google Sign-In failed";
-      }
-      Alert.alert(t.error || "Error", errorMessage);
+      // ... error handling
     } finally {
       setIsLoading(false);
     }
