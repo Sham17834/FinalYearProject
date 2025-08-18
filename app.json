@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "HealthApps",
-    "slug": "HealthApps",
+    "slug": "fyp",
     "version": "1.0.0",
     "assetBundlePatterns": [
       "**/*",
@@ -42,9 +42,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "bdd3ea04-e9e6-40e9-8638-13b9a2cee4f5"
+        "projectId": "c756094c-6d93-4725-a12f-015631077166"
       }
     },
-    "owner": "sham_17834"
+    "owner": "sham1767"
   }
 }
