@@ -126,7 +126,6 @@ const LoginScreen = () => {
       setErrors({ ...errors, [field]: "" });
     }
   };
-
   const checkIfFirstTimeUser = async (userEmail) => {
     try {
       const db = await getDb();

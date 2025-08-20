@@ -29,8 +29,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      
       "edgeToEdgeEnabled": true,
-      "package": "com.fyp.healthapps"
+      "package": "com.fyp.healthapps",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,7 +40,8 @@
     "plugins": [
       "expo-sqlite",
       "expo-web-browser",
-      "expo-asset"
+      "expo-asset",
+      "expo-font"
     ],
     "extra": {
       "eas": {

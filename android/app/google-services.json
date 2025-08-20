@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "197590438015",
+    "project_id": "fyp-9fbae",
+    "storage_bucket": "fyp-9fbae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:197590438015:android:eaa2a8b33d83e7409a2f4a",
+        "android_client_info": {
+          "package_name": "com.fyp.healthapps"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "197590438015-84oj8si3rlq22pgq73iqsgm8frtp902v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fyp.healthapps",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "197590438015-jkpo6rbjq2icl5uqsqkkik3r85q3s19k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1TvLoGaQhN5S3Dx2E4EdZGe4uw-D183s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "197590438015-jkpo6rbjq2icl5uqsqkkik3r85q3s19k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

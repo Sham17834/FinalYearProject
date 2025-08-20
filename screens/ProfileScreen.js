@@ -144,6 +144,7 @@ const ProfileScreen = () => {
   };
 
   const handleSave = async () => {
+    console.log("Name:", name, "Email:", email);
     if (!validateForm()) return;
 
     const data = { fullName: name, email };

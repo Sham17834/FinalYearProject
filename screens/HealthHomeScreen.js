@@ -1015,8 +1015,8 @@ const HealthHomeScreen = () => {
               {renderMetricCard(
                 t.sleep || "Sleep",
                 lifestyleData?.Sleep_Hours !== undefined
-                  ? `${lifestyleData.Sleep_Hours}${t.hrs || "h"}`
-                  : `0${t.hrs || "h"}`,
+                  ? `${lifestyleData.Sleep_Hours} ${t.hrs || "h"}`
+                  : `0 ${t.hrs || "h"}`,
                 getSleepStatus(lifestyleData?.Sleep_Hours),
                 "bed",
                 "#8A2BE2"
@@ -1071,8 +1071,8 @@ const HealthHomeScreen = () => {
             {renderFullWidthMetricCard(
               t.screenTime || "Screen Time",
               lifestyleData?.Screen_Time_Hours !== undefined
-                ? `${lifestyleData.Screen_Time_Hours}${t.hours?.toLowerCase() || "h"}`
-                : `0${t.hours?.toLowerCase() || "h"}`,
+                ? `${lifestyleData.Screen_Time_Hours} ${t.hours?.toLowerCase() || "h"}`
+                : `0 ${t.hours?.toLowerCase() || "h"}`,
               t.perDay || "per day",
               "devices",
               "#607D8B"
