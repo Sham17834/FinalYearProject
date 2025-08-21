@@ -1042,9 +1042,9 @@ const HealthHomeScreen = () => {
               {t.lifestyleFactors || "Lifestyle Factors"}
             </Text>
             {renderFullWidthMetricCard(
-              t.dietQuality || "Diet Quality",
+              t.dietQuality?.label || "Diet Quality",
               lifestyleData?.Diet_Quality !== undefined
-                ? getDietQualityText(lifestyleData.Diet_Quality, t)
+                ? getDietQualityText(lifestyleData.Diet_Quality)
                 : t.dietQuality?.unknown || "Unknown",
               "",
               "restaurant",

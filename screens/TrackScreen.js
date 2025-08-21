@@ -801,7 +801,7 @@ const TrackScreen = () => {
           <View style={styles.sectionContent}>
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>
-                {t.dietQuality || "Overall Diet Quality"}
+                {t.dietQuality?.label || "Overall Diet Quality"}
               </Text>
               <Picker
                 selectedValue={dietQuality}

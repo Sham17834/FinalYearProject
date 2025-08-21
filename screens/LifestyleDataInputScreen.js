@@ -1237,7 +1237,7 @@ const LifestyleDataInputScreen = () => {
             <>
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>
-                  {t.dietQuality || "Diet Quality"}
+                  {t.dietQuality?.label || "Diet Quality"}
                 </Text>
                 <View style={styles.pickerContainer}>
                   <Picker
@@ -1246,7 +1246,7 @@ const LifestyleDataInputScreen = () => {
                     onValueChange={(itemValue) =>
                       setFormData((prev) => ({ ...prev, dietQuality: itemValue }))
                     }
-                    accessibilityLabel={t.dietQuality || "Diet Quality"}
+                    accessibilityLabel={t.dietQuality?.label || "Diet Quality"}
                   >
                     {dietQualityOptions.map((option) => (
                       <Picker.Item

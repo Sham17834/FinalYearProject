@@ -862,7 +862,7 @@ const ProgressScreen = () => {
       { factor: t.bmi || "BMI", value: 0.2 },
       { factor: t.exerciseFrequency || "Exercise Frequency", value: 0.2 },
       { factor: t.sleep || "Sleep", value: 0.15 },
-      { factor: t.dietQuality || "Diet Quality", value: 0.1 },
+      { factor: t.dietQuality?.label || "Diet Quality", value: 0.1 },
       { factor: t.fruitsVeggies || "Fruits & Veggies", value: 0.1 },
     ],
     [
@@ -1270,7 +1270,7 @@ const ProgressScreen = () => {
               {t.perWeek || "week"}
             </Text>
             <Text style={styles.tooltipText}>
-              {t.dietQuality || "Diet"}: {details.diet_quality || "N/A"}
+              {t.dietQuality?.label || "Diet"}: {details.diet_quality || "N/A"}
             </Text>
             <TouchableOpacity
               style={styles.tooltipCloseButton}
@@ -1491,7 +1491,7 @@ const ProgressScreen = () => {
                           {t.stress || "Stress"}: {item.stress_level || 0}/10
                         </Text>
                         <Text style={styles.progressDetailItem}>
-                          {t.dietQuality.label || "Diet"}:{" "}
+                          {t.dietQuality?.label || "Diet"}:{" "}
                           {item.diet_quality
                             ? t.dietQuality[item.diet_quality.toLowerCase()] ||
                               item.diet_quality

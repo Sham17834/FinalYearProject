@@ -117,25 +117,6 @@ const ProfileScreen = () => {
     return isValid;
   };
 
-  const handleLanguageSelect = async (selectedLanguage) => {
-    try {
-      await changeLanguage(selectedLanguage.code);
-      setShowLanguageModal(false);
-      Alert.alert(
-        t.languageChanged || "Language Changed",
-        t.languageChangedMsg ||
-          "The app language has been updated successfully.",
-        [{ text: t.ok || "OK", style: "default" }]
-      );
-    } catch (error) {
-      Alert.alert(
-        t.error || "Error",
-        t.languageChangeError || "Failed to change language. Please try again.",
-        [{ text: t.ok || "OK", style: "default" }]
-      );
-    }
-  };
-
   const getCurrentLanguageName = () => {
     const currentLang = availableLanguages.find(
       (lang) => lang.code === language
@@ -455,7 +436,10 @@ const ProfileScreen = () => {
                   styles.modalOption,
                   language === lang.code && styles.modalOptionSelected,
                 ]}
-                onPress={() => handleLanguageSelect(lang)}
+                onPress={() => {
+                  changeLanguage(lang.code); // Update language
+                  setShowLanguageModal(false); // Close modal
+                }}
               >
                 <View style={styles.languageOptionContent}>
                   <Text
@@ -716,7 +700,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   securityDescription: {
-    fontSize: 14,
+    fontSize: 12,
     color: COLORS.textSecondary,
   },
   securityStatus: {
