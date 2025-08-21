@@ -92,9 +92,8 @@ const styles = {
   },
   sectionHeader: {
     backgroundColor: "#f8fafc",
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     borderBottomColor: "#e2e8f0",
   },
   sectionTitle: {
@@ -253,6 +252,7 @@ const TrackScreen = () => {
   const navigation = useNavigation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [isScrollEnabled, setIsScrollEnabled] = useState(true);
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("Male");
   const [heightCm, setHeightCm] = useState("");
@@ -260,14 +260,26 @@ const TrackScreen = () => {
   const [bmi, setBmi] = useState("");
   const [chronicDisease, setChronicDisease] = useState("None");
   const [dailySteps, setDailySteps] = useState(5000);
+  const [dailyStepsLive, setDailyStepsLive] = useState(5000);
+  const [isSlidingDailySteps, setIsSlidingDailySteps] = useState(false);
   const [exerciseFrequency, setExerciseFrequency] = useState(3);
+  const [exerciseFrequencyLive, setExerciseFrequencyLive] = useState(3);
+  const [isSlidingExerciseFrequency, setIsSlidingExerciseFrequency] = useState(false);
   const [sleepHours, setSleepHours] = useState(7);
+  const [sleepHoursLive, setSleepHoursLive] = useState(7);
+  const [isSlidingSleepHours, setIsSlidingSleepHours] = useState(false);
   const [alcoholConsumption, setAlcoholConsumption] = useState(false);
   const [smokingHabit, setSmokingHabit] = useState(false);
   const [dietQuality, setDietQuality] = useState("Good");
   const [fruitsVeggies, setFruitsVeggies] = useState(5);
+  const [fruitsVeggiesLive, setFruitsVeggiesLive] = useState(5);
+  const [isSlidingFruitsVeggies, setIsSlidingFruitsVeggies] = useState(false);
   const [stressLevel, setStressLevel] = useState(5);
+  const [stressLevelLive, setStressLevelLive] = useState(5);
+  const [isSlidingStressLevel, setIsSlidingStressLevel] = useState(false);
   const [screenTimeHours, setScreenTimeHours] = useState(4);
+  const [screenTimeHoursLive, setScreenTimeHoursLive] = useState(4);
+  const [isSlidingScreenTimeHours, setIsSlidingScreenTimeHours] = useState(false);
 
   const genderOptions = [
     { label: t.male || "Male", value: "Male" },
@@ -443,7 +455,12 @@ const TrackScreen = () => {
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
       <ScrollView
         style={styles.content}
-        onScroll={(e) => setScrollY(e.nativeEvent.contentOffset.y)}
+        scrollEnabled={isScrollEnabled}
+        onScroll={(e) => {
+          if (isScrollEnabled) {
+            setScrollY(e.nativeEvent.contentOffset.y);
+          }
+        }}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
       >
@@ -590,17 +607,27 @@ const TrackScreen = () => {
                   minimumValue={0}
                   maximumValue={50000}
                   step={100}
-                  value={dailySteps}
+                  value={isSlidingDailySteps ? dailyStepsLive : dailySteps}
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e5e7eb"
-                  onValueChange={(value) => setDailySteps(value)}
+                  onSlidingStart={() => {
+                    setIsSlidingDailySteps(true);
+                    setDailyStepsLive(dailySteps);
+                    setIsScrollEnabled(false);
+                  }}
+                  onSlidingComplete={(value) => {
+                    setDailySteps(Math.round(value));
+                    setIsSlidingDailySteps(false);
+                    setIsScrollEnabled(true);
+                  }}
+                  onValueChange={(value) => setDailyStepsLive(value)}
                 />
                 <View style={styles.sliderRange}>
                   <Text style={styles.rangeLabel}>0</Text>
                   <Text style={styles.rangeLabel}>50,000+</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {Math.round(dailySteps).toLocaleString()} {t.steps || "steps"}
+                  {Math.round(isSlidingDailySteps ? dailyStepsLive : dailySteps).toLocaleString()} {t.steps || "steps"}
                 </Text>
               </View>
             </View>
@@ -614,10 +641,20 @@ const TrackScreen = () => {
                   minimumValue={0}
                   maximumValue={7}
                   step={1}
-                  value={exerciseFrequency}
+                  value={isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency}
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e5e7eb"
-                  onValueChange={(value) => setExerciseFrequency(value)}
+                  onSlidingStart={() => {
+                    setIsSlidingExerciseFrequency(true);
+                    setExerciseFrequencyLive(exerciseFrequency);
+                    setIsScrollEnabled(false);
+                  }}
+                  onSlidingComplete={(value) => {
+                    setExerciseFrequency(value);
+                    setIsSlidingExerciseFrequency(false);
+                    setIsScrollEnabled(true);
+                  }}
+                  onValueChange={(value) => setExerciseFrequencyLive(value)}
                 />
                 <View style={styles.sliderRange}>
                   <Text style={styles.rangeLabel}>
@@ -626,9 +663,9 @@ const TrackScreen = () => {
                   <Text style={styles.rangeLabel}>{t.daily || "Daily"}</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {exerciseFrequency === 1
-                    ? `${exerciseFrequency} ${t.day || "day"}`
-                    : `${exerciseFrequency} ${t.days || "days"}`}{" "}
+                  {(isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency) === 1
+                    ? `${isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency} ${t.day || "day"}`
+                    : `${isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency} ${t.days || "days"}`} {" "}
                   {t.perWeek}
                 </Text>
               </View>
@@ -652,10 +689,20 @@ const TrackScreen = () => {
                   minimumValue={0}
                   maximumValue={12}
                   step={0.5}
-                  value={sleepHours}
+                  value={isSlidingSleepHours ? sleepHoursLive : sleepHours}
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e5e7eb"
-                  onValueChange={(value) => setSleepHours(value)}
+                  onSlidingStart={() => {
+                    setIsSlidingSleepHours(true);
+                    setSleepHoursLive(sleepHours);
+                    setIsScrollEnabled(false);
+                  }}
+                  onSlidingComplete={(value) => {
+                    setSleepHours(value);
+                    setIsSlidingSleepHours(false);
+                    setIsScrollEnabled(true);
+                  }}
+                  onValueChange={(value) => setSleepHoursLive(value)}
                 />
                 <View style={styles.sliderRange}>
                   <Text style={styles.rangeLabel}>{t.poor || "Poor"}</Text>
@@ -664,7 +711,7 @@ const TrackScreen = () => {
                   </Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {sleepHours} {t.hours || "hours"} {t.perNight || "per night"}
+                  {isSlidingSleepHours ? sleepHoursLive : sleepHours} {t.hours || "hours"} {t.perNight || "per night"}
                 </Text>
               </View>
             </View>
@@ -715,10 +762,20 @@ const TrackScreen = () => {
                   minimumValue={0}
                   maximumValue={16}
                   step={0.5}
-                  value={screenTimeHours}
+                  value={isSlidingScreenTimeHours ? screenTimeHoursLive : screenTimeHours}
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e5e7eb"
-                  onValueChange={(value) => setScreenTimeHours(value)}
+                  onSlidingStart={() => {
+                    setIsSlidingScreenTimeHours(true);
+                    setScreenTimeHoursLive(screenTimeHours);
+                    setIsScrollEnabled(false);
+                  }}
+                  onSlidingComplete={(value) => {
+                    setScreenTimeHours(value);
+                    setIsSlidingScreenTimeHours(false);
+                    setIsScrollEnabled(true);
+                  }}
+                  onValueChange={(value) => setScreenTimeHoursLive(value)}
                 />
                 <View style={styles.sliderRange}>
                   <Text style={styles.rangeLabel}>
@@ -729,7 +786,7 @@ const TrackScreen = () => {
                   </Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {screenTimeHours} {t.hours || "hours"} {t.daily || "daily"}
+                  {isSlidingScreenTimeHours ? screenTimeHoursLive : screenTimeHours} {t.hours || "hours"} {t.daily || "daily"}
                 </Text>
               </View>
             </View>
@@ -770,19 +827,29 @@ const TrackScreen = () => {
                   minimumValue={0}
                   maximumValue={15}
                   step={1}
-                  value={fruitsVeggies}
+                  value={isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies}
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e5e7eb"
-                  onValueChange={(value) => setFruitsVeggies(value)}
+                  onSlidingStart={() => {
+                    setIsSlidingFruitsVeggies(true);
+                    setFruitsVeggiesLive(fruitsVeggies);
+                    setIsScrollEnabled(false);
+                  }}
+                  onSlidingComplete={(value) => {
+                    setFruitsVeggies(value);
+                    setIsSlidingFruitsVeggies(false);
+                    setIsScrollEnabled(true);
+                  }}
+                  onValueChange={(value) => setFruitsVeggiesLive(value)}
                 />
                 <View style={styles.sliderRange}>
                   <Text style={styles.rangeLabel}>{t.low || "Low"}</Text>
                   <Text style={styles.rangeLabel}>{t.high || "High"}</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {fruitsVeggies === 1
-                    ? `${fruitsVeggies} ${t.serving || "serving"}`
-                    : `${fruitsVeggies} ${t.servings || "servings"}`}{" "}
+                  {(isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies) === 1
+                    ? `${isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies} ${t.serving || "serving"}`
+                    : `${isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies} ${t.servings || "servings"}`} {" "}
                   {t.daily || "daily"}
                 </Text>
               </View>
@@ -806,10 +873,20 @@ const TrackScreen = () => {
                   minimumValue={1}
                   maximumValue={10}
                   step={1}
-                  value={stressLevel}
+                  value={isSlidingStressLevel ? stressLevelLive : stressLevel}
                   minimumTrackTintColor="#10b981"
                   maximumTrackTintColor="#ef4444"
-                  onValueChange={(value) => setStressLevel(value)}
+                  onSlidingStart={() => {
+                    setIsSlidingStressLevel(true);
+                    setStressLevelLive(stressLevel);
+                    setIsScrollEnabled(false);
+                  }}
+                  onSlidingComplete={(value) => {
+                    setStressLevel(value);
+                    setIsSlidingStressLevel(false);
+                    setIsScrollEnabled(true);
+                  }}
+                  onValueChange={(value) => setStressLevelLive(value)}
                 />
                 <View style={styles.stressIndicator}>
                   <View
@@ -830,7 +907,7 @@ const TrackScreen = () => {
                   <Text style={styles.rangeLabel}>{t.high || "High"}</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {t.level || "Level"} {stressLevel}/10
+                  {t.level || "Level"} {isSlidingStressLevel ? stressLevelLive : stressLevel}/10
                 </Text>
               </View>
             </View>
