@@ -285,6 +285,144 @@ const styles = StyleSheet.create({
   },
 });
 
+const calculateLifestyleScore = (lifestyleData) => {
+  if (!lifestyleData) return 0;
+
+  let totalScore = 0;
+  const maxScore = 100;
+
+  // BMI Score (15 points max)
+  const bmiScore = (() => {
+    const bmi = lifestyleData.BMI;
+    if (!bmi) return 0;
+    if (bmi >= 18.5 && bmi < 25) return 15; // Normal BMI
+    if (bmi >= 17 && bmi < 18.5) return 12; // Slightly underweight
+    if (bmi >= 25 && bmi < 27) return 12; // Slightly overweight
+    if (bmi >= 16 && bmi < 17) return 8; // Underweight
+    if (bmi >= 27 && bmi < 30) return 8; // Overweight
+    if (bmi >= 15 && bmi < 16) return 4; // Very underweight
+    if (bmi >= 30 && bmi < 35) return 4; // Obese class I
+    return 0; // Severely underweight or obese class II+
+  })();
+
+  // Daily Steps Score (15 points max)
+  const stepsScore = (() => {
+    const steps = lifestyleData.Daily_Steps || 0;
+    if (steps >= 10000) return 15; // Excellent
+    if (steps >= 8000) return 12; // Good
+    if (steps >= 6000) return 9; // Fair
+    if (steps >= 4000) return 6; // Poor
+    if (steps >= 2000) return 3; // Very poor
+    return 0; // Sedentary
+  })();
+
+  // Sleep Score (15 points max)
+  const sleepScore = (() => {
+    const hours = lifestyleData.Sleep_Hours || 0;
+    if (hours >= 7 && hours <= 9) return 15; // Optimal sleep
+    if (hours >= 6 && hours < 7) return 12; // Slightly insufficient
+    if (hours > 9 && hours <= 10) return 12; // Slightly excessive
+    if (hours >= 5 && hours < 6) return 8; // Insufficient
+    if (hours > 10 && hours <= 11) return 8; // Excessive
+    if (hours >= 4 && hours < 5) return 4; // Very insufficient
+    if (hours > 11) return 4; // Very excessive
+    return 0; // Severely insufficient or excessive
+  })();
+
+  // Exercise Frequency Score (15 points max)
+  const exerciseScore = (() => {
+    const frequency = lifestyleData.Exercise_Frequency || 0;
+    if (frequency >= 5) return 15; // Very active
+    if (frequency >= 3) return 12; // Active
+    if (frequency >= 2) return 8; // Moderately active
+    if (frequency >= 1) return 4; // Lightly active
+    return 0; // Sedentary
+  })();
+
+  // Diet Quality Score (10 points max)
+  const dietScore = (() => {
+    const quality = lifestyleData.Diet_Quality?.toLowerCase() || "poor";
+    switch (quality) {
+      case "excellent":
+        return 10;
+      case "good":
+        return 8;
+      case "fair":
+        return 6;
+      case "poor":
+        return 2;
+      default:
+        return 0;
+    }
+  })();
+
+  // Fruits & Vegetables Score (10 points max)
+  const fruitsVeggiesScore = (() => {
+    const servings = lifestyleData.FRUITS_VEGGIES || 0;
+    if (servings >= 5) return 10; // Recommended amount
+    if (servings >= 4) return 8;
+    if (servings >= 3) return 6;
+    if (servings >= 2) return 4;
+    if (servings >= 1) return 2;
+    return 0;
+  })();
+
+  // Stress Level Score (10 points max) - Lower stress = higher score
+  const stressScore = (() => {
+    const stress = lifestyleData.Stress_Level || 5;
+    if (stress <= 2) return 10; // Very low stress
+    if (stress <= 4) return 8; // Low stress
+    if (stress <= 6) return 6; // Moderate stress
+    if (stress <= 8) return 3; // High stress
+    return 0; // Very high stress
+  })();
+
+  // Screen Time Score (5 points max) - Less screen time = higher score
+  const screenTimeScore = (() => {
+    const hours = lifestyleData.Screen_Time_Hours || 0;
+    if (hours <= 2) return 5; // Excellent
+    if (hours <= 4) return 4; // Good
+    if (hours <= 6) return 3; // Fair
+    if (hours <= 8) return 2; // Poor
+    if (hours <= 10) return 1; // Very poor
+    return 0; // Excessive
+  })();
+
+  // Smoking Penalty (-10 points)
+  const smokingPenalty = (() => {
+    const smoking = lifestyleData.Smoking_Habit?.toLowerCase() || "no";
+    if (smoking === "yes" || smoking === "daily" || smoking === "heavy")
+      return -10;
+    if (smoking === "occasionally" || smoking === "social") return -5;
+    return 0;
+  })();
+
+  // Alcohol Penalty (-5 points for excessive drinking)
+  const alcoholPenalty = (() => {
+    const alcohol = lifestyleData.Alcohol_Consumption?.toLowerCase() || "no";
+    if (alcohol === "heavy" || alcohol === "daily") return -5;
+    if (alcohol === "frequently") return -2;
+    return 0;
+  })();
+
+  // Calculate total score
+  totalScore =
+    bmiScore +
+    stepsScore +
+    sleepScore +
+    exerciseScore +
+    dietScore +
+    fruitsVeggiesScore +
+    stressScore +
+    screenTimeScore +
+    smokingPenalty +
+    alcoholPenalty;
+
+  // Ensure score is between 0 and 100
+  const finalScore = Math.max(0, Math.min(100, totalScore));
+  return finalScore;
+};
+
 const LifestyleDataInputScreen = () => {
   const { t = {} } = useContext(LanguageContext);
   const navigation = useNavigation();
@@ -365,21 +503,30 @@ const LifestyleDataInputScreen = () => {
           console.log(`Required module: ${JSON.stringify(asset.module)}`);
 
           if (asset.isJson && typeof asset.module === "object") {
-            console.log(`JSON file ${asset.name} parsed by Metro, writing directly...`);
+            console.log(
+              `JSON file ${asset.name} parsed by Metro, writing directly...`
+            );
             const destinationPath = `${FileSystem.documentDirectory}${asset.name}`;
             await FileSystem.writeAsStringAsync(
               destinationPath,
               JSON.stringify(asset.module)
             );
-            console.log(`Successfully wrote ${asset.name} to ${destinationPath}`);
+            console.log(
+              `Successfully wrote ${asset.name} to ${destinationPath}`
+            );
           } else {
-            if (!asset.module || (typeof asset.module === "object" && !asset.module.uri)) {
+            if (
+              !asset.module ||
+              (typeof asset.module === "object" && !asset.module.uri)
+            ) {
               throw new Error(
                 `Invalid module for ${asset.name}. Ensure the file is correctly included in assets/model/ and bundled in app.json.`
               );
             }
             const assetModule = Asset.fromModule(asset.module);
-            console.log(`Asset module resolved: ${JSON.stringify(assetModule)}`);
+            console.log(
+              `Asset module resolved: ${JSON.stringify(assetModule)}`
+            );
             await assetModule.downloadAsync();
             if (!assetModule.localUri) {
               throw new Error(
@@ -387,19 +534,25 @@ const LifestyleDataInputScreen = () => {
               );
             }
             const destinationPath = `${FileSystem.documentDirectory}${asset.name}`;
-            console.log(`Copying from ${assetModule.localUri} to ${destinationPath}`);
+            console.log(
+              `Copying from ${assetModule.localUri} to ${destinationPath}`
+            );
             await FileSystem.copyAsync({
               from: assetModule.localUri,
               to: destinationPath,
             });
-            console.log(`Successfully copied ${asset.name} to ${destinationPath}`);
+            console.log(
+              `Successfully copied ${asset.name} to ${destinationPath}`
+            );
           }
 
           const fileInfo = await FileSystem.getInfoAsync(
             `${FileSystem.documentDirectory}${asset.name}`
           );
           if (!fileInfo.exists) {
-            throw new Error(`Copied file not found at ${FileSystem.documentDirectory}${asset.name}`);
+            throw new Error(
+              `Copied file not found at ${FileSystem.documentDirectory}${asset.name}`
+            );
           }
         } catch (error) {
           console.error(`Error processing asset ${asset.name}:`, error);
@@ -408,7 +561,9 @@ const LifestyleDataInputScreen = () => {
       }
 
       // Log directory contents to confirm files are present
-      const files = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory);
+      const files = await FileSystem.readDirectoryAsync(
+        FileSystem.documentDirectory
+      );
       console.log("Files in document directory:", files);
 
       // Log raw scaler.json content
@@ -447,7 +602,9 @@ const LifestyleDataInputScreen = () => {
         requiredFiles.map(async (filename) => {
           const filePath = `${FileSystem.documentDirectory}${filename}`;
           const fileInfo = await FileSystem.getInfoAsync(filePath);
-          console.log(`Checking file ${filePath}: ${fileInfo.exists ? "exists" : "not found"}`);
+          console.log(
+            `Checking file ${filePath}: ${fileInfo.exists ? "exists" : "not found"}`
+          );
           return fileInfo.exists;
         })
       );
@@ -612,24 +769,40 @@ const LifestyleDataInputScreen = () => {
           );
           console.log("Raw scaler.json content:", scalerContent);
           const scaler = JSON.parse(scalerContent);
-          if (!scaler.mean || !scaler.scale || !Array.isArray(scaler.mean) || !Array.isArray(scaler.scale)) {
-            throw new Error("Invalid scaler.json content: missing or invalid mean or scale arrays");
+          if (
+            !scaler.mean ||
+            !scaler.scale ||
+            !Array.isArray(scaler.mean) ||
+            !Array.isArray(scaler.scale)
+          ) {
+            throw new Error(
+              "Invalid scaler.json content: missing or invalid mean or scale arrays"
+            );
           }
           if (scaler.mean.length !== scaler.scale.length) {
-            throw new Error(`scaler.json mismatch: mean length (${scaler.mean.length}) does not match scale length (${scaler.scale.length})`);
+            throw new Error(
+              `scaler.json mismatch: mean length (${scaler.mean.length}) does not match scale length (${scaler.scale.length})`
+            );
           }
           console.log("scaler:", scaler);
 
           const selectedFeaturesContent = await FileSystem.readAsStringAsync(
             `${FileSystem.documentDirectory}selected_features.json`
           );
-          console.log("Raw selected_features.json content:", selectedFeaturesContent);
+          console.log(
+            "Raw selected_features.json content:",
+            selectedFeaturesContent
+          );
           const selectedFeatures = JSON.parse(selectedFeaturesContent);
           if (!Array.isArray(selectedFeatures)) {
-            throw new Error("Invalid selected_features.json content: not an array");
+            throw new Error(
+              "Invalid selected_features.json content: not an array"
+            );
           }
           if (selectedFeatures.length !== scaler.mean.length) {
-            throw new Error(`Feature mismatch: selectedFeatures length (${selectedFeatures.length}) does not match scaler.mean length (${scaler.mean.length})`);
+            throw new Error(
+              `Feature mismatch: selectedFeatures length (${selectedFeatures.length}) does not match scaler.mean length (${scaler.mean.length})`
+            );
           }
           console.log("selectedFeatures:", selectedFeatures);
 
@@ -639,20 +812,38 @@ const LifestyleDataInputScreen = () => {
 
           // Map categorical features using labelEncoders arrays
           inputData.Gender = labelEncoders.Gender.indexOf(data.Gender);
-          if (inputData.Gender === -1) throw new Error(`Invalid Gender value: ${data.Gender}`);
-          
-          inputData.Chronic_Disease = labelEncoders.Chronic_Disease.indexOf(data.Chronic_Disease);
-          if (inputData.Chronic_Disease === -1) throw new Error(`Invalid Chronic_Disease value: ${data.Chronic_Disease}`);
-          
-          inputData.Alcohol_Consumption = labelEncoders.Alcohol_Consumption.indexOf(data.Alcohol_Consumption);
-          if (inputData.Alcohol_Consumption === -1) throw new Error(`Invalid Alcohol_Consumption value: ${data.Alcohol_Consumption}`);
-          
-          inputData.Smoking_Habit = labelEncoders.Smoking_Habit.indexOf(data.Smoking_Habit);
-          if (inputData.Smoking_Habit === -1) throw new Error(`Invalid Smoking_Habit value: ${data.Smoking_Habit}`);
-          
-          inputData.Diet_Quality = labelEncoders.Diet_Quality.indexOf(data.Diet_Quality);
-          if (inputData.Diet_Quality === -1) throw new Error(`Invalid Diet_Quality value: ${data.Diet_Quality}`);
-          
+          if (inputData.Gender === -1)
+            throw new Error(`Invalid Gender value: ${data.Gender}`);
+
+          inputData.Chronic_Disease = labelEncoders.Chronic_Disease.indexOf(
+            data.Chronic_Disease
+          );
+          if (inputData.Chronic_Disease === -1)
+            throw new Error(
+              `Invalid Chronic_Disease value: ${data.Chronic_Disease}`
+            );
+
+          inputData.Alcohol_Consumption =
+            labelEncoders.Alcohol_Consumption.indexOf(data.Alcohol_Consumption);
+          if (inputData.Alcohol_Consumption === -1)
+            throw new Error(
+              `Invalid Alcohol_Consumption value: ${data.Alcohol_Consumption}`
+            );
+
+          inputData.Smoking_Habit = labelEncoders.Smoking_Habit.indexOf(
+            data.Smoking_Habit
+          );
+          if (inputData.Smoking_Habit === -1)
+            throw new Error(
+              `Invalid Smoking_Habit value: ${data.Smoking_Habit}`
+            );
+
+          inputData.Diet_Quality = labelEncoders.Diet_Quality.indexOf(
+            data.Diet_Quality
+          );
+          if (inputData.Diet_Quality === -1)
+            throw new Error(`Invalid Diet_Quality value: ${data.Diet_Quality}`);
+
           console.log("inputData after encoding:", inputData);
 
           // Create feature array
@@ -666,8 +857,14 @@ const LifestyleDataInputScreen = () => {
 
           // Scale features
           const scaledFeatures = featureArray.map((value, index) => {
-            if (isNaN(value) || scaler.mean[index] === undefined || scaler.scale[index] === undefined) {
-              throw new Error(`Invalid scaling at index ${index}: value=${value}, mean=${scaler.mean[index]}, scale=${scaler.scale[index]}`);
+            if (
+              isNaN(value) ||
+              scaler.mean[index] === undefined ||
+              scaler.scale[index] === undefined
+            ) {
+              throw new Error(
+                `Invalid scaling at index ${index}: value=${value}, mean=${scaler.mean[index]}, scale=${scaler.scale[index]}`
+              );
             }
             return (value - scaler.mean[index]) / scaler.scale[index];
           });
@@ -682,7 +879,7 @@ const LifestyleDataInputScreen = () => {
           console.log("inputTensor:", {
             type: inputTensor.type,
             dims: inputTensor.dims,
-            data: Array.from(inputTensor.data)
+            data: Array.from(inputTensor.data),
           });
 
           // Verify .onnx files exist
@@ -704,79 +901,122 @@ const LifestyleDataInputScreen = () => {
             console.log(`Creating inference session for ${modelPaths[i]}`);
             const session = await ort.InferenceSession.create(modelPaths[i]);
             if (!session) {
-              throw new Error(`Failed to create InferenceSession for ${modelPaths[i]}`);
+              throw new Error(
+                `Failed to create InferenceSession for ${modelPaths[i]}`
+              );
             }
             const feeds = { float_input: inputTensor };
             console.log("feeds:", {
               float_input: {
                 type: inputTensor.type,
                 dims: inputTensor.dims,
-                data: Array.from(inputTensor.data)
-              }
+                data: Array.from(inputTensor.data),
+              },
             });
             try {
               const results = await session.run(feeds);
-              console.log("Inference results:", JSON.stringify(results, (key, value) => {
-                if (value instanceof Float32Array || value instanceof Float64Array) {
-                  return Array.from(value);
-                }
-                if (typeof value === 'bigint') {
-                  return Number(value);
-                }
-                if (value instanceof Int8Array || value instanceof Uint8Array || 
-                    value instanceof Int16Array || value instanceof Uint16Array || 
-                    value instanceof Int32Array || value instanceof Uint32Array || 
-                    value instanceof BigInt64Array || value instanceof BigUint64Array) {
-                  return Array.from(value).map(v => Number(v));
-                }
-                return value;
-              }));
+              console.log(
+                "Inference results:",
+                JSON.stringify(results, (key, value) => {
+                  if (
+                    value instanceof Float32Array ||
+                    value instanceof Float64Array
+                  ) {
+                    return Array.from(value);
+                  }
+                  if (typeof value === "bigint") {
+                    return Number(value);
+                  }
+                  if (
+                    value instanceof Int8Array ||
+                    value instanceof Uint8Array ||
+                    value instanceof Int16Array ||
+                    value instanceof Uint16Array ||
+                    value instanceof Int32Array ||
+                    value instanceof Uint32Array ||
+                    value instanceof BigInt64Array ||
+                    value instanceof BigUint64Array
+                  ) {
+                    return Array.from(value).map((v) => Number(v));
+                  }
+                  return value;
+                })
+              );
 
               // Try 'probabilities' output first, then 'label'
               let prediction;
-              let probabilitiesData = results.probabilities && (results.probabilities.cpuData || results.probabilities.data);
-              let labelData = results.label && (results.label.cpuData || results.label.data);
+              let probabilitiesData =
+                results.probabilities &&
+                (results.probabilities.cpuData || results.probabilities.data);
+              let labelData =
+                results.label && (results.label.cpuData || results.label.data);
 
-              console.log("probabilitiesData type:", probabilitiesData ? Object.prototype.toString.call(probabilitiesData) : 'undefined');
-              console.log("labelData type:", labelData ? Object.prototype.toString.call(labelData) : 'undefined');
+              console.log(
+                "probabilitiesData type:",
+                probabilitiesData
+                  ? Object.prototype.toString.call(probabilitiesData)
+                  : "undefined"
+              );
+              console.log(
+                "labelData type:",
+                labelData
+                  ? Object.prototype.toString.call(labelData)
+                  : "undefined"
+              );
 
               if (probabilitiesData && probabilitiesData.length === 2) {
                 console.log("Using 'probabilities' output:", {
                   dims: results.probabilities.dims,
-                  data: Array.from(probabilitiesData)
+                  data: Array.from(probabilitiesData),
                 });
-                if (results.probabilities.dims[0] !== 1 || results.probabilities.dims[1] !== 2) {
-                  throw new Error(`Invalid probabilities shape for ${modelPaths[i]}. Expected [1, 2], got ${JSON.stringify(results.probabilities.dims)}`);
+                if (
+                  results.probabilities.dims[0] !== 1 ||
+                  results.probabilities.dims[1] !== 2
+                ) {
+                  throw new Error(
+                    `Invalid probabilities shape for ${modelPaths[i]}. Expected [1, 2], got ${JSON.stringify(results.probabilities.dims)}`
+                  );
                 }
                 // Use the positive class probability (index 1)
                 prediction = probabilitiesData[1] > 0.5 ? 1 : 0;
               } else if (labelData && labelData.length === 1) {
                 console.log("Using 'label' output:", {
                   dims: results.label.dims,
-                  data: Array.from(labelData).map(v => Number(v))
+                  data: Array.from(labelData).map((v) => Number(v)),
                 });
                 if (results.label.dims[0] !== 1) {
-                  throw new Error(`Invalid label shape for ${modelPaths[i]}. Expected [1,], got ${JSON.stringify(results.label.dims)}`);
+                  throw new Error(
+                    `Invalid label shape for ${modelPaths[i]}. Expected [1,], got ${JSON.stringify(results.label.dims)}`
+                  );
                 }
                 // Convert BigInt to Number
                 prediction = Number(labelData[0]);
-                if (isNaN(prediction) || (prediction !== 0 && prediction !== 1)) {
-                  throw new Error(`Invalid label value for ${modelPaths[i]}: ${labelData[0]}`);
+                if (
+                  isNaN(prediction) ||
+                  (prediction !== 0 && prediction !== 1)
+                ) {
+                  throw new Error(
+                    `Invalid label value for ${modelPaths[i]}: ${labelData[0]}`
+                  );
                 }
               } else {
                 const outputKeys = Object.keys(results);
-                throw new Error(`No valid output ('probabilities' or 'label') found for ${modelPaths[i]}. Available keys: ${JSON.stringify(outputKeys)}`);
+                throw new Error(
+                  `No valid output ('probabilities' or 'label') found for ${modelPaths[i]}. Available keys: ${JSON.stringify(outputKeys)}`
+                );
               }
 
               predictions[
                 i === 0
                   ? "Obesity_Flag"
                   : i === 1
-                  ? "Hypertension_Flag"
-                  : "Stroke_Flag"
+                    ? "Hypertension_Flag"
+                    : "Stroke_Flag"
               ] = prediction;
             } catch (runError) {
-              throw new Error(`Inference failed for ${modelPaths[i]}: ${runError.message}`);
+              throw new Error(
+                `Inference failed for ${modelPaths[i]}: ${runError.message}`
+              );
             }
           }
           console.log("Offline predictions completed:", predictions);
@@ -824,14 +1064,16 @@ const LifestyleDataInputScreen = () => {
         Stroke_Flag: JSON.stringify(predictions.Stroke_Flag || 0),
       };
 
+      const lifestyleScore = calculateLifestyleScore(data);
+
       const db = await getDb();
       await db.runAsync(
         `INSERT INTO UserProfile (
           date, Age, Gender, Height_cm, Weight_kg, BMI, Chronic_Disease,
           Daily_Steps, Exercise_Frequency, Sleep_Hours, Alcohol_Consumption,
           Smoking_Habit, Diet_Quality, Stress_Level, FRUITS_VEGGIES, Screen_Time_Hours,
-          Salt_Intake, Obesity_Flag, Hypertension_Flag, Stroke_Flag
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          Salt_Intake, Obesity_Flag, Hypertension_Flag, Stroke_Flag, Lifestyle_Score
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           fullData.date,
           fullData.Age,
@@ -853,12 +1095,14 @@ const LifestyleDataInputScreen = () => {
           fullData.Obesity_Flag,
           fullData.Hypertension_Flag,
           fullData.Stroke_Flag,
+          lifestyleScore
         ]
       );
 
       navigation.navigate("MainApp", {
         lifestyleData: data,
         predictionData: predictions,
+        lifestyleScore, 
       });
     } catch (error) {
       console.error("Error in handleSubmit:", error);
@@ -1016,7 +1260,9 @@ const LifestyleDataInputScreen = () => {
                     onFocus={() => setFocusedInput("heightCm")}
                     onBlur={() => setFocusedInput(null)}
                     accessibilityLabel={t.heightCm || "Height in centimeters"}
-                    accessibilityHint={t.enterHeight || "Enter your height in cm"}
+                    accessibilityHint={
+                      t.enterHeight || "Enter your height in cm"
+                    }
                   />
                   {errors.heightCm ? (
                     <Text style={styles.errorText}>{errors.heightCm}</Text>
@@ -1046,7 +1292,9 @@ const LifestyleDataInputScreen = () => {
                     onFocus={() => setFocusedInput("weightKg")}
                     onBlur={() => setFocusedInput(null)}
                     accessibilityLabel={t.weightKg || "Weight in kilograms"}
-                    accessibilityHint={t.enterWeight || "Enter your weight in kg"}
+                    accessibilityHint={
+                      t.enterWeight || "Enter your weight in kg"
+                    }
                   />
                   {errors.weightKg ? (
                     <Text style={styles.errorText}>{errors.weightKg}</Text>
@@ -1146,7 +1394,9 @@ const LifestyleDataInputScreen = () => {
                       exerciseFrequency: value,
                     }))
                   }
-                  accessibilityLabel={t.exerciseFrequency || "Exercise Frequency"}
+                  accessibilityLabel={
+                    t.exerciseFrequency || "Exercise Frequency"
+                  }
                   accessibilityValue={{
                     text: `${formData.exerciseFrequency} days per week`,
                   }}
@@ -1207,8 +1457,12 @@ const LifestyleDataInputScreen = () => {
                       }))
                     }
                     trackColor={{ false: "#e2e8f0", true: "#14b8a6" }}
-                    thumbColor={formData.alcoholConsumption ? "#ffffff" : "#f4f3f4"}
-                    accessibilityLabel={t.alcoholConsumption || "Alcohol Consumption"}
+                    thumbColor={
+                      formData.alcoholConsumption ? "#ffffff" : "#f4f3f4"
+                    }
+                    accessibilityLabel={
+                      t.alcoholConsumption || "Alcohol Consumption"
+                    }
                   />
                 </View>
               </View>
@@ -1244,7 +1498,10 @@ const LifestyleDataInputScreen = () => {
                     selectedValue={formData.dietQuality}
                     style={styles.picker}
                     onValueChange={(itemValue) =>
-                      setFormData((prev) => ({ ...prev, dietQuality: itemValue }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        dietQuality: itemValue,
+                      }))
                     }
                     accessibilityLabel={t.dietQuality?.label || "Diet Quality"}
                   >
@@ -1308,7 +1565,9 @@ const LifestyleDataInputScreen = () => {
                     setFormData((prev) => ({ ...prev, stressLevel: value }))
                   }
                   accessibilityLabel={t.stressLevel || "Stress Level"}
-                  accessibilityValue={{ text: `${formData.stressLevel} out of 10` }}
+                  accessibilityValue={{
+                    text: `${formData.stressLevel} out of 10`,
+                  }}
                 />
                 <View style={styles.sliderLabelRow}>
                   <Text style={styles.sliderMinMaxLabel}>
@@ -1318,14 +1577,21 @@ const LifestyleDataInputScreen = () => {
                     {t.highStress || "High"}
                   </Text>
                 </View>
-                <Text style={styles.sliderValue}>{formData.stressLevel}/10</Text>
+                <Text style={styles.sliderValue}>
+                  {formData.stressLevel}/10
+                </Text>
                 <View style={styles.stressLevelIndicator}>
-                  {getStressLevelColors(formData.stressLevel).map((color, index) => (
-                    <View
-                      key={index}
-                      style={[styles.stressLevelColor, { backgroundColor: color }]}
-                    />
-                  ))}
+                  {getStressLevelColors(formData.stressLevel).map(
+                    (color, index) => (
+                      <View
+                        key={index}
+                        style={[
+                          styles.stressLevelColor,
+                          { backgroundColor: color },
+                        ]}
+                      />
+                    )
+                  )}
                 </View>
               </View>
 
@@ -1345,7 +1611,9 @@ const LifestyleDataInputScreen = () => {
                   onValueChange={(value) =>
                     setFormData((prev) => ({ ...prev, screenTimeHours: value }))
                   }
-                  accessibilityLabel={t.screenTimeHours || "Screen Time hours per day"}
+                  accessibilityLabel={
+                    t.screenTimeHours || "Screen Time hours per day"
+                  }
                   accessibilityValue={{
                     text: `${formData.screenTimeHours} hours per day`,
                   }}
@@ -1392,11 +1660,15 @@ const LifestyleDataInputScreen = () => {
                 onPress={handleSubmit}
                 disabled={isSubmitting}
                 accessibilityLabel={
-                  isSubmitting ? (t.submitting || "Submitting") : (t.submit || "Submit")
+                  isSubmitting
+                    ? t.submitting || "Submitting"
+                    : t.submit || "Submit"
                 }
               >
                 <Text style={styles.primaryButtonText}>
-                  {isSubmitting ? t.submitting || "Submitting..." : t.submit || "Submit"}
+                  {isSubmitting
+                    ? t.submitting || "Submitting..."
+                    : t.submit || "Submit"}
                 </Text>
               </TouchableOpacity>
             )}

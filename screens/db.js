@@ -52,7 +52,8 @@ export const getDb = async () => {
       Hypertension_Flag TEXT,
       Stroke_Flag TEXT,
       Full_Name TEXT,
-      email TEXT
+      email TEXT,
+      Lifestyle_Score INTEGER
     );
   `);
 

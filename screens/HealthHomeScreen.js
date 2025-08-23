@@ -15,10 +15,8 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import Svg, { Circle } from "react-native-svg";
 import { LanguageContext } from "./LanguageContext";
 import { getDb } from "./db.js";
-import RNHTMLtoPDF from "react-native-html-to-pdf";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
-import * as FileSystem from "expo-file-system";
 
 const { width } = Dimensions.get("window");
 
@@ -305,7 +303,7 @@ class ErrorBoundary extends React.Component {
       return (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
-            {this.state.error?.message || t.unknown || "Unknown error"}
+            {this.state.error?.message || this.props.t?.unknown || "Unknown error"}
           </Text>
         </View>
       );
@@ -435,11 +433,11 @@ const HealthHomeScreen = () => {
   const route = useRoute();
   const [lifestyleData, setLifestyleData] = useState(null);
   const [predictionData, setPredictionData] = useState(null);
-  const [localScore, setLocalScore] = useState(75);
+  const [lifestyleScore, setLifestyleScore] = useState(null);
   const [diseaseRisks, setDiseaseRisks] = useState({
-    obesity: 1,
-    hypertension: 1,
-    stroke: 1,
+    obesity: 0,
+    hypertension: 0,
+    stroke: 0,
   });
   const fadeAnim = new Animated.Value(0.8);
   const slideAnim = new Animated.Value(10);
@@ -496,242 +494,175 @@ const HealthHomeScreen = () => {
 
   const getDietQualityText = (dietQuality) => {
     if (!dietQuality) return t.dietQuality?.unknown || "Unknown";
-    return (
-      t.dietQuality?.[dietQuality.toLowerCase()] ||
-      dietQuality ||
-      t.dietQuality?.unknown ||
-      "Unknown"
-    );
+    switch (dietQuality.toLowerCase()) {
+      case "excellent": return t.dietQuality?.excellent || "Excellent";
+      case "good": return t.dietQuality?.good || "Good";
+      case "fair": return t.dietQuality?.fair || "Fair";
+      case "poor": return t.dietQuality?.poor || "Poor";
+      default: return t.dietQuality?.unknown || "Unknown";
+    }
   };
 
   const formatNumber = (num) => {
-    if (!num) return "0";
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return num?.toLocaleString() || "0";
   };
 
   const generatePersonalizedTips = () => {
     const tips = [];
-    if (lifestyleData?.BMI && lifestyleData.BMI >= 25) {
+    if (!lifestyleData) return tips;
+
+    if (lifestyleData.BMI >= 30) {
       tips.push({
-        text:
-          t.maintainHealthyWeight || "Focus on maintaining a healthy weight",
-        icon: "accessibility",
+        text: t.tips?.bmiHigh || "Consult a nutritionist to manage your weight.",
+        icon: "monitor-weight",
+      });
+    } else if (lifestyleData.BMI < 18.5) {
+      tips.push({
+        text: t.tips?.bmiLow || "Increase calorie intake with healthy foods.",
+        icon: "monitor-weight",
       });
     }
-    if (lifestyleData?.Daily_Steps < 5000) {
+
+    if (lifestyleData.Daily_Steps < 5000) {
       tips.push({
-        text:
-          t.increaseWalkingSteps || "Walk 8000+ steps daily for better health",
+        text: t.tips?.lowSteps || "Aim for at least 10,000 steps daily.",
         icon: "directions-walk",
       });
     }
-    if (lifestyleData?.Sleep_Hours < 6) {
+
+    if (lifestyleData.Sleep_Hours < 6) {
       tips.push({
-        text: t.improvesSleepQuality || "Aim for 7-9 hours of sleep nightly",
+        text: t.tips?.lowSleep || "Aim for 7-9 hours of sleep per night.",
         icon: "bed",
       });
     }
-    if (lifestyleData?.Exercise_Frequency < 3) {
+
+    if (lifestyleData.Exercise_Frequency < 3) {
       tips.push({
-        text: t.increasePhysicalActivity || "Try to exercise 3+ days/week",
+        text: t.tips?.lowExercise || "Incorporate exercise 3-5 times per week.",
         icon: "fitness-center",
       });
     }
-    if (lifestyleData?.FRUITS_VEGGIES < 5) {
+
+    if (lifestyleData.Stress_Level > 7) {
       tips.push({
-        text:
-          t.eatMoreFruitsVeggies || "Eat 5+ servings of fruits/veggies daily",
-        icon: "local-dining",
-      });
-    }
-    if (lifestyleData?.Diet_Quality?.toLowerCase() === "poor") {
-      tips.push({
-        text: t.eatMoreVegetables || "Eat more vegetables",
-        icon: "local-dining",
-      });
-    }
-    if (lifestyleData?.Stress_Level > 7) {
-      tips.push({
-        text: t.manageStressLevels || "Practice meditation to reduce stress",
+        text: t.tips?.highStress || "Practice mindfulness or meditation to reduce stress.",
         icon: "mood",
       });
     }
-    return tips.length > 0
-      ? tips
-      : [
-          {
-            text:
-              t.generalTip ||
-              "Maintain a balanced lifestyle for optimal health.",
-            icon: "favorite",
-          },
-        ];
+
+    if (lifestyleData.FRUITS_VEGGIES < 5) {
+      tips.push({
+        text: t.tips?.lowFruitVeggie || "Increase fruit and vegetable intake to 5+ servings daily.",
+        icon: "local-dining",
+      });
+    }
+
+    if (lifestyleData.Screen_Time_Hours > 6) {
+      tips.push({
+        text: t.tips?.highScreenTime || "Reduce screen time to improve overall health.",
+        icon: "devices",
+      });
+    }
+
+    if (lifestyleData.Smoking_Habit === "Yes") {
+      tips.push({
+        text: t.tips?.smoking || "Consider quitting smoking for better health.",
+        icon: "smoking-rooms",
+      });
+    }
+
+    if (lifestyleData.Alcohol_Consumption === "Yes") {
+      tips.push({
+        text: t.tips?.alcohol || "Limit alcohol consumption for better health outcomes.",
+        icon: "local-drink",
+      });
+    }
+
+    return tips;
   };
 
   const downloadHealthReport = async () => {
-    try {
-      if (!lifestyleData || !predictionData) {
-        Alert.alert(
-          t.error || "Error",
-          t.noData || "Please submit your lifestyle data to generate a report."
-        );
-        return;
-      }
-
-      console.log("Document Directory:", FileSystem.documentDirectory);
-      console.log("Cache Directory:", FileSystem.cacheDirectory);
-
-      const date = new Date().toLocaleDateString();
-      const htmlContent = `
-        <html>
-          <head>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 20px; color: #1D3557; }
-              h1 { color: #008080; text-align: center; }
-              h2 { color: #457B9D; }
-              .section { margin-bottom: 20px; }
-              .metric { margin: 10px 0; }
-              .metric-title { font-weight: bold; color: #457B9D; }
-              .metric-value { font-size: 18px; color: #1D3557; }
-              .risk { margin: 10px 0; }
-              .risk-title { font-weight: bold; color: #457B9D; }
-              .tip { margin: 10px 0; color: #34C759; }
-            </style>
-          </head>
-          <body>
-            <h1>${t.healthAssessmentRecord || "Health Report"}</h1>
-            <p style="text-align: center;">${t.date || "Generated on"} ${date}</p>
-            
-            <div class="section">
-              <h2>${t.keyMetrics || "Key Metrics"}</h2>
-              <div class="metric">
-                <span class="metric-title">${t.bmiLabel?.replace(": ", "") || "BMI"}:</span>
-                <span class="metric-value">${lifestyleData?.BMI?.toFixed(1) || t.unknown || "Unknown"} (${getBMICategory(lifestyleData?.BMI)})</span>
-              </div>
-              <div class="metric">
-                <span class="metric-title">${t.steps || "Steps"}:</span>
-                <span class="metric-value">${formatNumber(lifestyleData?.Daily_Steps) || "0"} (${t.daily || "Daily"})</span>
-              </div>
-              <div class="metric">
-                <span class="metric-title">${t.sleep || "Sleep"}:</span>
-                <span class="metric-value">${lifestyleData?.Sleep_Hours || 0}${t.hrs || "h"} (${getSleepStatus(lifestyleData?.Sleep_Hours)})</span>
-              </div>
-              <div class="metric">
-                <span class="metric-title">${t.exercise || "Exercise"}:</span>
-                <span class="metric-value">${lifestyleData?.Exercise_Frequency || 0}/${t.week || "week"} (${getExerciseStatus(lifestyleData?.Exercise_Frequency)})</span>
-              </div>
-            </div>
-
-            <div class="section">
-              <h2>${t.lifestyleFactors || "Lifestyle Factors"}</h2>
-              <div class="metric">
-                <span class="metric-title">${t.dietQuality?.label || "Diet Quality"}:</span>
-                <span class="metric-value">${getDietQualityText(lifestyleData?.Diet_Quality)}</span>
-              </div>
-              <div class="metric">
-                <span class="metric-title">${t.fruitsVeggies || "Fruits & Vegetables"}:</span>
-                <span class="metric-value">${lifestyleData?.FRUITS_VEGGIES || 0} ${t.servingsDaily || "servings/day"}</span>
-              </div>
-              <div class="metric">
-                <span class="metric-title">${t.stressLevel || "Stress Level"}:</span>
-                <span class="metric-value">${getStressLevelText(lifestyleData?.Stress_Level)} (${lifestyleData?.Stress_Level || 0}/10)</span>
-              </div>
-              <div class="metric">
-                <span class="metric-title">${t.screenTime || "Screen Time"}:</span>
-                <span class="metric-value">${lifestyleData?.Screen_Time_Hours || 0}${t.hours?.toLowerCase() || "h"} ${t.perDay || "per day"}</span>
-              </div>
-            </div>
-
-            <div class="section">
-              <h2>${t.chronicDiseaseRisk || "Chronic Disease Risk"}</h2>
-              <div class="risk">
-                <span class="risk-title">${t.obesityRisk || "Obesity Risk"}:</span>
-                <span class="metric-value">${(diseaseRisks.obesity || 0).toFixed(2)}% (${diseaseRisks.obesity >= 67 ? t.high || "High" : diseaseRisks.obesity >= 34 ? t.medium || "Medium" : t.low || "Low"})</span>
-              </div>
-              <div class="risk">
-                <span class="risk-title">${t.hypertensionRisk || "Hypertension Risk"}:</span>
-                <span class="metric-value">${(diseaseRisks.hypertension || 0).toFixed(2)}% (${diseaseRisks.hypertension >= 67 ? t.high || "High" : diseaseRisks.hypertension >= 34 ? t.medium || "Medium" : t.low || "Low"})</span>
-              </div>
-              <div class="risk">
-                <span class="risk-title">${t.strokeRisk || "Stroke Risk"}:</span>
-                <span class="metric-value">${(diseaseRisks.stroke || 0).toFixed(2)}% (${diseaseRisks.stroke >= 67 ? t.high || "High" : diseaseRisks.stroke >= 34 ? t.medium || "Medium" : t.low || "Low"})</span>
-              </div>
-            </div>
-
-            <div class="section">
-              <h2>${t.personalizedTips || "Personalized Tips"}</h2>
-              ${generatePersonalizedTips()
-                .map((tip) => `<div class="tip">${tip.text}</div>`)
-                .join("")}
-            </div>
-          </body>
-        </html>
-      `;
-
-      const fileName = `HealthReport_${date.replace(/\//g, "-")}.pdf`;
-      const options = {
-        html: htmlContent,
-        fileName: fileName.replace(".pdf", ""),
-        directory: "Documents",
-      };
-
-      console.log("Generating PDF with options:", options);
-
-      const file = await RNHTMLtoPDF.convert(options);
-      console.log("PDF generation result:", file);
-
-      if (!file.filePath) {
-        throw new Error(
-          t.errorSubmission || "PDF creation failed: No file path returned"
-        );
-      }
-
-      const validFilePath = file.filePath.startsWith("file://")
-        ? file.filePath
-        : `file://${file.filePath}`;
-      console.log("Valid file path for sharing:", validFilePath);
-
-      const fileInfo = await FileSystem.getInfoAsync(validFilePath);
-      console.log("File info:", fileInfo);
-      if (!fileInfo.exists) {
-        throw new Error(
-          `${t.errorSubmission || "PDF file does not exist at path"}: ${validFilePath}`
-        );
-      }
-
-      const isAvailable = await Sharing.isAvailableAsync();
-      if (!isAvailable) {
-        Alert.alert(
-          t.error || "Error",
-          t.sharingNotAvailable || "Sharing is not available on this device."
-        );
-        return;
-      }
-
-      await Sharing.shareAsync(validFilePath, {
-        mimeType: "application/pdf",
-        dialogTitle: t.shareReport || "Share Health Report",
-        UTI: "com.adobe.pdf",
-      });
-
-      Alert.alert(
-        t.success || "Success",
-        t.reportGenerated ||
-          "Health report has been generated and is ready to share or save."
-      );
-
-      try {
-        await FileSystem.deleteAsync(validFilePath);
-        console.log("Cleaned up PDF file:", validFilePath);
-      } catch (cleanupError) {
-        console.warn("Failed to clean up PDF file:", cleanupError);
-      }
-    } catch (error) {
-      console.error("Error generating health report:", error);
+    if (!lifestyleData || !predictionData) {
       Alert.alert(
         t.error || "Error",
-        `${t.reportError || "Failed to generate health report. Please try again."} (${error.message})`
+        t.noData || "Please submit your lifestyle data to generate a report."
       );
+      return;
+    }
+
+    const htmlContent = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #008080; text-align: center; }
+            .section { margin-bottom: 20px; }
+            .section-title { font-size: 18px; font-weight: bold; color: #1D3557; }
+            .metric { margin: 10px 0; }
+            .metric-title { font-weight: bold; color: #457B9D; }
+            .metric-value { color: #1D3557; }
+            .risk-high { color: #FF3B30; }
+            .risk-medium { color: #FFD60A; }
+            .risk-low { color: #34C759; }
+          </style>
+        </head>
+        <body>
+          <h1>${t.healthReport || "Health Report"}</h1>
+          <div class="section">
+            <div class="section-title">${t.keyMetrics || "Key Metrics"}</div>
+            <div class="metric">
+              <span class="metric-title">${t.bmiLabel?.replace(": ", "") || "BMI"}: </span>
+              <span class="metric-value">${lifestyleData?.BMI?.toFixed(1) ?? t.unknown} (${getBMICategory(lifestyleData?.BMI)})</span>
+            </div>
+            <div class="metric">
+              <span class="metric-title">${t.steps || "Steps"}: </span>
+              <span class="metric-value">${formatNumber(lifestyleData?.Daily_Steps) ?? "0"} (${t.daily || "Daily"})</span>
+            </div>
+            <div class="metric">
+              <span class="metric-title">${t.sleep || "Sleep"}: </span>
+              <span class="metric-value">${lifestyleData?.Sleep_Hours !== undefined ? `${lifestyleData.Sleep_Hours} ${t.hrs || "h"}` : `0 ${t.hrs || "h"}`} (${getSleepStatus(lifestyleData?.Sleep_Hours)})</span>
+            </div>
+            <div class="metric">
+              <span class="metric-title">${t.exercise || "Exercise"}: </span>
+              <span class="metric-value">${lifestyleData?.Exercise_Frequency !== undefined ? `${lifestyleData.Exercise_Frequency}/${t.daysPerWeek}` : `0/${t.daysPerWeek}`} (${getExerciseStatus(lifestyleData?.Exercise_Frequency)})</span>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-title">${t.lifestyleScore || "Lifestyle Score"}</div>
+            <div class="metric">
+              <span class="metric-value">${lifestyleScore ?? 0} ${t.outOf100 || "out of 100"}</span>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-title">${t.chronicDiseaseRisk || "Chronic Disease Risk"}</div>
+            <div class="metric">
+              <span class="metric-title">${t.obesityRisk || "Obesity Risk"}: </span>
+              <span class="metric-value risk-${diseaseRisks.obesity >= 67 ? "high" : diseaseRisks.obesity >= 34 ? "medium" : "low"}">${diseaseRisks.obesity.toFixed(2)}% (${diseaseRisks.obesity >= 67 ? t.high : diseaseRisks.obesity >= 34 ? t.medium : t.low || "Low"})</span>
+            </div>
+            <div class="metric">
+              <span class="metric-title">${t.hypertensionRisk || "Hypertension Risk"}: </span>
+              <span class="metric-value risk-${diseaseRisks.hypertension >= 67 ? "high" : diseaseRisks.hypertension >= 34 ? "medium" : "low"}">${diseaseRisks.hypertension.toFixed(2)}% (${diseaseRisks.hypertension >= 67 ? t.high : diseaseRisks.hypertension >= 34 ? t.medium : t.low || "Low"})</span>
+            </div>
+            <div class="metric">
+              <span class="metric-title">${t.strokeRisk || "Stroke Risk"}: </span>
+              <span class="metric-value risk-${diseaseRisks.stroke >= 67 ? "high" : diseaseRisks.stroke >= 34 ? "medium" : "low"}">${diseaseRisks.stroke.toFixed(2)}% (${diseaseRisks.stroke >= 67 ? t.high : diseaseRisks.stroke >= 34 ? t.medium : t.low || "Low"})</span>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-title">${t.personalizedTips || "Personalized Tips"}</div>
+            ${generatePersonalizedTips().map(tip => `<div class="metric">${tip.text}</div>`).join("")}
+          </div>
+        </body>
+      </html>
+    `;
+
+    try {
+      const { uri } = await Print.printToFileAsync({ html: htmlContent });
+      await Sharing.shareAsync(uri);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      Alert.alert(t.error || "Error", t.pdfGenerationError || "Failed to generate PDF.");
     }
   };
 
@@ -745,8 +676,23 @@ const HealthHomeScreen = () => {
 
       let lifestyle = null;
       let prediction = null;
+      let score = null;
 
-      if (userProfileData.length > 0) {
+      if (route.params?.lifestyleData && route.params?.predictionData && route.params?.lifestyleScore) {
+        lifestyle = route.params.lifestyleData;
+        prediction = route.params.predictionData;
+        score = route.params.lifestyleScore;
+        setLifestyleData(lifestyle);
+        setPredictionData(prediction);
+        setLifestyleScore(score);
+
+        // Use actual probabilities from predictionData
+        setDiseaseRisks({
+          obesity: (prediction.Obesity_Flag?.probability || 0) * 100,
+          hypertension: (prediction.Hypertension_Flag?.probability || 0) * 100,
+          stroke: (prediction.Stroke_Flag?.probability || 0) * 100,
+        });
+      } else if (userProfileData.length > 0) {
         const record = userProfileData[0];
         lifestyle = {
           date: record.date,
@@ -766,21 +712,21 @@ const HealthHomeScreen = () => {
           Stress_Level: Number(record.Stress_Level) || 1,
           Screen_Time_Hours: Number(record.Screen_Time_Hours) || 0,
         };
-        setLifestyleData(lifestyle);
-
-        // Parse prediction flags from JSON strings
         prediction = {
-          Obesity_Flag: JSON.parse(record.Obesity_Flag || "0"),
-          Hypertension_Flag: JSON.parse(record.Hypertension_Flag || "0"),
-          Stroke_Flag: JSON.parse(record.Stroke_Flag || "0"),
+          Obesity_Flag: JSON.parse(record.Obesity_Flag || '{"prediction": 0, "probability": 0}'),
+          Hypertension_Flag: JSON.parse(record.Hypertension_Flag || '{"prediction": 0, "probability": 0}'),
+          Stroke_Flag: JSON.parse(record.Stroke_Flag || '{"prediction": 0, "probability": 0}'),
         };
+        score = Number(record.Lifestyle_Score) || null;
+        setLifestyleData(lifestyle);
         setPredictionData(prediction);
+        setLifestyleScore(score);
 
-        // Update disease risks based on prediction flags
+        // Use actual probabilities from database
         setDiseaseRisks({
-          obesity: prediction.Obesity_Flag ? 67 : 1, // Simplified: 67% for positive, 1% for negative
-          hypertension: prediction.Hypertension_Flag ? 67 : 1,
-          stroke: prediction.Stroke_Flag ? 67 : 1,
+          obesity: (prediction.Obesity_Flag?.probability || 0) * 100,
+          hypertension: (prediction.Hypertension_Flag?.probability || 0) * 100,
+          stroke: (prediction.Stroke_Flag?.probability || 0) * 100,
         });
       }
     } catch (error) {
@@ -790,7 +736,7 @@ const HealthHomeScreen = () => {
         t.dataFetchError || "Failed to fetch health data."
       );
     }
-  }, []);
+  }, [route.params, t]);
 
   useEffect(() => {
     fetchProgressData();
@@ -806,7 +752,7 @@ const HealthHomeScreen = () => {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fetchProgressData]);
 
   const renderMetricCard = (
     title,
@@ -976,15 +922,14 @@ const HealthHomeScreen = () => {
               { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
             ]}
           >
-            <AnimatedProgressCircle percentage={localScore} />
+            <AnimatedProgressCircle percentage={lifestyleScore ?? 0} />
             <Text style={styles.progressLabel}>
               {t.yourLifestyleScore || "Your Lifestyle Score"}
             </Text>
             <Text
               style={[styles.riskStatusText, { color: getOverallRiskColor() }]}
             >
-              {getOverallRiskLevel()}{" "}
-              {t.overallHealthRisk || "Overall Health Risk"}
+              {getOverallRiskLevel()} {t.overallHealthRisk || "Overall Health Risk"}
             </Text>
           </Animated.View>
         );
@@ -1149,7 +1094,7 @@ const HealthHomeScreen = () => {
   };
 
   return (
-    <ErrorBoundary>
+    <ErrorBoundary t={t}>
       <SafeAreaView style={styles.container}>
         <FlatList
           data={data}

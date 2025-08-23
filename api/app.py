@@ -74,7 +74,7 @@ async def predict_risk(input_data: LifestyleInput):
 
         # Format output
         predictions = {}
-        target_names = ["Obesity_Flag", "Hypertension_Flag", "Stroke_Flag"]  # adjust if needed
+        target_names = ["Obesity_Flag", "Hypertension_Flag", "Stroke_Flag"]  
         for i, col in enumerate(target_names):
             predictions[col] = {
                 "prediction": int(y_pred[0][i]),
