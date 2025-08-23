@@ -430,7 +430,7 @@ const AnimatedProgressCircle = ({
 };
 
 const HealthHomeScreen = () => {
-  const { t = {} } = useContext(LanguageContext);
+  const { t, language } = useContext(LanguageContext);
   const navigation = useNavigation();
   const route = useRoute();
   const [lifestyleData, setLifestyleData] = useState(null);
@@ -783,9 +783,6 @@ const HealthHomeScreen = () => {
           stroke: prediction.Stroke_Flag ? 67 : 1,
         });
       }
-
-      // Placeholder score calculation; replace with actual logic
-      setLocalScore(75);
     } catch (error) {
       console.error("Error fetching progress data:", error);
       Alert.alert(
@@ -793,7 +790,7 @@ const HealthHomeScreen = () => {
         t.dataFetchError || "Failed to fetch health data."
       );
     }
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     fetchProgressData();
@@ -809,7 +806,7 @@ const HealthHomeScreen = () => {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [fetchProgressData]);
+  }, []);
 
   const renderMetricCard = (
     title,
@@ -871,7 +868,7 @@ const HealthHomeScreen = () => {
 
   const renderRiskCard = ({ item }, t) => {
     const riskPercentage = diseaseRisks[item.key] || 0;
-    const progress = riskPercentage / 100;
+    const progress = Math.max(0, Math.min(1, riskPercentage / 100));
     const color = getRiskColor(riskPercentage);
     const predictionStatus =
       riskPercentage >= 67

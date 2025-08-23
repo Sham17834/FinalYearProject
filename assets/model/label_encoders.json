@@ -1,1 +1,25 @@
-{"Gender": ["Female", "Male"], "Chronic_Disease": ["Hypertension", "None", "Obesity", "Stroke"], "Alcohol_Consumption": ["No", "Yes"], "Smoking_Habit": ["No", "Yes"], "Diet_Quality": ["Average", "Excellent", "Good", "Poor"]}
+{
+    "Gender": [
+        "Female",
+        "Male"
+    ],
+    "Chronic_Disease": [
+        "Hypertension",
+        "Obesity",
+        "Stroke"
+    ],
+    "Alcohol_Consumption": [
+        "No",
+        "Yes"
+    ],
+    "Smoking_Habit": [
+        "No",
+        "Yes"
+    ],
+    "Diet_Quality": [
+        "Average",
+        "Excellent",
+        "Good",
+        "Poor"
+    ]
+}
