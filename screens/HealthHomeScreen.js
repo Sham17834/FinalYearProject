@@ -11,7 +11,7 @@ import {
   Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
 import Svg, { Circle } from "react-native-svg";
 import { LanguageContext } from "./LanguageContext";
 import { getDb } from "./db.js";
@@ -685,75 +685,73 @@ const HealthHomeScreen = () => {
   const fetchProgressData = useCallback(async () => {
     try {
       const db = await getDb();
+      let lifestyle, prediction, score;
 
-      const userProfileData = await db.getAllAsync(
-        "SELECT * FROM UserProfile ORDER BY id DESC LIMIT 1"
-      );
-
-      let lifestyle = null;
-      let prediction = null;
-      let score = null;
-
-      if (
-        route.params?.lifestyleData &&
-        route.params?.predictionData &&
-        route.params?.lifestyleScore
-      ) {
+      if (route.params?.predictionData) {
+        console.log("Using data from route.params");
         lifestyle = route.params.lifestyleData;
         prediction = route.params.predictionData;
         score = route.params.lifestyleScore;
+      } else {
+        console.log("Fetching latest data from database");
+        const userProfileData = await db.getAllAsync(
+          "SELECT * FROM UserProfile ORDER BY id DESC LIMIT 1"
+        );
+
+        if (userProfileData.length > 0) {
+          const record = userProfileData[0];
+          lifestyle = {
+            date: record.date,
+            Daily_Steps: Number(record.Daily_Steps) || 0,
+            Sleep_Hours: Number(record.Sleep_Hours) || 0,
+            BMI: Number(record.BMI) || null,
+            Age: Number(record.Age) || null,
+            Gender: record.Gender || "Unknown",
+            Height_cm: Number(record.Height_cm) || null,
+            Weight_kg: Number(record.Weight_kg) || null,
+            Chronic_Disease: record.Chronic_Disease || t.none || "None",
+            Exercise_Frequency: Number(record.Exercise_Frequency) || 0,
+            Alcohol_Consumption: record.Alcohol_Consumption || t.no || "No",
+            Smoking_Habit: record.Smoking_Habit || t.no || "No",
+            Diet_Quality: record.Diet_Quality || "unknown",
+            FRUITS_VEGGIES: Number(record.FRUITS_VEGGIES) || 0,
+            Stress_Level: Number(record.Stress_Level) || 1,
+            Screen_Time_Hours: Number(record.Screen_Time_Hours) || 0,
+          };
+          prediction = {
+            Obesity_Flag: JSON.parse(
+              record.Obesity_Flag || '{"prediction": 0, "probability": 0}'
+            ),
+            Hypertension_Flag: JSON.parse(
+              record.Hypertension_Flag || '{"prediction": 0, "probability": 0}'
+            ),
+            Stroke_Flag: JSON.parse(
+              record.Stroke_Flag || '{"prediction": 0, "probability": 0}'
+            ),
+          };
+          score = Number(record.Lifestyle_Score) || null;
+        }
+      }
+
+      if (prediction) {
+        console.log("Setting states with fetched data");
         setLifestyleData(lifestyle);
         setPredictionData(prediction);
         setLifestyleScore(score);
 
-        // Use actual probabilities from predictionData
-        setDiseaseRisks({
+        const newDiseaseRisks = {
           obesity: (prediction.Obesity_Flag?.probability || 0) * 100,
           hypertension: (prediction.Hypertension_Flag?.probability || 0) * 100,
           stroke: (prediction.Stroke_Flag?.probability || 0) * 100,
-        });
-      } else if (userProfileData.length > 0) {
-        const record = userProfileData[0];
-        lifestyle = {
-          date: record.date,
-          Daily_Steps: Number(record.Daily_Steps) || 0,
-          Sleep_Hours: Number(record.Sleep_Hours) || 0,
-          BMI: Number(record.BMI) || null,
-          Age: Number(record.Age) || null,
-          Gender: record.Gender || "Unknown",
-          Height_cm: Number(record.Height_cm) || null,
-          Weight_kg: Number(record.Weight_kg) || null,
-          Chronic_Disease: record.Chronic_Disease || t.none || "None",
-          Exercise_Frequency: Number(record.Exercise_Frequency) || 0,
-          Alcohol_Consumption: record.Alcohol_Consumption || t.no || "No",
-          Smoking_Habit: record.Smoking_Habit || t.no || "No",
-          Diet_Quality: record.Diet_Quality || "unknown",
-          FRUITS_VEGGIES: Number(record.FRUITS_VEGGIES) || 0,
-          Stress_Level: Number(record.Stress_Level) || 1,
-          Screen_Time_Hours: Number(record.Screen_Time_Hours) || 0,
         };
-        prediction = {
-          Obesity_Flag: JSON.parse(
-            record.Obesity_Flag || '{"prediction": 0, "probability": 0}'
-          ),
-          Hypertension_Flag: JSON.parse(
-            record.Hypertension_Flag || '{"prediction": 0, "probability": 0}'
-          ),
-          Stroke_Flag: JSON.parse(
-            record.Stroke_Flag || '{"prediction": 0, "probability": 0}'
-          ),
-        };
-        score = Number(record.Lifestyle_Score) || null;
-        setLifestyleData(lifestyle);
-        setPredictionData(prediction);
-        setLifestyleScore(score);
-
-        // Use actual probabilities from database
-        setDiseaseRisks({
-          obesity: (prediction.Obesity_Flag?.probability || 0) * 100,
-          hypertension: (prediction.Hypertension_Flag?.probability || 0) * 100,
-          stroke: (prediction.Stroke_Flag?.probability || 0) * 100,
-        });
+        console.log("Updating disease risks:", newDiseaseRisks);
+        setDiseaseRisks(newDiseaseRisks);
+      } else {
+        console.log("No data found in route.params or database.");
+        setLifestyleData(null);
+        setPredictionData(null);
+        setLifestyleScore(0);
+        setDiseaseRisks({ obesity: 0, hypertension: 0, stroke: 0 });
       }
     } catch (error) {
       console.error("Error fetching progress data:", error);
@@ -762,23 +760,28 @@ const HealthHomeScreen = () => {
         t.dataFetchError || "Failed to fetch health data."
       );
     }
-  }, [route.params, t]);
+  }, [route.params, language, t]);
 
-  useEffect(() => {
-    fetchProgressData();
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [fetchProgressData]);
+  // ---- NEW, CORRECTED CODE ----
+  useFocusEffect(
+    useCallback(() => {
+      console.log("Screen is in focus, fetching data...");
+      fetchProgressData();
+
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, []) 
+  );
 
   const renderMetricCard = (
     title,
@@ -911,23 +914,34 @@ const HealthHomeScreen = () => {
   ];
 
   const renderItem = ({ item }) => {
-    if (!lifestyleData && item.type !== "recalculate") {
-      return (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>
-            {t.noData ||
-              "Please submit your lifestyle data to view your health risk predictions."}
-          </Text>
-          <TouchableOpacity
-            style={styles.recalculateButton}
-            onPress={() => navigation.navigate("LifestyleDataInput")}
-          >
-            <Text style={styles.recalculateButtonText}>
-              {t.recalculate || "Update Lifestyle Data"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      );
+    if (
+      !lifestyleData &&
+      item.type !== "recalculate" &&
+      item.type !== "header"
+    ) {
+      // Only render the "no data" message once, inside a container
+      if (item.type === "score") {
+        return (
+          <View style={[styles.section, { marginTop: 20 }]}>
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>
+                {t.noData ||
+                  "Please submit your lifestyle data to view your health risk predictions."}
+              </Text>
+              <TouchableOpacity
+                style={[styles.recalculateButton, { marginTop: 20 }]}
+                onPress={() => navigation.navigate("LifestyleDataInput")}
+              >
+                <Text style={styles.recalculateButtonText}>
+                  {t.recalculate || "Update Lifestyle Data"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        );
+      }
+      // Return null for other sections to avoid multiple error messages
+      return null;
     }
 
     switch (item.type) {
@@ -993,11 +1007,9 @@ const HealthHomeScreen = () => {
               {renderMetricCard(
                 t.exercise,
                 lifestyleData?.Exercise_Frequency !== undefined
-                  ? `${lifestyleData.Exercise_Frequency}/${t.daysPerWeek}`
-                  : `0/${t.daysPerWeek}`,
-                lifestyleData?.Exercise_Frequency >= 3
-                  ? t.exerciseStatus.good
-                  : t.exerciseStatus.poor,
+                  ? `${lifestyleData.Exercise_Frequency}/${t.daysPerWeek || "days/week"}`
+                  : `0/${t.daysPerWeek || "days/week"}`,
+                getExerciseStatus(lifestyleData?.Exercise_Frequency),
                 "fitness-center",
                 "#FF9500"
               )}
@@ -1076,21 +1088,25 @@ const HealthHomeScreen = () => {
               keyExtractor={(item) => item.key}
               contentContainerStyle={{ paddingHorizontal: 0 }}
               ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+              scrollEnabled={false}
             />
           </View>
         );
       case "tips":
+        const tips = generatePersonalizedTips();
+        if (tips.length === 0) return null;
         return (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
               {t.personalizedTips || "Personalized Tips"}
             </Text>
             <FlatList
-              data={generatePersonalizedTips()}
+              data={tips}
               renderItem={renderTipCard}
               keyExtractor={(item, index) => `${item.text}-${index}`}
               contentContainerStyle={{ paddingHorizontal: 0 }}
               ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+              scrollEnabled={false}
             />
           </View>
         );
@@ -1108,6 +1124,7 @@ const HealthHomeScreen = () => {
             <TouchableOpacity
               style={styles.downloadButton}
               onPress={downloadHealthReport}
+              disabled={!lifestyleData}
             >
               <Text style={styles.downloadButtonText}>
                 {t.downloadReport || "Download Health Report"}
