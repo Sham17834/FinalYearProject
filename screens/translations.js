@@ -10,6 +10,7 @@ const translations = {
       unknown: "Unknown",
     },
     tabHome: "Home",
+    submitting: "Submitting...",
     tabProgress: "Progress",
     tabTrack: "Track",
     tabProfile: "Profile",
@@ -130,6 +131,7 @@ const translations = {
     downloadReport: "Download Health Report",
     veryActive: "Very Active",
     active: "Active",
+    submit: "Submit",
     reportGenerated:
       "Health report has been generated and is ready to share or save",
     lightlyActive: "Lightly Active",
@@ -362,6 +364,7 @@ const translations = {
     low: "低",
     medium: "中",
     high: "高",
+    submitting: "提交中...",
     appName: "健康追踪",
     tagline: "您的个人健康伴侣",
     welcome: "欢迎！",
@@ -378,6 +381,7 @@ const translations = {
     success: "成功",
     dataSubmitted: "数据提交成功！分数：{score}，风险：{risk}",
     help: "帮助",
+    submit: "提交",
     forgotPassword: "忘记密码？",
     signIn: "登录",
     noAccount: "没有账户？",
@@ -1041,6 +1045,7 @@ const translations = {
     risk: "Risiko",
     low: "Rendah",
     medium: "Sederhana",
+    submit: "Submit",
     high: "Tinggi",
     bmiPlaceholder: "Dikira Automatik",
     dietQuality: {
@@ -1054,6 +1059,7 @@ const translations = {
     personalInfoTitle: "Maklumat Peribadi",
     healthHabitsTitle: "Tabiat Kesihatan & Aktiviti",
     lifestyleTitle: "Gaya Hidup & Kesejahteraan",
+    submitting: "Hantar..."
   },
 };
 

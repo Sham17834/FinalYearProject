@@ -679,7 +679,7 @@ const LifestyleDataInputScreen = () => {
     if (step === 1) {
       const ageNum = parseInt(formData.age);
       if (!formData.age || isNaN(ageNum) || ageNum < 18 || ageNum > 120) {
-        newErrors.age = t.ageError || "Please enter a valid age (18 - 120)";
+        newErrors.age = t.errorAge || "Please enter a valid age (18 - 120)";
         isValid = false;
       }
       const heightNum = parseFloat(formData.heightCm);
@@ -690,7 +690,7 @@ const LifestyleDataInputScreen = () => {
         heightNum > 250
       ) {
         newErrors.heightCm =
-          t.heightError || "Please enter a valid height (100 - 250 cm)";
+          t.errorHeight || "Please enter a valid height (100 - 250 cm)";
         isValid = false;
       }
       const weightNum = parseFloat(formData.weightKg);
@@ -701,7 +701,7 @@ const LifestyleDataInputScreen = () => {
         weightNum > 300
       ) {
         newErrors.weightKg =
-          t.weightError || "Please enter a valid weight (20 - 300 kg)";
+          t.errorWeight || "Please enter a valid weight (20 - 300 kg)";
         isValid = false;
       }
     }
@@ -1095,14 +1095,14 @@ const LifestyleDataInputScreen = () => {
           fullData.Obesity_Flag,
           fullData.Hypertension_Flag,
           fullData.Stroke_Flag,
-          lifestyleScore
+          lifestyleScore,
         ]
       );
 
       navigation.navigate("MainApp", {
         lifestyleData: data,
         predictionData: predictions,
-        lifestyleScore, 
+        lifestyleScore,
       });
     } catch (error) {
       console.error("Error in handleSubmit:", error);
@@ -1234,7 +1234,6 @@ const LifestyleDataInputScreen = () => {
                       />
                     ))}
                   </Picker>
-                  <View style={styles.dropdownIcon} />
                 </View>
               </View>
 
@@ -1619,11 +1618,11 @@ const LifestyleDataInputScreen = () => {
                   }}
                 />
                 <View style={styles.sliderLabelRow}>
-                  <Text style={styles.sliderMinMaxLabel}>0h</Text>
-                  <Text style={styles.sliderMinMaxLabel}>16h</Text>
+                  <Text style={styles.sliderMinMaxLabel}>0 {t.hours || "h"}</Text>
+                  <Text style={styles.sliderMinMaxLabel}>16 {t.hours || "h"}</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {formData.screenTimeHours} {t.hoursPerDay || "hours/day"}
+                  {formData.screenTimeHours} {t. hours || "hours"}
                 </Text>
               </View>
             </>

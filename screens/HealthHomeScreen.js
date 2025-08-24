@@ -303,7 +303,9 @@ class ErrorBoundary extends React.Component {
       return (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
-            {this.state.error?.message || this.props.t?.unknown || "Unknown error"}
+            {this.state.error?.message ||
+              this.props.t?.unknown ||
+              "Unknown error"}
           </Text>
         </View>
       );
@@ -495,11 +497,16 @@ const HealthHomeScreen = () => {
   const getDietQualityText = (dietQuality) => {
     if (!dietQuality) return t.dietQuality?.unknown || "Unknown";
     switch (dietQuality.toLowerCase()) {
-      case "excellent": return t.dietQuality?.excellent || "Excellent";
-      case "good": return t.dietQuality?.good || "Good";
-      case "fair": return t.dietQuality?.fair || "Fair";
-      case "poor": return t.dietQuality?.poor || "Poor";
-      default: return t.dietQuality?.unknown || "Unknown";
+      case "excellent":
+        return t.dietQuality?.excellent || "Excellent";
+      case "good":
+        return t.dietQuality?.good || "Good";
+      case "fair":
+        return t.dietQuality?.fair || "Fair";
+      case "poor":
+        return t.dietQuality?.poor || "Poor";
+      default:
+        return t.dietQuality?.unknown || "Unknown";
     }
   };
 
@@ -513,68 +520,72 @@ const HealthHomeScreen = () => {
 
     if (lifestyleData.BMI >= 30) {
       tips.push({
-        text: t.tips?.bmiHigh || "Consult a nutritionist to manage your weight.",
+        text:
+          t.manageWeightTips || "Maintain a calorie deficit to reduce weight.",
         icon: "monitor-weight",
       });
     } else if (lifestyleData.BMI < 18.5) {
       tips.push({
-        text: t.tips?.bmiLow || "Increase calorie intake with healthy foods.",
+        text:
+          t.maintainHealthyWeight || "Focus on maintaining a healthy weight.",
         icon: "monitor-weight",
       });
     }
 
     if (lifestyleData.Daily_Steps < 5000) {
       tips.push({
-        text: t.tips?.lowSteps || "Aim for at least 10,000 steps daily.",
+        text:
+          t.increaseWalkingSteps || "Walk 8000+ steps daily for better health.",
         icon: "directions-walk",
       });
     }
 
     if (lifestyleData.Sleep_Hours < 6) {
       tips.push({
-        text: t.tips?.lowSleep || "Aim for 7-9 hours of sleep per night.",
+        text: t.improvesSleepQuality || "Aim for 7-9 hours of sleep nightly.",
         icon: "bed",
       });
     }
 
     if (lifestyleData.Exercise_Frequency < 3) {
       tips.push({
-        text: t.tips?.lowExercise || "Incorporate exercise 3-5 times per week.",
+        text: t.increasePhysicalActivity || "Try to exercise 3+ days/week.",
         icon: "fitness-center",
       });
     }
 
     if (lifestyleData.Stress_Level > 7) {
       tips.push({
-        text: t.tips?.highStress || "Practice mindfulness or meditation to reduce stress.",
+        text: t.manageStressLevels || "Practice meditation to reduce stress.",
         icon: "mood",
       });
     }
 
     if (lifestyleData.FRUITS_VEGGIES < 5) {
       tips.push({
-        text: t.tips?.lowFruitVeggie || "Increase fruit and vegetable intake to 5+ servings daily.",
+        text:
+          t.eatMoreFruitsVeggies || "Eat 5+ servings of fruits/veggies daily.",
         icon: "local-dining",
       });
     }
 
     if (lifestyleData.Screen_Time_Hours > 6) {
       tips.push({
-        text: t.tips?.highScreenTime || "Reduce screen time to improve overall health.",
+        text: t.reduceScreenTime || "Limit screen time to 6 hours/day.",
         icon: "devices",
       });
     }
 
     if (lifestyleData.Smoking_Habit === "Yes") {
       tips.push({
-        text: t.tips?.smoking || "Consider quitting smoking for better health.",
+        text: t.quitSmoking || "Consider quitting smoking for better health.",
         icon: "smoking-rooms",
       });
     }
 
     if (lifestyleData.Alcohol_Consumption === "Yes") {
       tips.push({
-        text: t.tips?.alcohol || "Limit alcohol consumption for better health outcomes.",
+        text: t.limitAlcohol || "Limit alcohol consumption.",
         icon: "local-drink",
       });
     }
@@ -651,7 +662,9 @@ const HealthHomeScreen = () => {
           </div>
           <div class="section">
             <div class="section-title">${t.personalizedTips || "Personalized Tips"}</div>
-            ${generatePersonalizedTips().map(tip => `<div class="metric">${tip.text}</div>`).join("")}
+            ${generatePersonalizedTips()
+              .map((tip) => `<div class="metric">${tip.text}</div>`)
+              .join("")}
           </div>
         </body>
       </html>
@@ -662,7 +675,10 @@ const HealthHomeScreen = () => {
       await Sharing.shareAsync(uri);
     } catch (error) {
       console.error("Error generating PDF:", error);
-      Alert.alert(t.error || "Error", t.pdfGenerationError || "Failed to generate PDF.");
+      Alert.alert(
+        t.error || "Error",
+        t.pdfGenerationError || "Failed to generate PDF."
+      );
     }
   };
 
@@ -678,7 +694,11 @@ const HealthHomeScreen = () => {
       let prediction = null;
       let score = null;
 
-      if (route.params?.lifestyleData && route.params?.predictionData && route.params?.lifestyleScore) {
+      if (
+        route.params?.lifestyleData &&
+        route.params?.predictionData &&
+        route.params?.lifestyleScore
+      ) {
         lifestyle = route.params.lifestyleData;
         prediction = route.params.predictionData;
         score = route.params.lifestyleScore;
@@ -713,9 +733,15 @@ const HealthHomeScreen = () => {
           Screen_Time_Hours: Number(record.Screen_Time_Hours) || 0,
         };
         prediction = {
-          Obesity_Flag: JSON.parse(record.Obesity_Flag || '{"prediction": 0, "probability": 0}'),
-          Hypertension_Flag: JSON.parse(record.Hypertension_Flag || '{"prediction": 0, "probability": 0}'),
-          Stroke_Flag: JSON.parse(record.Stroke_Flag || '{"prediction": 0, "probability": 0}'),
+          Obesity_Flag: JSON.parse(
+            record.Obesity_Flag || '{"prediction": 0, "probability": 0}'
+          ),
+          Hypertension_Flag: JSON.parse(
+            record.Hypertension_Flag || '{"prediction": 0, "probability": 0}'
+          ),
+          Stroke_Flag: JSON.parse(
+            record.Stroke_Flag || '{"prediction": 0, "probability": 0}'
+          ),
         };
         score = Number(record.Lifestyle_Score) || null;
         setLifestyleData(lifestyle);
@@ -929,7 +955,8 @@ const HealthHomeScreen = () => {
             <Text
               style={[styles.riskStatusText, { color: getOverallRiskColor() }]}
             >
-              {getOverallRiskLevel()} {t.overallHealthRisk || "Overall Health Risk"}
+              {getOverallRiskLevel()}{" "}
+              {t.overallHealthRisk || "Overall Health Risk"}
             </Text>
           </Animated.View>
         );
