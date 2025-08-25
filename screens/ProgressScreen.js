@@ -766,55 +766,134 @@ const ProgressScreen = () => {
   const calculateLifestyleScore = useCallback((data) => {
     if (!data) return 0;
 
-    let score = 0;
+    let totalScore = 0;
 
-    if (data.bmi >= 18.5 && data.bmi < 25) score += 15;
-    else if (data.bmi < 18.5 || data.bmi < 30) score += 8;
-    else score += 3;
+    // BMI Score
+    const bmiScore = (() => {
+      const bmi = data.bmi || 0;
+      if (bmi >= 18.5 && bmi < 25) return 15;
+      if (bmi >= 17 && bmi < 18.5) return 12;
+      if (bmi >= 25 && bmi < 27) return 12;
+      if (bmi >= 16 && bmi < 17) return 8;
+      if (bmi >= 27 && bmi < 30) return 8;
+      if (bmi >= 15 && bmi < 16) return 4;
+      if (bmi >= 30 && bmi < 35) return 4;
+      return 0;
+    })();
 
-    if (data.daily_steps >= 10000) score += 10;
-    else if (data.daily_steps >= 7000) score += 7;
-    else if (data.daily_steps >= 5000) score += 4;
-    else score += 1;
+    // Daily Steps Score
+    const stepsScore = (() => {
+      const steps = data.daily_steps || 0;
+      if (steps >= 10000) return 15;
+      if (steps >= 8000) return 12;
+      if (steps >= 6000) return 9;
+      if (steps >= 4000) return 6;
+      if (steps >= 2000) return 3;
+      return 0;
+    })();
 
-    if (data.exercise_frequency >= 5) score += 15;
-    else if (data.exercise_frequency >= 3) score += 10;
-    else if (data.exercise_frequency >= 1) score += 5;
-    else score += 1;
+    // Sleep Hours Score
+    const sleepScore = (() => {
+      const hours = data.sleep_hours || 0;
+      if (hours >= 7 && hours <= 9) return 15;
+      if (hours >= 6 && hours < 7) return 12;
+      if (hours > 9 && hours <= 10) return 12;
+      if (hours >= 5 && hours < 6) return 8;
+      if (hours > 10 && hours <= 11) return 8;
+      if (hours >= 4 && hours < 5) return 4;
+      if (hours > 11) return 4;
+      return 0;
+    })();
 
-    if (data.sleep_hours >= 7 && data.sleep_hours <= 9) score += 15;
-    else if (data.sleep_hours === 6 || data.sleep_hours === 10) score += 10;
-    else score += 5;
+    // Exercise Frequency Score
+    const exerciseScore = (() => {
+      const frequency = data.exercise_frequency || 0;
+      if (frequency >= 5) return 15;
+      if (frequency >= 3) return 12;
+      if (frequency >= 2) return 8;
+      if (frequency >= 1) return 4;
+      return 0;
+    })();
 
-    if (data.fruits_veggies >= 5) score += 10;
-    else if (data.fruits_veggies >= 3) score += 7;
-    else if (data.fruits_veggies >= 1) score += 3;
-    else score += 0;
+    // Diet Quality Score
+    const dietScore = (() => {
+      const quality = data.diet_quality?.toLowerCase() || "poor";
+      switch (quality) {
+        case "excellent":
+          return 10;
+        case "good":
+          return 8;
+        case "fair":
+          return 6;
+        case "poor":
+          return 2;
+        default:
+          return 0;
+      }
+    })();
 
-    const isNonSmoker = data.smoking_habit === "No";
-    const isLowAlcohol = data.alcohol_consumption === "No";
-    if (isNonSmoker && isLowAlcohol) score += 10;
-    else if (isNonSmoker || isLowAlcohol) score += 5;
-    else score += 0;
+    // Fruits and Veggies Score
+    const fruitsVeggiesScore = (() => {
+      const servings = data.fruits_veggies || 0;
+      if (servings >= 5) return 10;
+      if (servings >= 4) return 8;
+      if (servings >= 3) return 6;
+      if (servings >= 2) return 4;
+      if (servings >= 1) return 2;
+      return 0;
+    })();
 
-    if (data.screen_time_hours < 2) score += 5;
-    else if (data.screen_time_hours <= 4) score += 3;
-    else if (data.screen_time_hours <= 6) score += 1;
-    else score += 0;
+    // Stress Level Score
+    const stressScore = (() => {
+      const stress = data.stress_level || 5;
+      if (stress <= 2) return 10;
+      if (stress <= 4) return 8;
+      if (stress <= 6) return 6;
+      if (stress <= 8) return 3;
+      return 0;
+    })();
 
-    if (data.diet_quality === "Excellent") score += 10;
-    else if (data.diet_quality === "Good") score += 7;
-    else if (data.diet_quality === "Average") score += 4;
-    else score += 1;
+    // Screen Time Score
+    const screenTimeScore = (() => {
+      const hours = data.screen_time_hours || 0;
+      if (hours <= 2) return 5;
+      if (hours <= 4) return 4;
+      if (hours <= 6) return 3;
+      if (hours <= 8) return 2;
+      if (hours <= 10) return 1;
+      return 0;
+    })();
 
-    if (data.stress_level <= 3) score += 5;
-    else if (data.stress_level <= 6) score += 3;
-    else score += 1;
+    // Smoking Penalty
+    const smokingPenalty = (() => {
+      const smoking = data.smoking_habit?.toLowerCase() || "no";
+      if (smoking === "yes" || smoking === "daily" || smoking === "heavy")
+        return -10;
+      if (smoking === "occasionally" || smoking === "social") return -5;
+      return 0;
+    })();
 
-    if (data.chronic_disease === "None") score += 5;
-    else score += 0;
+    // Alcohol Penalty
+    const alcoholPenalty = (() => {
+      const alcohol = data.alcohol_consumption?.toLowerCase() || "no";
+      if (alcohol === "heavy" || alcohol === "daily") return -5;
+      if (alcohol === "frequently") return -2;
+      return 0;
+    })();
 
-    return Math.min(Math.round(score), 100);
+    totalScore =
+      bmiScore +
+      stepsScore +
+      sleepScore +
+      exerciseScore +
+      dietScore +
+      fruitsVeggiesScore +
+      stressScore +
+      screenTimeScore +
+      smokingPenalty +
+      alcoholPenalty;
+
+    return Math.max(0, Math.min(100, totalScore));
   }, []);
 
   const filteredData = useMemo(() => {

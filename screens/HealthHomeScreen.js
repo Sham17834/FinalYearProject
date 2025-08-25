@@ -20,6 +20,7 @@ import * as Sharing from "expo-sharing";
 
 const { width } = Dimensions.get("window");
 
+// Define styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -291,6 +292,7 @@ const styles = StyleSheet.create({
   },
 });
 
+// Define ErrorBoundary class first to ensure it is available
 class ErrorBoundary extends React.Component {
   state = { hasError: false, error: null };
 
@@ -314,6 +316,133 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+// Define calculateLifestyleScore function
+const calculateLifestyleScore = (lifestyleData) => {
+  if (!lifestyleData) return 0;
+
+  let totalScore = 0;
+  const maxScore = 100;
+
+  const bmiScore = (() => {
+    const bmi = lifestyleData.BMI;
+    if (!bmi) return 0;
+    if (bmi >= 18.5 && bmi < 25) return 15;
+    if (bmi >= 17 && bmi < 18.5) return 12;
+    if (bmi >= 25 && bmi < 27) return 12;
+    if (bmi >= 16 && bmi < 17) return 8;
+    if (bmi >= 27 && bmi < 30) return 8;
+    if (bmi >= 15 && bmi < 16) return 4;
+    if (bmi >= 30 && bmi < 35) return 4;
+    return 0;
+  })();
+
+  const stepsScore = (() => {
+    const steps = lifestyleData.Daily_Steps || 0;
+    if (steps >= 10000) return 15;
+    if (steps >= 8000) return 12;
+    if (steps >= 6000) return 9;
+    if (steps >= 4000) return 6;
+    if (steps >= 2000) return 3;
+    return 0;
+  })();
+
+  const sleepScore = (() => {
+    const hours = lifestyleData.Sleep_Hours || 0;
+    if (hours >= 7 && hours <= 9) return 15;
+    if (hours >= 6 && hours < 7) return 12;
+    if (hours > 9 && hours <= 10) return 12;
+    if (hours >= 5 && hours < 6) return 8;
+    if (hours > 10 && hours <= 11) return 8;
+    if (hours >= 4 && hours < 5) return 4;
+    if (hours > 11) return 4;
+    return 0;
+  })();
+
+  const exerciseScore = (() => {
+    const frequency = lifestyleData.Exercise_Frequency || 0;
+    if (frequency >= 5) return 15;
+    if (frequency >= 3) return 12;
+    if (frequency >= 2) return 8;
+    if (frequency >= 1) return 4;
+    return 0;
+  })();
+
+  const dietScore = (() => {
+    const quality = lifestyleData.Diet_Quality?.toLowerCase() || "poor";
+    switch (quality) {
+      case "excellent":
+        return 10;
+      case "good":
+        return 8;
+      case "fair":
+        return 6;
+      case "poor":
+        return 2;
+      default:
+        return 0;
+    }
+  })();
+
+  const fruitsVeggiesScore = (() => {
+    const servings = lifestyleData.FRUITS_VEGGIES || 0;
+    if (servings >= 5) return 10;
+    if (servings >= 4) return 8;
+    if (servings >= 3) return 6;
+    if (servings >= 2) return 4;
+    if (servings >= 1) return 2;
+    return 0;
+  })();
+
+  const stressScore = (() => {
+    const stress = lifestyleData.Stress_Level || 5;
+    if (stress <= 2) return 10;
+    if (stress <= 4) return 8;
+    if (stress <= 6) return 6;
+    if (stress <= 8) return 3;
+    return 0;
+  })();
+
+  const screenTimeScore = (() => {
+    const hours = lifestyleData.Screen_Time_Hours || 0;
+    if (hours <= 2) return 5;
+    if (hours <= 4) return 4;
+    if (hours <= 6) return 3;
+    if (hours <= 8) return 2;
+    if (hours <= 10) return 1;
+    return 0;
+  })();
+
+  const smokingPenalty = (() => {
+    const smoking = lifestyleData.Smoking_Habit?.toLowerCase() || "no";
+    if (smoking === "yes" || smoking === "daily" || smoking === "heavy")
+      return -10;
+    if (smoking === "occasionally" || smoking === "social") return -5;
+    return 0;
+  })();
+
+  const alcoholPenalty = (() => {
+    const alcohol = lifestyleData.Alcohol_Consumption?.toLowerCase() || "no";
+    if (alcohol === "heavy" || alcohol === "daily") return -5;
+    if (alcohol === "frequently") return -2;
+    return 0;
+  })();
+
+  totalScore =
+    bmiScore +
+    stepsScore +
+    sleepScore +
+    exerciseScore +
+    dietScore +
+    fruitsVeggiesScore +
+    stressScore +
+    screenTimeScore +
+    smokingPenalty +
+    alcoholPenalty;
+
+  return Math.max(0, Math.min(100, totalScore));
+};
+
+// Define CustomProgressBar component
 const CustomProgressBar = ({ progress, color }) => {
   const animatedWidth = new Animated.Value(0);
 
@@ -344,6 +473,7 @@ const CustomProgressBar = ({ progress, color }) => {
   );
 };
 
+// Define AnimatedProgressCircle component
 const AnimatedProgressCircle = ({
   percentage,
   size = 180,
@@ -429,6 +559,7 @@ const AnimatedProgressCircle = ({
   );
 };
 
+// Define HealthHomeScreen component
 const HealthHomeScreen = () => {
   const { t, language } = useContext(LanguageContext);
   const navigation = useNavigation();
@@ -733,16 +864,18 @@ const HealthHomeScreen = () => {
         }
       }
 
-      if (prediction) {
+      if (lifestyle) {
         console.log("Setting states with fetched data");
         setLifestyleData(lifestyle);
         setPredictionData(prediction);
-        setLifestyleScore(score);
+        // Recalculate score if not provided or invalid
+        const calculatedScore = score ?? calculateLifestyleScore(lifestyle);
+        setLifestyleScore(calculatedScore);
 
         const newDiseaseRisks = {
-          obesity: (prediction.Obesity_Flag?.probability || 0) * 100,
-          hypertension: (prediction.Hypertension_Flag?.probability || 0) * 100,
-          stroke: (prediction.Stroke_Flag?.probability || 0) * 100,
+          obesity: (prediction?.Obesity_Flag?.probability || 0) * 100,
+          hypertension: (prediction?.Hypertension_Flag?.probability || 0) * 100,
+          stroke: (prediction?.Stroke_Flag?.probability || 0) * 100,
         };
         console.log("Updating disease risks:", newDiseaseRisks);
         setDiseaseRisks(newDiseaseRisks);
@@ -762,7 +895,6 @@ const HealthHomeScreen = () => {
     }
   }, [route.params, language, t]);
 
-  // ---- NEW, CORRECTED CODE ----
   useFocusEffect(
     useCallback(() => {
       console.log("Screen is in focus, fetching data...");
@@ -780,7 +912,7 @@ const HealthHomeScreen = () => {
           useNativeDriver: true,
         }),
       ]).start();
-    }, []) 
+    }, [fetchProgressData])
   );
 
   const renderMetricCard = (

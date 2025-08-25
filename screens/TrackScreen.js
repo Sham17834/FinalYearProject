@@ -21,7 +21,7 @@ const getCurrentDate = () => {
   const day = String(today.getDate()).padStart(2, "0");
   const month = String(today.getMonth() + 1).padStart(2, "0");
   const year = today.getFullYear();
-  return `${day}-${month}-${year}`;
+ return `${day}/${month}/${year}`; 
 };
 
 const styles = {
@@ -263,7 +263,8 @@ const TrackScreen = () => {
   const [isSlidingDailySteps, setIsSlidingDailySteps] = useState(false);
   const [exerciseFrequency, setExerciseFrequency] = useState(3);
   const [exerciseFrequencyLive, setExerciseFrequencyLive] = useState(3);
-  const [isSlidingExerciseFrequency, setIsSlidingExerciseFrequency] = useState(false);
+  const [isSlidingExerciseFrequency, setIsSlidingExerciseFrequency] =
+    useState(false);
   const [sleepHours, setSleepHours] = useState(7);
   const [sleepHoursLive, setSleepHoursLive] = useState(7);
   const [isSlidingSleepHours, setIsSlidingSleepHours] = useState(false);
@@ -278,7 +279,8 @@ const TrackScreen = () => {
   const [isSlidingStressLevel, setIsSlidingStressLevel] = useState(false);
   const [screenTimeHours, setScreenTimeHours] = useState(4);
   const [screenTimeHoursLive, setScreenTimeHoursLive] = useState(4);
-  const [isSlidingScreenTimeHours, setIsSlidingScreenTimeHours] = useState(false);
+  const [isSlidingScreenTimeHours, setIsSlidingScreenTimeHours] =
+    useState(false);
 
   const genderOptions = [
     { label: t.male || "Male", value: "Male" },
@@ -380,74 +382,80 @@ const TrackScreen = () => {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
-    setIsSubmitting(true);
-    const data = {
-      date: getCurrentDate(),
-      daily_steps: Math.round(dailySteps),
-      sleep_hours: sleepHours,
-      bmi: parseFloat(bmi) || null,
-      age: parseInt(age),
-      gender,
-      height_cm: parseFloat(heightCm),
-      weight_kg: parseFloat(weightKg),
-      chronic_disease: chronicDisease,
-      exercise_frequency: exerciseFrequency,
-      alcohol_consumption: alcoholConsumption ? "Yes" : "No",
-      smoking_habit: smokingHabit ? "Yes" : "No",
-      diet_quality: dietQuality,
-      fruits_veggies: fruitsVeggies,
-      stress_level: stressLevel,
-      screen_time_hours: screenTimeHours,
-    };
-
-    try {
-      const db = await getDb();
-
-      await db.runAsync(
-        `INSERT INTO HealthRecords (
-        date, daily_steps, sleep_hours, bmi, age, gender, height_cm, weight_kg,
-        chronic_disease, exercise_frequency, alcohol_consumption, smoking_habit,
-        diet_quality, fruits_veggies, stress_level, screen_time_hours
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          data.date,
-          data.daily_steps,
-          data.sleep_hours,
-          data.bmi,
-          data.age,
-          data.gender,
-          data.height_cm,
-          data.weight_kg,
-          data.chronic_disease,
-          data.exercise_frequency,
-          data.alcohol_consumption,
-          data.smoking_habit,
-          data.diet_quality,
-          data.fruits_veggies,
-          data.stress_level,
-          data.screen_time_hours,
-        ]
-      );
-
-      navigation.navigate("MainApp", {
-        screen: "Progress",
-        params: { newRecord: data },
-      });
-    } catch (error) {
-      Alert.alert(
-        t.error || "Error",
-        t.errorSaving || "Failed to save health record: " + error.message
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+  if (!validateForm()) {
+    return;
+  }
+  setIsSubmitting(true);
+  const data = {
+    date: getCurrentDate(),
+    daily_steps: Math.round(dailySteps),
+    sleep_hours: sleepHours,
+    bmi: parseFloat(bmi) || null,
+    age: parseInt(age),
+    gender,
+    height_cm: parseFloat(heightCm),
+    weight_kg: parseFloat(weightKg),
+    chronic_disease: chronicDisease,
+    exercise_frequency: exerciseFrequency,
+    alcohol_consumption: alcoholConsumption ? "Yes" : "No",
+    smoking_habit: smokingHabit ? "Yes" : "No",
+    diet_quality: dietQuality,
+    fruits_veggies: fruitsVeggies,
+    stress_level: stressLevel,
+    screen_time_hours: screenTimeHours,
+    salt_intake: "Moderate",
   };
 
+  try {
+    const db = await getDb();
+    console.log("Saving data to HealthRecords:", data);
+    const result = await db.runAsync(
+      `INSERT INTO HealthRecords (
+        date, daily_steps, sleep_hours, bmi, age, gender, height_cm, weight_kg,
+        chronic_disease, exercise_frequency, alcohol_consumption, smoking_habit,
+        diet_quality, fruits_veggies, stress_level, screen_time_hours, salt_intake
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        data.date,
+        data.daily_steps,
+        data.sleep_hours,
+        data.bmi,
+        data.age,
+        data.gender,
+        data.height_cm,
+        data.weight_kg,
+        data.chronic_disease,
+        data.exercise_frequency,
+        data.alcohol_consumption,
+        data.smoking_habit,
+        data.diet_quality,
+        data.fruits_veggies,
+        data.stress_level,
+        data.screen_time_hours,
+        data.salt_intake,
+      ]
+    );
+    // Retrieve the inserted record with its ID
+    const insertedRecord = await db.getAllAsync(
+      "SELECT * FROM HealthRecords ORDER BY id DESC LIMIT 1"
+    );
+    const newRecord = { ...data, id: insertedRecord[0].id };
+    console.log("Inserted HealthRecords entry:", newRecord);
+    navigation.navigate("MainApp", {
+      screen: "Progress",
+      params: { newRecord },
+    });
+  } catch (error) {
+    Alert.alert(
+      t.error || "Error",
+      t.errorSaving || "Failed to save health record: " + error.message
+    );
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
   const currentDate = getCurrentDate();
-  const recordId = `HR-${Date.now().toString().slice(-6)}`;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -626,7 +634,10 @@ const TrackScreen = () => {
                   <Text style={styles.rangeLabel}>50,000+</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {Math.round(isSlidingDailySteps ? dailyStepsLive : dailySteps).toLocaleString()} {t.steps || "steps"}
+                  {Math.round(
+                    isSlidingDailySteps ? dailyStepsLive : dailySteps
+                  ).toLocaleString()}{" "}
+                  {t.steps || "steps"}
                 </Text>
               </View>
             </View>
@@ -640,7 +651,11 @@ const TrackScreen = () => {
                   minimumValue={0}
                   maximumValue={7}
                   step={1}
-                  value={isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency}
+                  value={
+                    isSlidingExerciseFrequency
+                      ? exerciseFrequencyLive
+                      : exerciseFrequency
+                  }
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e5e7eb"
                   onSlidingStart={() => {
@@ -662,9 +677,11 @@ const TrackScreen = () => {
                   <Text style={styles.rangeLabel}>{t.daily || "Daily"}</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {(isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency) === 1
+                  {(isSlidingExerciseFrequency
+                    ? exerciseFrequencyLive
+                    : exerciseFrequency) === 1
                     ? `${isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency} ${t.day || "day"}`
-                    : `${isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency} ${t.days || "days"}`} {" "}
+                    : `${isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency} ${t.days || "days"}`}{" "}
                   {t.perWeek}
                 </Text>
               </View>
@@ -710,7 +727,8 @@ const TrackScreen = () => {
                   </Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {isSlidingSleepHours ? sleepHoursLive : sleepHours} {t.hours || "hours"} {t.perNight || "per night"}
+                  {isSlidingSleepHours ? sleepHoursLive : sleepHours}{" "}
+                  {t.hours || "hours"} {t.perNight || "per night"}
                 </Text>
               </View>
             </View>
@@ -761,7 +779,11 @@ const TrackScreen = () => {
                   minimumValue={0}
                   maximumValue={16}
                   step={0.5}
-                  value={isSlidingScreenTimeHours ? screenTimeHoursLive : screenTimeHours}
+                  value={
+                    isSlidingScreenTimeHours
+                      ? screenTimeHoursLive
+                      : screenTimeHours
+                  }
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e5e7eb"
                   onSlidingStart={() => {
@@ -785,7 +807,10 @@ const TrackScreen = () => {
                   </Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {isSlidingScreenTimeHours ? screenTimeHoursLive : screenTimeHours} {t.hours || "hours"} {t.daily || "daily"}
+                  {isSlidingScreenTimeHours
+                    ? screenTimeHoursLive
+                    : screenTimeHours}{" "}
+                  {t.hours || "hours"} {t.daily || "daily"}
                 </Text>
               </View>
             </View>
@@ -826,7 +851,9 @@ const TrackScreen = () => {
                   minimumValue={0}
                   maximumValue={15}
                   step={1}
-                  value={isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies}
+                  value={
+                    isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies
+                  }
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e5e7eb"
                   onSlidingStart={() => {
@@ -846,9 +873,11 @@ const TrackScreen = () => {
                   <Text style={styles.rangeLabel}>{t.high || "High"}</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {(isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies) === 1
+                  {(isSlidingFruitsVeggies
+                    ? fruitsVeggiesLive
+                    : fruitsVeggies) === 1
                     ? `${isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies} ${t.serving || "serving"}`
-                    : `${isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies} ${t.servings || "servings"}`} {" "}
+                    : `${isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies} ${t.servings || "servings"}`}{" "}
                   {t.daily || "daily"}
                 </Text>
               </View>
@@ -906,7 +935,8 @@ const TrackScreen = () => {
                   <Text style={styles.rangeLabel}>{t.high || "High"}</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {t.level || "Level"} {isSlidingStressLevel ? stressLevelLive : stressLevel}/10
+                  {t.level || "Level"}{" "}
+                  {isSlidingStressLevel ? stressLevelLive : stressLevel}/10
                 </Text>
               </View>
             </View>

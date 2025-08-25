@@ -1,4 +1,11 @@
-import React, { useState, useContext, useEffect, useCallback, useMemo, useRef } from "react";
+import React, {
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import {
   View,
   Text,
@@ -142,7 +149,7 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderColor: "#e2e8f0",
     borderWidth: 1,
-    minHeight: 600, 
+    minHeight: 600,
   },
   stepTitle: {
     fontSize: 24,
@@ -359,7 +366,6 @@ const calculateLifestyleScore = (lifestyleData) => {
   if (!lifestyleData) return 0;
 
   let totalScore = 0;
-  const maxScore = 100;
 
   const bmiScore = (() => {
     const bmi = lifestyleData.BMI;
@@ -367,42 +373,42 @@ const calculateLifestyleScore = (lifestyleData) => {
     if (bmi >= 18.5 && bmi < 25) return 15;
     if (bmi >= 17 && bmi < 18.5) return 12;
     if (bmi >= 25 && bmi < 27) return 12;
-    if (bmi >= 16 && bmi < 17) return 8; 
+    if (bmi >= 16 && bmi < 17) return 8;
     if (bmi >= 27 && bmi < 30) return 8;
-    if (bmi >= 15 && bmi < 16) return 4; 
+    if (bmi >= 15 && bmi < 16) return 4;
     if (bmi >= 30 && bmi < 35) return 4;
-    return 0; 
+    return 0;
   })();
 
   const stepsScore = (() => {
     const steps = lifestyleData.Daily_Steps || 0;
-    if (steps >= 10000) return 15; 
+    if (steps >= 10000) return 15;
     if (steps >= 8000) return 12;
     if (steps >= 6000) return 9;
     if (steps >= 4000) return 6;
-    if (steps >= 2000) return 3; 
-    return 0; 
+    if (steps >= 2000) return 3;
+    return 0;
   })();
 
   const sleepScore = (() => {
     const hours = lifestyleData.Sleep_Hours || 0;
-    if (hours >= 7 && hours <= 9) return 15; 
-    if (hours >= 6 && hours < 7) return 12; 
-    if (hours > 9 && hours <= 10) return 12; 
-    if (hours >= 5 && hours < 6) return 8; 
-    if (hours > 10 && hours <= 11) return 8; 
-    if (hours >= 4 && hours < 5) return 4; 
-    if (hours > 11) return 4; 
-    return 0; 
+    if (hours >= 7 && hours <= 9) return 15;
+    if (hours >= 6 && hours < 7) return 12;
+    if (hours > 9 && hours <= 10) return 12;
+    if (hours >= 5 && hours < 6) return 8;
+    if (hours > 10 && hours <= 11) return 8;
+    if (hours >= 4 && hours < 5) return 4;
+    if (hours > 11) return 4;
+    return 0;
   })();
 
   const exerciseScore = (() => {
     const frequency = lifestyleData.Exercise_Frequency || 0;
-    if (frequency >= 5) return 15; 
-    if (frequency >= 3) return 12; 
-    if (frequency >= 2) return 8; 
-    if (frequency >= 1) return 4; 
-    return 0; 
+    if (frequency >= 5) return 15;
+    if (frequency >= 3) return 12;
+    if (frequency >= 2) return 8;
+    if (frequency >= 1) return 4;
+    return 0;
   })();
 
   const dietScore = (() => {
@@ -423,7 +429,7 @@ const calculateLifestyleScore = (lifestyleData) => {
 
   const fruitsVeggiesScore = (() => {
     const servings = lifestyleData.FRUITS_VEGGIES || 0;
-    if (servings >= 5) return 10; 
+    if (servings >= 5) return 10;
     if (servings >= 4) return 8;
     if (servings >= 3) return 6;
     if (servings >= 2) return 4;
@@ -433,21 +439,21 @@ const calculateLifestyleScore = (lifestyleData) => {
 
   const stressScore = (() => {
     const stress = lifestyleData.Stress_Level || 5;
-    if (stress <= 2) return 10; 
-    if (stress <= 4) return 8; 
-    if (stress <= 6) return 6; 
-    if (stress <= 8) return 3; 
-    return 0; 
+    if (stress <= 2) return 10;
+    if (stress <= 4) return 8;
+    if (stress <= 6) return 6;
+    if (stress <= 8) return 3;
+    return 0;
   })();
 
   const screenTimeScore = (() => {
     const hours = lifestyleData.Screen_Time_Hours || 0;
-    if (hours <= 2) return 5; 
-    if (hours <= 4) return 4; 
-    if (hours <= 6) return 3; 
-    if (hours <= 8) return 2; 
-    if (hours <= 10) return 1; 
-    return 0; 
+    if (hours <= 2) return 5;
+    if (hours <= 4) return 4;
+    if (hours <= 6) return 3;
+    if (hours <= 8) return 2;
+    if (hours <= 10) return 1;
+    return 0;
   })();
 
   const smokingPenalty = (() => {
@@ -482,7 +488,9 @@ const calculateLifestyleScore = (lifestyleData) => {
 };
 
 const ProgressBar = React.memo(({ currentStep, totalSteps, t }) => {
-  const progressAnim = useRef(new Animated.Value(currentStep / totalSteps)).current;
+  const progressAnim = useRef(
+    new Animated.Value(currentStep / totalSteps)
+  ).current;
 
   useEffect(() => {
     Animated.timing(progressAnim, {
@@ -494,7 +502,7 @@ const ProgressBar = React.memo(({ currentStep, totalSteps, t }) => {
 
   const animatedWidth = progressAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
+    outputRange: ["0%", "100%"],
   });
 
   return (
@@ -505,10 +513,14 @@ const ProgressBar = React.memo(({ currentStep, totalSteps, t }) => {
       <Text style={styles.progressText}>
         {formatString
           ? formatString(
-              t.lifestyleDataTagline || fallbackTranslations.lifestyleDataTagline,
+              t.lifestyleDataTagline ||
+                fallbackTranslations.lifestyleDataTagline,
               { currentStep, totalSteps }
             )
-          : (t.lifestyleDataTagline || fallbackTranslations.lifestyleDataTagline)
+          : (
+              t.lifestyleDataTagline ||
+              fallbackTranslations.lifestyleDataTagline
+            )
               .replace("{currentStep}", currentStep)
               .replace("{totalSteps}", totalSteps)}
       </Text>
@@ -519,10 +531,12 @@ const ProgressBar = React.memo(({ currentStep, totalSteps, t }) => {
 const LifestyleDataInputScreen = () => {
   const context = useContext(LanguageContext);
   const t = context && context.t ? context.t : fallbackTranslations;
-  
+
   useEffect(() => {
     if (!context || !context.t) {
-      console.warn("LanguageContext is not properly set up. Using fallback translations.");
+      console.warn(
+        "LanguageContext is not properly set up. Using fallback translations."
+      );
     }
   }, [context]);
 
@@ -560,64 +574,69 @@ const LifestyleDataInputScreen = () => {
 
   const [focusedInput, setFocusedInput] = useState(null);
 
-  const formattedValues = useMemo(() => ({
-    dailySteps: Math.round(formData.dailySteps).toLocaleString(),
-    exerciseFrequency: `${formData.exerciseFrequency} ${t.daysPerWeek || fallbackTranslations.daysPerWeek}`,
-    sleepHours: `${formData.sleepHours} ${t.hours || fallbackTranslations.hours}`,
-    fruitsVeggies: `${formData.fruitsVeggies} ${t.servingsPerDay || fallbackTranslations.servingsPerDay}`,
-    stressLevel: `${formData.stressLevel}/10`,
-    screenTimeHours: `${formData.screenTimeHours} ${t.hours || fallbackTranslations.hours}`,
-  }), [
-    formData.dailySteps,
-    formData.exerciseFrequency,
-    formData.sleepHours,
-    formData.fruitsVeggies,
-    formData.stressLevel,
-    formData.screenTimeHours,
-    t
-  ]);
+  const formattedValues = useMemo(
+    () => ({
+      dailySteps: Math.round(formData.dailySteps).toLocaleString(),
+      exerciseFrequency: `${formData.exerciseFrequency} ${t.daysPerWeek || fallbackTranslations.daysPerWeek}`,
+      sleepHours: `${formData.sleepHours} ${t.hours || fallbackTranslations.hours}`,
+      fruitsVeggies: `${formData.fruitsVeggies} ${t.servingsPerDay || fallbackTranslations.servingsPerDay}`,
+      stressLevel: `${formData.stressLevel}/10`,
+      screenTimeHours: `${formData.screenTimeHours} ${t.hours || fallbackTranslations.hours}`,
+    }),
+    [
+      formData.dailySteps,
+      formData.exerciseFrequency,
+      formData.sleepHours,
+      formData.fruitsVeggies,
+      formData.stressLevel,
+      formData.screenTimeHours,
+      t,
+    ]
+  );
 
   const debouncedSetDailySteps = useCallback(
     debounce((value) => {
-      setFormData(prev => ({ ...prev, dailySteps: value }));
-    }, 16), 
+      setFormData((prev) => ({ ...prev, dailySteps: value }));
+    }, 16),
     []
   );
 
   const debouncedSetExerciseFrequency = useCallback(
     debounce((value) => {
-      setFormData(prev => ({ ...prev, exerciseFrequency: value }));
+      setFormData((prev) => ({ ...prev, exerciseFrequency: value }));
     }, 16),
     []
   );
 
   const debouncedSetSleepHours = useCallback(
     debounce((value) => {
-      setFormData(prev => ({ ...prev, sleepHours: value }));
+      setFormData((prev) => ({ ...prev, sleepHours: value }));
     }, 16),
     []
   );
 
   const debouncedSetFruitsVeggies = useCallback(
     debounce((value) => {
-      setFormData(prev => ({ ...prev, fruitsVeggies: value }));
+      setFormData((prev) => ({ ...prev, fruitsVeggies: value }));
     }, 16),
     []
   );
 
   const debouncedSetStressLevel = useCallback(
     debounce((value) => {
-      setFormData(prev => ({ ...prev, stressLevel: value }));
+      setFormData((prev) => ({ ...prev, stressLevel: value }));
     }, 16),
     []
   );
 
   const debouncedSetScreenTimeHours = useCallback(
     debounce((value) => {
-      setFormData(prev => ({ ...prev, screenTimeHours: value }));
+      setFormData((prev) => ({ ...prev, screenTimeHours: value }));
     }, 16),
     []
   );
+
+  // ... [Rest of your existing methods remain the same] ...
 
   const loadOfflineFilesFromAssets = async () => {
     try {
@@ -1032,6 +1051,7 @@ const LifestyleDataInputScreen = () => {
             data: Array.from(inputTensor.data),
           });
 
+          // Verify .onnx files exist
           const modelPaths = [
             `${FileSystem.documentDirectory}xgb_model_output_0.onnx`,
             `${FileSystem.documentDirectory}xgb_model_output_1.onnx`,
@@ -1273,30 +1293,48 @@ const LifestyleDataInputScreen = () => {
     };
   }, []);
 
-  const stepTitles = useMemo(() => [
-    t.personalInfoTitle || fallbackTranslations.personalInfoTitle,
-    t.healthHabitsTitle || fallbackTranslations.healthHabitsTitle,
-    t.lifestyleTitle || fallbackTranslations.lifestyleTitle,
-  ], [t]);
+  const stepTitles = useMemo(
+    () => [
+      t.personalInfoTitle || fallbackTranslations.personalInfoTitle,
+      t.healthHabitsTitle || fallbackTranslations.healthHabitsTitle,
+      t.lifestyleTitle || fallbackTranslations.lifestyleTitle,
+    ],
+    [t]
+  );
 
-  const genderOptions = useMemo(() => [
-    { label: t.male || fallbackTranslations.male, value: "Male" },
-    { label: t.female || fallbackTranslations.female, value: "Female" },
-  ], [t]);
+  const genderOptions = useMemo(
+    () => [
+      { label: t.male || fallbackTranslations.male, value: "Male" },
+      { label: t.female || fallbackTranslations.female, value: "Female" },
+    ],
+    [t]
+  );
 
-  const chronicDiseaseOptions = useMemo(() => [
-    { label: t.none || fallbackTranslations.none, value: "None" },
-    { label: t.stroke || fallbackTranslations.stroke, value: "Stroke" },
-    { label: t.hypertension || fallbackTranslations.hypertension, value: "Hypertension" },
-    { label: t.obesity || fallbackTranslations.obesity, value: "Obesity" },
-  ], [t]);
+  const chronicDiseaseOptions = useMemo(
+    () => [
+      { label: t.none || fallbackTranslations.none, value: "None" },
+      { label: t.stroke || fallbackTranslations.stroke, value: "Stroke" },
+      {
+        label: t.hypertension || fallbackTranslations.hypertension,
+        value: "Hypertension",
+      },
+      { label: t.obesity || fallbackTranslations.obesity, value: "Obesity" },
+    ],
+    [t]
+  );
 
-  const dietQualityOptions = useMemo(() => [
-    { label: t.excellent || fallbackTranslations.excellent, value: "Excellent" },
-    { label: t.good || fallbackTranslations.good, value: "Good" },
-    { label: t.average || fallbackTranslations.average, value: "Average" },
-    { label: t.poor || fallbackTranslations.poor, value: "Poor" },
-  ], [t]);
+  const dietQualityOptions = useMemo(
+    () => [
+      {
+        label: t.excellent || fallbackTranslations.excellent,
+        value: "Excellent",
+      },
+      { label: t.good || fallbackTranslations.good, value: "Good" },
+      { label: t.average || fallbackTranslations.average, value: "Average" },
+      { label: t.poor || fallbackTranslations.poor, value: "Poor" },
+    ],
+    [t]
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -1309,9 +1347,10 @@ const LifestyleDataInputScreen = () => {
         <ProgressBar currentStep={currentStep} totalSteps={totalSteps} t={t} />
       </View>
 
-      <ScrollView 
-        style={styles.content} 
+      <ScrollView
+        style={styles.content}
         showsVerticalScrollIndicator={false}
+        // Additional props to reduce scrollbar jitter
         scrollEventThrottle={16}
         bounces={false}
         overScrollMode="never"
@@ -1322,7 +1361,9 @@ const LifestyleDataInputScreen = () => {
           {currentStep === 1 && (
             <>
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>{t.age || fallbackTranslations.age}</Text>
+                <Text style={styles.inputLabel}>
+                  {t.age || fallbackTranslations.age}
+                </Text>
                 <View style={styles.inputContainer}>
                   <TextInput
                     style={[
@@ -1340,7 +1381,9 @@ const LifestyleDataInputScreen = () => {
                     onFocus={() => setFocusedInput("age")}
                     onBlur={() => setFocusedInput(null)}
                     accessibilityLabel={t.age || fallbackTranslations.age}
-                    accessibilityHint={t.enterAge || fallbackTranslations.enterAge}
+                    accessibilityHint={
+                      t.enterAge || fallbackTranslations.enterAge
+                    }
                   />
                   {errors.age ? (
                     <Text style={styles.errorText}>{errors.age}</Text>
@@ -1349,7 +1392,9 @@ const LifestyleDataInputScreen = () => {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>{t.gender || fallbackTranslations.gender}</Text>
+                <Text style={styles.inputLabel}>
+                  {t.gender || fallbackTranslations.gender}
+                </Text>
                 <View style={styles.pickerContainer}>
                   <Picker
                     selectedValue={formData.gender}
@@ -1381,7 +1426,9 @@ const LifestyleDataInputScreen = () => {
                       focusedInput === "heightCm" && styles.inputFocused,
                       errors.heightCm && { borderColor: "#ef4444" },
                     ]}
-                    placeholder={t.enterHeight || fallbackTranslations.enterHeight}
+                    placeholder={
+                      t.enterHeight || fallbackTranslations.enterHeight
+                    }
                     placeholderTextColor="#94a3b8"
                     keyboardType="numeric"
                     value={formData.heightCm}
@@ -1391,8 +1438,12 @@ const LifestyleDataInputScreen = () => {
                     }}
                     onFocus={() => setFocusedInput("heightCm")}
                     onBlur={() => setFocusedInput(null)}
-                    accessibilityLabel={t.heightCm || fallbackTranslations.heightCm}
-                    accessibilityHint={t.enterHeight || fallbackTranslations.enterHeight}
+                    accessibilityLabel={
+                      t.heightCm || fallbackTranslations.heightCm
+                    }
+                    accessibilityHint={
+                      t.enterHeight || fallbackTranslations.enterHeight
+                    }
                   />
                   {errors.heightCm ? (
                     <Text style={styles.errorText}>{errors.heightCm}</Text>
@@ -1411,7 +1462,9 @@ const LifestyleDataInputScreen = () => {
                       focusedInput === "weightKg" && styles.inputFocused,
                       errors.weightKg && { borderColor: "#ef4444" },
                     ]}
-                    placeholder={t.enterWeight || fallbackTranslations.enterWeight}
+                    placeholder={
+                      t.enterWeight || fallbackTranslations.enterWeight
+                    }
                     placeholderTextColor="#94a3b8"
                     keyboardType="numeric"
                     value={formData.weightKg}
@@ -1421,8 +1474,12 @@ const LifestyleDataInputScreen = () => {
                     }}
                     onFocus={() => setFocusedInput("weightKg")}
                     onBlur={() => setFocusedInput(null)}
-                    accessibilityLabel={t.weightKg || fallbackTranslations.weightKg}
-                    accessibilityHint={t.enterWeight || fallbackTranslations.enterWeight}
+                    accessibilityLabel={
+                      t.weightKg || fallbackTranslations.weightKg
+                    }
+                    accessibilityHint={
+                      t.enterWeight || fallbackTranslations.enterWeight
+                    }
                   />
                   {errors.weightKg ? (
                     <Text style={styles.errorText}>{errors.weightKg}</Text>
@@ -1431,12 +1488,16 @@ const LifestyleDataInputScreen = () => {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>{t.bmi || fallbackTranslations.bmi}</Text>
+                <Text style={styles.inputLabel}>
+                  {t.bmi || fallbackTranslations.bmi}
+                </Text>
                 <TextInput
                   style={[styles.input, styles.bmiContainer]}
                   value={formData.bmi}
                   editable={false}
-                  placeholder={t.bmiPlaceholder || fallbackTranslations.bmiPlaceholder}
+                  placeholder={
+                    t.bmiPlaceholder || fallbackTranslations.bmiPlaceholder
+                  }
                   placeholderTextColor="#14b8a6"
                   accessibilityLabel={t.bmi || fallbackTranslations.bmi}
                 />
@@ -1460,7 +1521,9 @@ const LifestyleDataInputScreen = () => {
                         chronicDisease: itemValue,
                       }))
                     }
-                    accessibilityLabel={t.chronicDisease || fallbackTranslations.chronicDisease}
+                    accessibilityLabel={
+                      t.chronicDisease || fallbackTranslations.chronicDisease
+                    }
                   >
                     {chronicDiseaseOptions.map((option) => (
                       <Picker.Item
@@ -1487,7 +1550,9 @@ const LifestyleDataInputScreen = () => {
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
                   onValueChange={debouncedSetDailySteps}
-                  accessibilityLabel={t.dailySteps || fallbackTranslations.dailySteps}
+                  accessibilityLabel={
+                    t.dailySteps || fallbackTranslations.dailySteps
+                  }
                   accessibilityValue={{
                     text: `${Math.round(formData.dailySteps)} steps`,
                   }}
@@ -1503,7 +1568,8 @@ const LifestyleDataInputScreen = () => {
 
               <View style={styles.sliderGroup}>
                 <Text style={styles.inputLabel}>
-                  {t.exerciseFrequency || fallbackTranslations.exerciseFrequency}
+                  {t.exerciseFrequency ||
+                    fallbackTranslations.exerciseFrequency}
                 </Text>
                 <Slider
                   style={styles.slider}
@@ -1515,7 +1581,10 @@ const LifestyleDataInputScreen = () => {
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
                   onValueChange={debouncedSetExerciseFrequency}
-                  accessibilityLabel={t.exerciseFrequency || fallbackTranslations.exerciseFrequency}
+                  accessibilityLabel={
+                    t.exerciseFrequency ||
+                    fallbackTranslations.exerciseFrequency
+                  }
                   accessibilityValue={{
                     text: `${formData.exerciseFrequency} days per week`,
                   }}
@@ -1547,7 +1616,9 @@ const LifestyleDataInputScreen = () => {
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
                   onValueChange={debouncedSetSleepHours}
-                  accessibilityLabel={t.sleepHours || fallbackTranslations.sleepHours}
+                  accessibilityLabel={
+                    t.sleepHours || fallbackTranslations.sleepHours
+                  }
                   accessibilityValue={{ text: `${formData.sleepHours} hours` }}
                 />
                 <View style={styles.sliderLabelRow}>
@@ -1562,7 +1633,8 @@ const LifestyleDataInputScreen = () => {
               <View style={styles.switchGroup}>
                 <View style={styles.switchContainer}>
                   <Text style={styles.switchLabel}>
-                    {t.alcoholConsumption || fallbackTranslations.alcoholConsumption}
+                    {t.alcoholConsumption ||
+                      fallbackTranslations.alcoholConsumption}
                   </Text>
                   <Switch
                     style={styles.switchToggle}
@@ -1577,7 +1649,10 @@ const LifestyleDataInputScreen = () => {
                     thumbColor={
                       formData.alcoholConsumption ? "#ffffff" : "#f4f3f4"
                     }
-                    accessibilityLabel={t.alcoholConsumption || fallbackTranslations.alcoholConsumption}
+                    accessibilityLabel={
+                      t.alcoholConsumption ||
+                      fallbackTranslations.alcoholConsumption
+                    }
                   />
                 </View>
               </View>
@@ -1595,7 +1670,9 @@ const LifestyleDataInputScreen = () => {
                     }
                     trackColor={{ false: "#e2e8f0", true: "#14b8a6" }}
                     thumbColor={formData.smokingHabit ? "#ffffff" : "#f4f3f4"}
-                    accessibilityLabel={t.smokingHabit || fallbackTranslations.smokingHabit}
+                    accessibilityLabel={
+                      t.smokingHabit || fallbackTranslations.smokingHabit
+                    }
                   />
                 </View>
               </View>
@@ -1606,7 +1683,8 @@ const LifestyleDataInputScreen = () => {
             <>
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>
-                  {t.dietQuality?.label || fallbackTranslations.dietQuality.label}
+                  {t.dietQuality?.label ||
+                    fallbackTranslations.dietQuality.label}
                 </Text>
                 <View style={styles.pickerContainer}>
                   <Picker
@@ -1618,7 +1696,10 @@ const LifestyleDataInputScreen = () => {
                         dietQuality: itemValue,
                       }))
                     }
-                    accessibilityLabel={t.dietQuality?.label || fallbackTranslations.dietQuality.label}
+                    accessibilityLabel={
+                      t.dietQuality?.label ||
+                      fallbackTranslations.dietQuality.label
+                    }
                   >
                     {dietQualityOptions.map((option) => (
                       <Picker.Item
@@ -1645,7 +1726,9 @@ const LifestyleDataInputScreen = () => {
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
                   onValueChange={debouncedSetFruitsVeggies}
-                  accessibilityLabel={t.fruitsVeggies || fallbackTranslations.fruitsVeggies}
+                  accessibilityLabel={
+                    t.fruitsVeggies || fallbackTranslations.fruitsVeggies
+                  }
                   accessibilityValue={{
                     text: `${formData.fruitsVeggies} servings per day`,
                   }}
@@ -1673,7 +1756,9 @@ const LifestyleDataInputScreen = () => {
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
                   onValueChange={debouncedSetStressLevel}
-                  accessibilityLabel={t.stressLevel || fallbackTranslations.stressLevel}
+                  accessibilityLabel={
+                    t.stressLevel || fallbackTranslations.stressLevel
+                  }
                   accessibilityValue={{
                     text: `${formData.stressLevel} out of 10`,
                   }}
@@ -1694,7 +1779,10 @@ const LifestyleDataInputScreen = () => {
                     (color, index) => (
                       <View
                         key={index}
-                        style={[styles.stressLevelColor, { backgroundColor: color }]}
+                        style={[
+                          styles.stressLevelColor,
+                          { backgroundColor: color },
+                        ]}
                       />
                     )
                   )}
@@ -1715,14 +1803,20 @@ const LifestyleDataInputScreen = () => {
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
                   onValueChange={debouncedSetScreenTimeHours}
-                  accessibilityLabel={t.screenTimeHours || fallbackTranslations.screenTimeHours}
+                  accessibilityLabel={
+                    t.screenTimeHours || fallbackTranslations.screenTimeHours
+                  }
                   accessibilityValue={{
                     text: `${formData.screenTimeHours} hours per day`,
                   }}
                 />
                 <View style={styles.sliderLabelRow}>
-                  <Text style={styles.sliderMinMaxLabel}>0 {t.hours || fallbackTranslations.hours}</Text>
-                  <Text style={styles.sliderMinMaxLabel}>16 {t.hours || fallbackTranslations.hours}</Text>
+                  <Text style={styles.sliderMinMaxLabel}>
+                    0 {t.hours || fallbackTranslations.hours}
+                  </Text>
+                  <Text style={styles.sliderMinMaxLabel}>
+                    16 {t.hours || fallbackTranslations.hours}
+                  </Text>
                 </View>
                 <Text style={styles.sliderValue}>
                   {formattedValues.screenTimeHours}

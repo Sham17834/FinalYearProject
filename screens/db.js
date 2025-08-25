@@ -120,6 +120,7 @@ export const getDb = async () => {
     }
   }
 
+  // Create HealthRecords table with all necessary columns
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS HealthRecords (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -138,9 +139,21 @@ export const getDb = async () => {
       diet_quality TEXT,
       fruits_veggies INTEGER,
       stress_level INTEGER,
-      screen_time_hours REAL
+      screen_time_hours REAL,
+      salt_intake TEXT
     );
   `);
+
+  // Add salt_intake column if it doesn't exist (for existing databases)
+  try {
+    await db.execAsync(`
+      ALTER TABLE HealthRecords ADD COLUMN salt_intake TEXT;
+    `);
+  } catch (error) {
+    if (!error.message.includes("duplicate column name")) {
+      console.log("salt_intake column may already exist or couldn't be added");
+    }
+  }
 
   return db;
 };
