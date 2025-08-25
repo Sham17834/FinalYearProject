@@ -65,7 +65,7 @@ export const getDb = async () => {
     if (!error.message.includes("duplicate column name")) {
     }
   }
-  
+
   try {
     await db.execAsync(`
       ALTER TABLE UserProfile ADD COLUMN email TEXT;

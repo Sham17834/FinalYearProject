@@ -24,7 +24,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Asset } from "expo-asset";
 import debounce from "lodash.debounce";
 
-// Fallback translations to use when LanguageContext is not properly set up
 const fallbackTranslations = {
   lifestyleDataTitle: "Lifestyle Assessment",
   personalInfoTitle: "Personal Information",
@@ -143,8 +142,7 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderColor: "#e2e8f0",
     borderWidth: 1,
-    // Fix layout shifts by ensuring consistent dimensions
-    minHeight: 600, // Adjust based on your content
+    minHeight: 600, 
   },
   stepTitle: {
     fontSize: 24,
@@ -152,12 +150,10 @@ const styles = StyleSheet.create({
     color: "#008080",
     marginBottom: 20,
     textAlign: "center",
-    // Prevent title from changing height
     minHeight: 32,
   },
   inputGroup: {
     marginBottom: 24,
-    // Ensure consistent height for input groups
     minHeight: 80,
   },
   inputLabel: {
@@ -165,7 +161,6 @@ const styles = StyleSheet.create({
     color: "#1e293b",
     marginBottom: 12,
     fontWeight: "600",
-    // Prevent label height changes
     minHeight: 22,
   },
   inputContainer: {
@@ -223,7 +218,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderColor: "#e2e8f0",
     borderWidth: 1,
-    // Fix slider group height to prevent layout shifts
     minHeight: 140,
   },
   slider: {
@@ -242,9 +236,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderColor: "#008080",
     borderWidth: 1,
-    // Prevent value display from changing size
     minHeight: 44,
-    // Set fixed width to prevent text width changes from shifting layout
     minWidth: 120,
     alignSelf: "center",
   },
@@ -252,7 +244,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 4,
-    // Ensure consistent height
     minHeight: 16,
   },
   sliderMinMaxLabel: {
@@ -272,7 +263,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
-    // Ensure consistent height for switch groups
     minHeight: 80,
   },
   switchContainer: {
@@ -530,7 +520,6 @@ const LifestyleDataInputScreen = () => {
   const context = useContext(LanguageContext);
   const t = context && context.t ? context.t : fallbackTranslations;
   
-  // Log warning if context is not properly set up
   useEffect(() => {
     if (!context || !context.t) {
       console.warn("LanguageContext is not properly set up. Using fallback translations.");
@@ -571,7 +560,6 @@ const LifestyleDataInputScreen = () => {
 
   const [focusedInput, setFocusedInput] = useState(null);
 
-  // Memoize formatted values to prevent re-renders
   const formattedValues = useMemo(() => ({
     dailySteps: Math.round(formData.dailySteps).toLocaleString(),
     exerciseFrequency: `${formData.exerciseFrequency} ${t.daysPerWeek || fallbackTranslations.daysPerWeek}`,
@@ -589,11 +577,10 @@ const LifestyleDataInputScreen = () => {
     t
   ]);
 
-  // Debounced handlers to prevent excessive re-renders
   const debouncedSetDailySteps = useCallback(
     debounce((value) => {
       setFormData(prev => ({ ...prev, dailySteps: value }));
-    }, 16), // ~60fps
+    }, 16), 
     []
   );
 
@@ -631,8 +618,6 @@ const LifestyleDataInputScreen = () => {
     }, 16),
     []
   );
-
-  // ... [Rest of your existing methods remain the same] ...
 
   const loadOfflineFilesFromAssets = async () => {
     try {
@@ -1047,7 +1032,6 @@ const LifestyleDataInputScreen = () => {
             data: Array.from(inputTensor.data),
           });
 
-          // Verify .onnx files exist
           const modelPaths = [
             `${FileSystem.documentDirectory}xgb_model_output_0.onnx`,
             `${FileSystem.documentDirectory}xgb_model_output_1.onnx`,
@@ -1328,7 +1312,6 @@ const LifestyleDataInputScreen = () => {
       <ScrollView 
         style={styles.content} 
         showsVerticalScrollIndicator={false}
-        // Additional props to reduce scrollbar jitter
         scrollEventThrottle={16}
         bounces={false}
         overScrollMode="never"

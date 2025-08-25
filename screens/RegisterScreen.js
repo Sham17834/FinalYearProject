@@ -14,7 +14,6 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getDb } from "./db";
 
 const RegisterScreen = () => {

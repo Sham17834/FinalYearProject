@@ -4,20 +4,17 @@ from pydantic import BaseModel
 import numpy as np
 import joblib
 
-# Load pre-trained artifacts
 model = joblib.load('api/XGBoost_model.pkl')
 scaler = joblib.load('api/scaler_final.pkl')
 label_encoders = joblib.load('api/label_encoders_final.pkl')
 selected_features = joblib.load('api/selected_features_final.pkl')
 
-# FastAPI app
 app = FastAPI(
     title="Multi-label XGBoost API",
     description="Predict Obesity, Hypertension, Stroke risk with probability.",
     version="1.0"
 )
 
-# Add CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  
@@ -26,7 +23,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Input schema and predict stays the same
 class InputData(BaseModel):
     Age: int
     Gender: str

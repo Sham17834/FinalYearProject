@@ -83,13 +83,11 @@ const LoginScreen = () => {
     try {
       console.log("Saving user data:", userData);
 
-      // Save to AsyncStorage for ProfileScreen to access
       await AsyncStorage.setItem("userProfileData", JSON.stringify(userData));
 
       // Save to database
       const db = await getDb();
 
-      // Check if user already exists
       const existingUser = await db.getFirstAsync(
         `SELECT id FROM Users WHERE email = ?`,
         [userData.email]
@@ -163,7 +161,6 @@ const LoginScreen = () => {
         userData,
       });
     } catch (error) {
-      // ... error handling
     } finally {
       setIsLoading(false);
     }
@@ -198,7 +195,6 @@ const LoginScreen = () => {
         email: user.email || userInfo.user?.email,
       };
 
-      // Save user data before navigation
       await saveUserData(userData);
 
       const isFirstTimeUser = await checkIfFirstTimeUser(user.email);

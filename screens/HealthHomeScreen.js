@@ -919,7 +919,6 @@ const HealthHomeScreen = () => {
       item.type !== "recalculate" &&
       item.type !== "header"
     ) {
-      // Only render the "no data" message once, inside a container
       if (item.type === "score") {
         return (
           <View style={[styles.section, { marginTop: 20 }]}>
@@ -940,7 +939,6 @@ const HealthHomeScreen = () => {
           </View>
         );
       }
-      // Return null for other sections to avoid multiple error messages
       return null;
     }
 
