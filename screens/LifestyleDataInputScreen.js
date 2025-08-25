@@ -143,6 +143,8 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderColor: "#e2e8f0",
     borderWidth: 1,
+    // Fix layout shifts by ensuring consistent dimensions
+    minHeight: 600, // Adjust based on your content
   },
   stepTitle: {
     fontSize: 24,
@@ -150,15 +152,21 @@ const styles = StyleSheet.create({
     color: "#008080",
     marginBottom: 20,
     textAlign: "center",
+    // Prevent title from changing height
+    minHeight: 32,
   },
   inputGroup: {
     marginBottom: 24,
+    // Ensure consistent height for input groups
+    minHeight: 80,
   },
   inputLabel: {
     fontSize: 16,
     color: "#1e293b",
     marginBottom: 12,
     fontWeight: "600",
+    // Prevent label height changes
+    minHeight: 22,
   },
   inputContainer: {
     position: "relative",
@@ -215,6 +223,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderColor: "#e2e8f0",
     borderWidth: 1,
+    // Fix slider group height to prevent layout shifts
+    minHeight: 140,
   },
   slider: {
     width: "100%",
@@ -232,11 +242,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderColor: "#008080",
     borderWidth: 1,
+    // Prevent value display from changing size
+    minHeight: 44,
+    // Set fixed width to prevent text width changes from shifting layout
+    minWidth: 120,
+    alignSelf: "center",
   },
   sliderLabelRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 4,
+    // Ensure consistent height
+    minHeight: 16,
   },
   sliderMinMaxLabel: {
     fontSize: 12,
@@ -255,6 +272,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    // Ensure consistent height for switch groups
+    minHeight: 80,
   },
   switchContainer: {
     flexDirection: "row",
@@ -276,6 +295,8 @@ const styles = StyleSheet.create({
     marginTop: 32,
     marginBottom: 20,
     gap: 12,
+    // Ensure consistent button container height
+    minHeight: 60,
   },
   button: {
     paddingVertical: 16,
@@ -287,6 +308,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    // Ensure consistent button height
+    minHeight: 56,
   },
   primaryButton: {
     flex: 1,
@@ -297,6 +320,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderColor: "#e2e8f0",
     borderWidth: 2,
+    // Set minimum width for secondary button
+    minWidth: 120,
   },
   primaryButtonText: {
     color: "#ffffff",
@@ -318,6 +343,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 6,
     fontWeight: "500",
+    // Consistent error text height
+    minHeight: 16,
   },
   stressLevelIndicator: {
     flexDirection: "row",
@@ -543,6 +570,69 @@ const LifestyleDataInputScreen = () => {
   });
 
   const [focusedInput, setFocusedInput] = useState(null);
+
+  // Memoize formatted values to prevent re-renders
+  const formattedValues = useMemo(() => ({
+    dailySteps: Math.round(formData.dailySteps).toLocaleString(),
+    exerciseFrequency: `${formData.exerciseFrequency} ${t.daysPerWeek || fallbackTranslations.daysPerWeek}`,
+    sleepHours: `${formData.sleepHours} ${t.hours || fallbackTranslations.hours}`,
+    fruitsVeggies: `${formData.fruitsVeggies} ${t.servingsPerDay || fallbackTranslations.servingsPerDay}`,
+    stressLevel: `${formData.stressLevel}/10`,
+    screenTimeHours: `${formData.screenTimeHours} ${t.hours || fallbackTranslations.hours}`,
+  }), [
+    formData.dailySteps,
+    formData.exerciseFrequency,
+    formData.sleepHours,
+    formData.fruitsVeggies,
+    formData.stressLevel,
+    formData.screenTimeHours,
+    t
+  ]);
+
+  // Debounced handlers to prevent excessive re-renders
+  const debouncedSetDailySteps = useCallback(
+    debounce((value) => {
+      setFormData(prev => ({ ...prev, dailySteps: value }));
+    }, 16), // ~60fps
+    []
+  );
+
+  const debouncedSetExerciseFrequency = useCallback(
+    debounce((value) => {
+      setFormData(prev => ({ ...prev, exerciseFrequency: value }));
+    }, 16),
+    []
+  );
+
+  const debouncedSetSleepHours = useCallback(
+    debounce((value) => {
+      setFormData(prev => ({ ...prev, sleepHours: value }));
+    }, 16),
+    []
+  );
+
+  const debouncedSetFruitsVeggies = useCallback(
+    debounce((value) => {
+      setFormData(prev => ({ ...prev, fruitsVeggies: value }));
+    }, 16),
+    []
+  );
+
+  const debouncedSetStressLevel = useCallback(
+    debounce((value) => {
+      setFormData(prev => ({ ...prev, stressLevel: value }));
+    }, 16),
+    []
+  );
+
+  const debouncedSetScreenTimeHours = useCallback(
+    debounce((value) => {
+      setFormData(prev => ({ ...prev, screenTimeHours: value }));
+    }, 16),
+    []
+  );
+
+  // ... [Rest of your existing methods remain the same] ...
 
   const loadOfflineFilesFromAssets = async () => {
     try {
@@ -1183,44 +1273,46 @@ const LifestyleDataInputScreen = () => {
     }
   };
 
-  const getStressLevelColors = (level) => {
-    const colors = [];
-    for (let i = 1; i <= 10; i++) {
-      if (i <= level) {
-        if (i <= 3) colors.push("#10b981");
-        else if (i <= 6) colors.push("#f59e0b");
-        else colors.push("#ef4444");
-      } else {
-        colors.push("#e5e7eb");
+  const getStressLevelColors = useMemo(() => {
+    return (level) => {
+      const colors = [];
+      for (let i = 1; i <= 10; i++) {
+        if (i <= level) {
+          if (i <= 3) colors.push("#10b981");
+          else if (i <= 6) colors.push("#f59e0b");
+          else colors.push("#ef4444");
+        } else {
+          colors.push("#e5e7eb");
+        }
       }
-    }
-    return colors;
-  };
+      return colors;
+    };
+  }, []);
 
-  const stepTitles = [
+  const stepTitles = useMemo(() => [
     t.personalInfoTitle || fallbackTranslations.personalInfoTitle,
     t.healthHabitsTitle || fallbackTranslations.healthHabitsTitle,
     t.lifestyleTitle || fallbackTranslations.lifestyleTitle,
-  ];
+  ], [t]);
 
-  const genderOptions = [
+  const genderOptions = useMemo(() => [
     { label: t.male || fallbackTranslations.male, value: "Male" },
     { label: t.female || fallbackTranslations.female, value: "Female" },
-  ];
+  ], [t]);
 
-  const chronicDiseaseOptions = [
+  const chronicDiseaseOptions = useMemo(() => [
     { label: t.none || fallbackTranslations.none, value: "None" },
     { label: t.stroke || fallbackTranslations.stroke, value: "Stroke" },
     { label: t.hypertension || fallbackTranslations.hypertension, value: "Hypertension" },
     { label: t.obesity || fallbackTranslations.obesity, value: "Obesity" },
-  ];
+  ], [t]);
 
-  const dietQualityOptions = [
+  const dietQualityOptions = useMemo(() => [
     { label: t.excellent || fallbackTranslations.excellent, value: "Excellent" },
     { label: t.good || fallbackTranslations.good, value: "Good" },
     { label: t.average || fallbackTranslations.average, value: "Average" },
     { label: t.poor || fallbackTranslations.poor, value: "Poor" },
-  ];
+  ], [t]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -1233,7 +1325,14 @@ const LifestyleDataInputScreen = () => {
         <ProgressBar currentStep={currentStep} totalSteps={totalSteps} t={t} />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        // Additional props to reduce scrollbar jitter
+        scrollEventThrottle={16}
+        bounces={false}
+        overScrollMode="never"
+      >
         <View style={styles.stepCard}>
           <Text style={styles.stepTitle}>{stepTitles[currentStep - 1]}</Text>
 
@@ -1404,9 +1503,7 @@ const LifestyleDataInputScreen = () => {
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, dailySteps: value }))
-                  }
+                  onValueChange={debouncedSetDailySteps}
                   accessibilityLabel={t.dailySteps || fallbackTranslations.dailySteps}
                   accessibilityValue={{
                     text: `${Math.round(formData.dailySteps)} steps`,
@@ -1417,7 +1514,7 @@ const LifestyleDataInputScreen = () => {
                   <Text style={styles.sliderMinMaxLabel}>50,000+</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {Math.round(formData.dailySteps).toLocaleString()}
+                  {formattedValues.dailySteps}
                 </Text>
               </View>
 
@@ -1434,12 +1531,7 @@ const LifestyleDataInputScreen = () => {
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      exerciseFrequency: value,
-                    }))
-                  }
+                  onValueChange={debouncedSetExerciseFrequency}
                   accessibilityLabel={t.exerciseFrequency || fallbackTranslations.exerciseFrequency}
                   accessibilityValue={{
                     text: `${formData.exerciseFrequency} days per week`,
@@ -1454,7 +1546,7 @@ const LifestyleDataInputScreen = () => {
                   </Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {formData.exerciseFrequency} {t.daysPerWeek || fallbackTranslations.daysPerWeek}
+                  {formattedValues.exerciseFrequency}
                 </Text>
               </View>
 
@@ -1471,9 +1563,7 @@ const LifestyleDataInputScreen = () => {
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, sleepHours: value }))
-                  }
+                  onValueChange={debouncedSetSleepHours}
                   accessibilityLabel={t.sleepHours || fallbackTranslations.sleepHours}
                   accessibilityValue={{ text: `${formData.sleepHours} hours` }}
                 />
@@ -1482,7 +1572,7 @@ const LifestyleDataInputScreen = () => {
                   <Text style={styles.sliderMinMaxLabel}>12h</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {formData.sleepHours} {t.hours || fallbackTranslations.hours}
+                  {formattedValues.sleepHours}
                 </Text>
               </View>
 
@@ -1571,9 +1661,7 @@ const LifestyleDataInputScreen = () => {
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, fruitsVeggies: value }))
-                  }
+                  onValueChange={debouncedSetFruitsVeggies}
                   accessibilityLabel={t.fruitsVeggies || fallbackTranslations.fruitsVeggies}
                   accessibilityValue={{
                     text: `${formData.fruitsVeggies} servings per day`,
@@ -1584,7 +1672,7 @@ const LifestyleDataInputScreen = () => {
                   <Text style={styles.sliderMinMaxLabel}>10+</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {formData.fruitsVeggies} {t.servingsPerDay || fallbackTranslations.servingsPerDay}
+                  {formattedValues.fruitsVeggies}
                 </Text>
               </View>
 
@@ -1601,9 +1689,7 @@ const LifestyleDataInputScreen = () => {
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, stressLevel: value }))
-                  }
+                  onValueChange={debouncedSetStressLevel}
                   accessibilityLabel={t.stressLevel || fallbackTranslations.stressLevel}
                   accessibilityValue={{
                     text: `${formData.stressLevel} out of 10`,
@@ -1618,7 +1704,7 @@ const LifestyleDataInputScreen = () => {
                   </Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {formData.stressLevel}/10
+                  {formattedValues.stressLevel}
                 </Text>
                 <View style={styles.stressLevelIndicator}>
                   {getStressLevelColors(formData.stressLevel).map(
@@ -1645,9 +1731,7 @@ const LifestyleDataInputScreen = () => {
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, screenTimeHours: value }))
-                  }
+                  onValueChange={debouncedSetScreenTimeHours}
                   accessibilityLabel={t.screenTimeHours || fallbackTranslations.screenTimeHours}
                   accessibilityValue={{
                     text: `${formData.screenTimeHours} hours per day`,
@@ -1658,7 +1742,7 @@ const LifestyleDataInputScreen = () => {
                   <Text style={styles.sliderMinMaxLabel}>16 {t.hours || fallbackTranslations.hours}</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {formData.screenTimeHours} {t.hours || fallbackTranslations.hours}
+                  {formattedValues.screenTimeHours}
                 </Text>
               </View>
             </>
