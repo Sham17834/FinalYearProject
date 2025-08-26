@@ -10,7 +10,11 @@ import {
   Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
+import {
+  useNavigation,
+  useRoute,
+  useFocusEffect,
+} from "@react-navigation/native";
 import Svg, { Circle } from "react-native-svg";
 import { LanguageContext } from "./LanguageContext";
 import { getDb } from "./db.js";
@@ -302,7 +306,9 @@ class ErrorBoundary extends React.Component {
       return (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
-            {this.state.error?.message || this.props.t?.unknown || "Unknown error"}
+            {this.state.error?.message ||
+              this.props.t?.unknown ||
+              "Unknown error"}
           </Text>
         </View>
       );
@@ -602,19 +608,22 @@ const HealthHomeScreen = () => {
 
     if (lifestyleData.BMI >= 30) {
       tips.push({
-        text: t.manageWeightTips || "Maintain a calorie deficit to reduce weight.",
+        text:
+          t.manageWeightTips || "Maintain a calorie deficit to reduce weight.",
         icon: "monitor-weight",
       });
     } else if (lifestyleData.BMI < 18.5) {
       tips.push({
-        text: t.maintainHealthyWeight || "Focus on maintaining a healthy weight.",
+        text:
+          t.maintainHealthyWeight || "Focus on maintaining a healthy weight.",
         icon: "monitor-weight",
       });
     }
 
     if (lifestyleData.Daily_Steps < 5000) {
       tips.push({
-        text: t.increaseWalkingSteps || "Walk 8000+ steps daily for better health.",
+        text:
+          t.increaseWalkingSteps || "Walk 8000+ steps daily for better health.",
         icon: "directions-walk",
       });
     }
@@ -642,7 +651,8 @@ const HealthHomeScreen = () => {
 
     if (lifestyleData.FRUITS_VEGGIES < 5) {
       tips.push({
-        text: t.eatMoreFruitsVeggies || "Eat 5+ servings of fruits/veggies daily.",
+        text:
+          t.eatMoreFruitsVeggies || "Eat 5+ servings of fruits/veggies daily.",
         icon: "local-dining",
       });
     }

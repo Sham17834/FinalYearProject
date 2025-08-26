@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8fafc",
   },
   header: {
-    paddingTop: 50,
+    paddingTop: 16,
     backgroundColor: "#008080",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -97,14 +97,14 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#ffffff",
     marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#ffffff",
     marginBottom: 24,
     textAlign: "center",
