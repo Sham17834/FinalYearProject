@@ -5,7 +5,6 @@ import {
   FlatList,
   SafeAreaView,
   TouchableOpacity,
-  Animated,
   StyleSheet,
   Dimensions,
   Alert,
@@ -20,7 +19,6 @@ import * as Sharing from "expo-sharing";
 
 const { width } = Dimensions.get("window");
 
-// Define styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -292,7 +290,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// Define ErrorBoundary class first to ensure it is available
 class ErrorBoundary extends React.Component {
   state = { hasError: false, error: null };
 
@@ -305,9 +302,7 @@ class ErrorBoundary extends React.Component {
       return (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
-            {this.state.error?.message ||
-              this.props.t?.unknown ||
-              "Unknown error"}
+            {this.state.error?.message || this.props.t?.unknown || "Unknown error"}
           </Text>
         </View>
       );
@@ -316,7 +311,6 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// Define calculateLifestyleScore function
 const calculateLifestyleScore = (lifestyleData) => {
   if (!lifestyleData) return 0;
 
@@ -442,29 +436,14 @@ const calculateLifestyleScore = (lifestyleData) => {
   return Math.max(0, Math.min(100, totalScore));
 };
 
-// Define CustomProgressBar component
 const CustomProgressBar = ({ progress, color }) => {
-  const animatedWidth = new Animated.Value(0);
-
-  useEffect(() => {
-    const clampedProgress = Math.max(0, Math.min(1, progress));
-    Animated.timing(animatedWidth, {
-      toValue: clampedProgress,
-      duration: 800,
-      useNativeDriver: false,
-    }).start();
-  }, [progress]);
-
   return (
     <View style={styles.riskProgressBar}>
-      <Animated.View
+      <View
         style={[
           styles.progressBarFill,
           {
-            width: animatedWidth.interpolate({
-              inputRange: [0, 1],
-              outputRange: ["0%", "100%"],
-            }),
+            width: `${Math.max(0, Math.min(1, progress)) * 100}%`,
             backgroundColor: color,
           },
         ]}
@@ -473,42 +452,16 @@ const CustomProgressBar = ({ progress, color }) => {
   );
 };
 
-// Define AnimatedProgressCircle component
 const AnimatedProgressCircle = ({
   percentage,
   size = 180,
   strokeWidth = 12,
 }) => {
   const { t = {} } = useContext(LanguageContext);
-  const animatedValue = new Animated.Value(0);
   const circleRef = React.useRef();
-
   const halfSize = size / 2;
   const radius = halfSize - strokeWidth;
   const circumference = 2 * Math.PI * radius;
-
-  useEffect(() => {
-    Animated.spring(animatedValue, {
-      toValue: 1,
-      duration: 1500,
-      useNativeDriver: true,
-      bounciness: 10,
-    }).start();
-
-    animatedValue.addListener((v) => {
-      if (circleRef?.current) {
-        const offset =
-          circumference - (circumference * (percentage || 0) * v.value) / 100;
-        circleRef.current.setNativeProps({
-          strokeDashoffset: offset,
-        });
-      }
-    });
-
-    return () => {
-      animatedValue.removeAllListeners();
-    };
-  }, [percentage]);
 
   const getScoreColor = (score) => {
     if (!score) return "#34C759";
@@ -518,6 +471,7 @@ const AnimatedProgressCircle = ({
   };
 
   const color = getScoreColor(percentage);
+  const offset = circumference - (circumference * (percentage || 0)) / 100;
 
   return (
     <View
@@ -544,7 +498,7 @@ const AnimatedProgressCircle = ({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={circumference}
+          strokeDashoffset={offset}
           fill="none"
           ref={circleRef}
           rotation="-90"
@@ -559,7 +513,6 @@ const AnimatedProgressCircle = ({
   );
 };
 
-// Define HealthHomeScreen component
 const HealthHomeScreen = () => {
   const { t, language } = useContext(LanguageContext);
   const navigation = useNavigation();
@@ -572,8 +525,6 @@ const HealthHomeScreen = () => {
     hypertension: 0,
     stroke: 0,
   });
-  const fadeAnim = new Animated.Value(0.8);
-  const slideAnim = new Animated.Value(10);
 
   const getRiskColor = (risk) => {
     if (risk >= 67) return "#FF3B30";
@@ -651,22 +602,19 @@ const HealthHomeScreen = () => {
 
     if (lifestyleData.BMI >= 30) {
       tips.push({
-        text:
-          t.manageWeightTips || "Maintain a calorie deficit to reduce weight.",
+        text: t.manageWeightTips || "Maintain a calorie deficit to reduce weight.",
         icon: "monitor-weight",
       });
     } else if (lifestyleData.BMI < 18.5) {
       tips.push({
-        text:
-          t.maintainHealthyWeight || "Focus on maintaining a healthy weight.",
+        text: t.maintainHealthyWeight || "Focus on maintaining a healthy weight.",
         icon: "monitor-weight",
       });
     }
 
     if (lifestyleData.Daily_Steps < 5000) {
       tips.push({
-        text:
-          t.increaseWalkingSteps || "Walk 8000+ steps daily for better health.",
+        text: t.increaseWalkingSteps || "Walk 8000+ steps daily for better health.",
         icon: "directions-walk",
       });
     }
@@ -694,8 +642,7 @@ const HealthHomeScreen = () => {
 
     if (lifestyleData.FRUITS_VEGGIES < 5) {
       tips.push({
-        text:
-          t.eatMoreFruitsVeggies || "Eat 5+ servings of fruits/veggies daily.",
+        text: t.eatMoreFruitsVeggies || "Eat 5+ servings of fruits/veggies daily.",
         icon: "local-dining",
       });
     }
@@ -805,7 +752,6 @@ const HealthHomeScreen = () => {
       const { uri } = await Print.printToFileAsync({ html: htmlContent });
       await Sharing.shareAsync(uri);
     } catch (error) {
-      console.error("Error generating PDF:", error);
       Alert.alert(
         t.error || "Error",
         t.pdfGenerationError || "Failed to generate PDF."
@@ -819,12 +765,10 @@ const HealthHomeScreen = () => {
       let lifestyle, prediction, score;
 
       if (route.params?.predictionData) {
-        console.log("Using data from route.params");
         lifestyle = route.params.lifestyleData;
         prediction = route.params.predictionData;
         score = route.params.lifestyleScore;
       } else {
-        console.log("Fetching latest data from database");
         const userProfileData = await db.getAllAsync(
           "SELECT * FROM UserProfile ORDER BY id DESC LIMIT 1"
         );
@@ -865,53 +809,32 @@ const HealthHomeScreen = () => {
       }
 
       if (lifestyle) {
-        console.log("Setting states with fetched data");
         setLifestyleData(lifestyle);
         setPredictionData(prediction);
-        // Recalculate score if not provided or invalid
         const calculatedScore = score ?? calculateLifestyleScore(lifestyle);
         setLifestyleScore(calculatedScore);
-
-        const newDiseaseRisks = {
+        setDiseaseRisks({
           obesity: (prediction?.Obesity_Flag?.probability || 0) * 100,
           hypertension: (prediction?.Hypertension_Flag?.probability || 0) * 100,
           stroke: (prediction?.Stroke_Flag?.probability || 0) * 100,
-        };
-        console.log("Updating disease risks:", newDiseaseRisks);
-        setDiseaseRisks(newDiseaseRisks);
+        });
       } else {
-        console.log("No data found in route.params or database.");
         setLifestyleData(null);
         setPredictionData(null);
         setLifestyleScore(0);
         setDiseaseRisks({ obesity: 0, hypertension: 0, stroke: 0 });
       }
     } catch (error) {
-      console.error("Error fetching progress data:", error);
       Alert.alert(
         t.error || "Error",
         t.dataFetchError || "Failed to fetch health data."
       );
     }
-  }, [route.params, language, t]);
+  }, [route.params, t]);
 
   useFocusEffect(
     useCallback(() => {
-      console.log("Screen is in focus, fetching data...");
       fetchProgressData();
-
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ]).start();
     }, [fetchProgressData])
   );
 
@@ -922,12 +845,7 @@ const HealthHomeScreen = () => {
     iconName,
     iconColor = "#457B9D"
   ) => (
-    <Animated.View
-      style={[
-        styles.metricCard,
-        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-      ]}
-    >
+    <View style={styles.metricCard}>
       <Text style={styles.metricTitle}>{title}</Text>
       <Text style={styles.metricValue}>
         {value ?? (t.unknown || "Unknown")}
@@ -941,7 +859,7 @@ const HealthHomeScreen = () => {
         color={iconColor}
         style={styles.metricIcon}
       />
-    </Animated.View>
+    </View>
   );
 
   const renderFullWidthMetricCard = (
@@ -951,12 +869,7 @@ const HealthHomeScreen = () => {
     iconName,
     iconColor = "#457B9D"
   ) => (
-    <Animated.View
-      style={[
-        styles.fullWidthCard,
-        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-      ]}
-    >
+    <View style={styles.fullWidthCard}>
       <Text style={styles.metricTitle}>{title}</Text>
       <Text style={styles.metricValue}>
         {value ?? (t.unknown || "Unknown")}
@@ -970,7 +883,7 @@ const HealthHomeScreen = () => {
         color={iconColor}
         style={styles.metricIcon}
       />
-    </Animated.View>
+    </View>
   );
 
   const renderRiskCard = ({ item }, t) => {
@@ -985,12 +898,7 @@ const HealthHomeScreen = () => {
           : t.low || "Low";
 
     return (
-      <Animated.View
-        style={[
-          styles.riskCard,
-          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-        ]}
-      >
+      <View style={styles.riskCard}>
         <View style={styles.riskCardContent}>
           <Icon
             name={item.icon}
@@ -1007,20 +915,15 @@ const HealthHomeScreen = () => {
           </View>
         </View>
         <CustomProgressBar progress={progress} color={color} />
-      </Animated.View>
+      </View>
     );
   };
 
   const renderTipCard = ({ item }) => (
-    <Animated.View
-      style={[
-        styles.tipCard,
-        { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-      ]}
-    >
+    <View style={styles.tipCard}>
       <Icon name={item.icon} size={24} color="#34C759" style={styles.tipIcon} />
       <Text style={styles.tipText}>{item.text}</Text>
-    </Animated.View>
+    </View>
   );
 
   const getOverallRiskLevel = () => {
@@ -1046,52 +949,43 @@ const HealthHomeScreen = () => {
   ];
 
   const renderItem = ({ item }) => {
-    if (
-      !lifestyleData &&
-      item.type !== "recalculate" &&
-      item.type !== "header"
-    ) {
-      if (item.type === "score") {
-        return (
-          <View style={[styles.section, { marginTop: 20 }]}>
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>
-                {t.noData ||
-                  "Please submit your lifestyle data to view your health risk predictions."}
+    if (item.type === "score" && !lifestyleData) {
+      return (
+        <View style={[styles.section, { marginTop: 20 }]}>
+          <Text style={styles.sectionTitle}>
+            {t.yourLifestyleScore || "Your Lifestyle Score"}
+          </Text>
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>
+              {t.noData ||
+                "Please submit your lifestyle data to view your health risk predictions."}
+            </Text>
+            <TouchableOpacity
+              style={[styles.recalculateButton, { marginTop: 20 }]}
+              onPress={() => navigation.navigate("LifestyleDataInput")}
+            >
+              <Text style={styles.recalculateButtonText}>
+                {t.recalculate || "Update Lifestyle Data"}
               </Text>
-              <TouchableOpacity
-                style={[styles.recalculateButton, { marginTop: 20 }]}
-                onPress={() => navigation.navigate("LifestyleDataInput")}
-              >
-                <Text style={styles.recalculateButtonText}>
-                  {t.recalculate || "Update Lifestyle Data"}
-                </Text>
-              </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
           </View>
-        );
-      }
-      return null;
+        </View>
+      );
     }
 
     switch (item.type) {
       case "header":
         return (
-          <Animated.View style={[styles.headerContainer]}>
+          <View style={styles.headerContainer}>
             <Text style={styles.greeting}>{t.homeTitle || "Dashboard"}</Text>
             <Text style={styles.appTagline}>
               {t.homeTagline || "Your health overview"}
             </Text>
-          </Animated.View>
+          </View>
         );
       case "score":
         return (
-          <Animated.View
-            style={[
-              styles.scoreContainer,
-              { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-            ]}
-          >
+          <View style={styles.scoreContainer}>
             <AnimatedProgressCircle percentage={lifestyleScore ?? 0} />
             <Text style={styles.progressLabel}>
               {t.yourLifestyleScore || "Your Lifestyle Score"}
@@ -1102,7 +996,7 @@ const HealthHomeScreen = () => {
               {getOverallRiskLevel()}{" "}
               {t.overallHealthRisk || "Overall Health Risk"}
             </Text>
-          </Animated.View>
+          </View>
         );
       case "metrics":
         return (
@@ -1110,40 +1004,42 @@ const HealthHomeScreen = () => {
             <Text style={styles.sectionTitle}>
               {t.keyMetrics || "Key Metrics"}
             </Text>
-            <View style={styles.metricsGrid}>
-              {renderMetricCard(
-                t.bmiLabel?.replace(": ", "") || "BMI",
-                lifestyleData?.BMI?.toFixed(1) ?? t.unknown,
-                getBMICategory(lifestyleData?.BMI),
-                "accessibility",
-                getBMIColor(lifestyleData?.BMI)
-              )}
-              {renderMetricCard(
-                t.steps || "Steps",
-                formatNumber(lifestyleData?.Daily_Steps) ?? "0",
-                t.daily || "Daily",
-                "directions-walk",
-                "#326db9ff"
-              )}
-              {renderMetricCard(
-                t.sleep || "Sleep",
-                lifestyleData?.Sleep_Hours !== undefined
-                  ? `${lifestyleData.Sleep_Hours} ${t.hrs || "h"}`
-                  : `0 ${t.hrs || "h"}`,
-                getSleepStatus(lifestyleData?.Sleep_Hours),
-                "bed",
-                "#8A2BE2"
-              )}
-              {renderMetricCard(
-                t.exercise,
-                lifestyleData?.Exercise_Frequency !== undefined
-                  ? `${lifestyleData.Exercise_Frequency}/${t.daysPerWeek || "days/week"}`
-                  : `0/${t.daysPerWeek || "days/week"}`,
-                getExerciseStatus(lifestyleData?.Exercise_Frequency),
-                "fitness-center",
-                "#FF9500"
-              )}
-            </View>
+            {lifestyleData && (
+              <View style={styles.metricsGrid}>
+                {renderMetricCard(
+                  t.bmiLabel?.replace(": ", "") || "BMI",
+                  lifestyleData?.BMI?.toFixed(1) ?? t.unknown,
+                  getBMICategory(lifestyleData?.BMI),
+                  "accessibility",
+                  getBMIColor(lifestyleData?.BMI)
+                )}
+                {renderMetricCard(
+                  t.steps || "Steps",
+                  formatNumber(lifestyleData?.Daily_Steps) ?? "0",
+                  t.daily || "Daily",
+                  "directions-walk",
+                  "#326db9ff"
+                )}
+                {renderMetricCard(
+                  t.sleep || "Sleep",
+                  lifestyleData?.Sleep_Hours !== undefined
+                    ? `${lifestyleData.Sleep_Hours} ${t.hrs || "h"}`
+                    : `0 ${t.hrs || "h"}`,
+                  getSleepStatus(lifestyleData?.Sleep_Hours),
+                  "bed",
+                  "#8A2BE2"
+                )}
+                {renderMetricCard(
+                  t.exercise,
+                  lifestyleData?.Exercise_Frequency !== undefined
+                    ? `${lifestyleData.Exercise_Frequency}/${t.daysPerWeek || "days/week"}`
+                    : `0/${t.daysPerWeek || "days/week"}`,
+                  getExerciseStatus(lifestyleData?.Exercise_Frequency),
+                  "fitness-center",
+                  "#FF9500"
+                )}
+              </View>
+            )}
           </View>
         );
       case "lifestyle":
@@ -1152,41 +1048,45 @@ const HealthHomeScreen = () => {
             <Text style={styles.sectionTitle}>
               {t.lifestyleFactors || "Lifestyle Factors"}
             </Text>
-            {renderFullWidthMetricCard(
-              t.dietQuality?.label || "Diet Quality",
-              lifestyleData?.Diet_Quality !== undefined
-                ? getDietQualityText(lifestyleData.Diet_Quality)
-                : t.dietQuality?.unknown || "Unknown",
-              "",
-              "restaurant",
-              "#4CAF50"
-            )}
-            {renderFullWidthMetricCard(
-              t.fruitsVeggies || "Fruits & Vegetables",
-              lifestyleData?.FRUITS_VEGGIES !== undefined
-                ? `${lifestyleData.FRUITS_VEGGIES} ${t.servingsDaily || "servings/day"}`
-                : `0 ${t.servingsDaily || "servings/day"}`,
-              "",
-              "local-dining",
-              "#8BC34A"
-            )}
-            {renderFullWidthMetricCard(
-              t.stressLevel || "Stress Level",
-              getStressLevelText(lifestyleData?.Stress_Level),
-              lifestyleData?.Stress_Level !== undefined
-                ? `${lifestyleData.Stress_Level}/10`
-                : `0/10`,
-              "mood",
-              getStressColor(lifestyleData?.Stress_Level)
-            )}
-            {renderFullWidthMetricCard(
-              t.screenTime || "Screen Time",
-              lifestyleData?.Screen_Time_Hours !== undefined
-                ? `${lifestyleData.Screen_Time_Hours} ${t.hours?.toLowerCase() || "h"}`
-                : `0 ${t.hours?.toLowerCase() || "h"}`,
-              t.perDay || "per day",
-              "devices",
-              "#607D8B"
+            {lifestyleData && (
+              <>
+                {renderFullWidthMetricCard(
+                  t.dietQuality?.label || "Diet Quality",
+                  lifestyleData?.Diet_Quality !== undefined
+                    ? getDietQualityText(lifestyleData.Diet_Quality)
+                    : t.dietQuality?.unknown || "Unknown",
+                  "",
+                  "restaurant",
+                  "#4CAF50"
+                )}
+                {renderFullWidthMetricCard(
+                  t.fruitsVeggies || "Fruits & Vegetables",
+                  lifestyleData?.FRUITS_VEGGIES !== undefined
+                    ? `${lifestyleData.FRUITS_VEGGIES} ${t.servingsDaily || "servings/day"}`
+                    : `0 ${t.servingsDaily || "servings/day"}`,
+                  "",
+                  "local-dining",
+                  "#8BC34A"
+                )}
+                {renderFullWidthMetricCard(
+                  t.stressLevel || "Stress Level",
+                  getStressLevelText(lifestyleData?.Stress_Level),
+                  lifestyleData?.Stress_Level !== undefined
+                    ? `${lifestyleData.Stress_Level}/10`
+                    : `0/10`,
+                  "mood",
+                  getStressColor(lifestyleData?.Stress_Level)
+                )}
+                {renderFullWidthMetricCard(
+                  t.screenTime || "Screen Time",
+                  lifestyleData?.Screen_Time_Hours !== undefined
+                    ? `${lifestyleData.Screen_Time_Hours} ${t.hours?.toLowerCase() || "h"}`
+                    : `0 ${t.hours?.toLowerCase() || "h"}`,
+                  t.perDay || "per day",
+                  "devices",
+                  "#607D8B"
+                )}
+              </>
             )}
           </View>
         );
@@ -1196,53 +1096,56 @@ const HealthHomeScreen = () => {
             <Text style={styles.sectionTitle}>
               {t.chronicDiseaseRisk || "Chronic Disease Risk"}
             </Text>
-            <FlatList
-              data={[
-                {
-                  key: "obesity",
-                  name: t.obesityRisk || "Obesity Risk",
-                  icon: "monitor-weight",
-                },
-                {
-                  key: "hypertension",
-                  name: t.hypertensionRisk || "Hypertension Risk",
-                  icon: "favorite",
-                },
-                {
-                  key: "stroke",
-                  name: t.strokeRisk || "Stroke Risk",
-                  icon: "local-hospital",
-                },
-              ]}
-              renderItem={(props) => renderRiskCard(props, t)}
-              keyExtractor={(item) => item.key}
-              contentContainerStyle={{ paddingHorizontal: 0 }}
-              ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-              scrollEnabled={false}
-            />
+            {lifestyleData && (
+              <FlatList
+                data={[
+                  {
+                    key: "obesity",
+                    name: t.obesityRisk || "Obesity Risk",
+                    icon: "monitor-weight",
+                  },
+                  {
+                    key: "hypertension",
+                    name: t.hypertensionRisk || "Hypertension Risk",
+                    icon: "favorite",
+                  },
+                  {
+                    key: "stroke",
+                    name: t.strokeRisk || "Stroke Risk",
+                    icon: "local-hospital",
+                  },
+                ]}
+                renderItem={(props) => renderRiskCard(props, t)}
+                keyExtractor={(item) => item.key}
+                contentContainerStyle={{ paddingHorizontal: 0 }}
+                ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+                scrollEnabled={false}
+              />
+            )}
           </View>
         );
       case "tips":
         const tips = generatePersonalizedTips();
-        if (tips.length === 0) return null;
         return (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
               {t.personalizedTips || "Personalized Tips"}
             </Text>
-            <FlatList
-              data={tips}
-              renderItem={renderTipCard}
-              keyExtractor={(item, index) => `${item.text}-${index}`}
-              contentContainerStyle={{ paddingHorizontal: 0 }}
-              ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-              scrollEnabled={false}
-            />
+            {tips.length > 0 && (
+              <FlatList
+                data={tips}
+                renderItem={renderTipCard}
+                keyExtractor={(item, index) => `${item.text}-${index}`}
+                contentContainerStyle={{ paddingHorizontal: 0 }}
+                ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+                scrollEnabled={false}
+              />
+            )}
           </View>
         );
       case "recalculate":
         return (
-          <Animated.View style={[styles.recalculateContainer]}>
+          <View style={styles.recalculateContainer}>
             <TouchableOpacity
               style={styles.recalculateButton}
               onPress={() => navigation.navigate("LifestyleDataInput")}
@@ -1260,7 +1163,7 @@ const HealthHomeScreen = () => {
                 {t.downloadReport || "Download Health Report"}
               </Text>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
         );
       default:
         return null;

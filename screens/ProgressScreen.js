@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useMemo,
-  useCallback,
-  useContext,
-  useEffect,
-} from "react";
+import React, { useState, useMemo, useCallback, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,7 +8,6 @@ import {
   Dimensions,
   FlatList,
   StyleSheet,
-  Animated,
   Alert,
   Modal,
 } from "react-native";
@@ -23,8 +16,7 @@ import { useRoute } from "@react-navigation/native";
 import { getDb } from "./db";
 import { LineChart } from "react-native-chart-kit";
 
-const screenWidth = Dimensions.get("window").width;
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+const { width: screenWidth } = Dimensions.get("window");
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "N/A";
@@ -46,12 +38,13 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingTop: 20,
     paddingBottom: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    paddingHorizontal: 0,
+    margin: 0,
     position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
   },
   headerTitle: {
     fontSize: 24,
@@ -66,7 +59,7 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     padding: 16,
-    paddingTop: 100,
+    paddingTop: 80,
   },
   topSection: {
     flexDirection: "row",
@@ -77,22 +70,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderRadius: 16,
     padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
     marginBottom: 16,
   },
   timeRangeCard: {
     backgroundColor: "#ffffff",
     borderRadius: 16,
     padding: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
     marginBottom: 16,
   },
   chartsSection: {
@@ -108,32 +91,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderRadius: 16,
     padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
     minHeight: 200,
   },
   fullWidthChartCard: {
     backgroundColor: "#ffffff",
     borderRadius: 16,
     padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
     marginBottom: 12,
   },
   bottomSection: {
     backgroundColor: "#ffffff",
     borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
     overflow: "hidden",
   },
   tabContainer: {
@@ -370,11 +338,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     width: screenWidth - 80,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
   },
   tooltipTitle: {
     fontSize: 16,
@@ -399,6 +362,27 @@ const styles = StyleSheet.create({
   },
 });
 
+const chartConfig = {
+  backgroundGradientFrom: "#ffffff",
+  backgroundGradientTo: "#ffffff",
+  color: (opacity = 1) => `rgba(0, 128, 128, ${opacity})`,
+  strokeWidth: 2,
+  barPercentage: 0.5,
+  useShadowColorFromDataset: false,
+  propsForDots: {
+    r: "4",
+    strokeWidth: "2",
+    stroke: "#008080",
+  },
+  propsForBackgroundLines: {
+    strokeDasharray: "",
+    stroke: "#e2e8f0",
+  },
+  propsForLabels: {
+    fontSize: 10,
+  },
+};
+
 const ProgressScreen = () => {
   const { t } = useContext(LanguageContext);
   const route = useRoute();
@@ -412,21 +396,16 @@ const ProgressScreen = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [selectedDataPoint, setSelectedDataPoint] = useState(null);
-  const scrollY = new Animated.Value(0);
 
   const handleDeleteEntry = useCallback(
     async (item) => {
       try {
         const db = await getDb();
-        const table =
-          item.source === "UserProfile" ? "UserProfile" : "HealthRecords";
+        const table = item.source === "UserProfile" ? "UserProfile" : "HealthRecords";
         await db.runAsync(`DELETE FROM ${table} WHERE id = ?`, [item.id]);
         setRefreshKey((prev) => prev + 1);
       } catch (error) {
-        Alert.alert(
-          t.error || "Error",
-          t.deleteError || "Failed to delete entry"
-        );
+        Alert.alert(t.error || "Error", t.deleteError || "Failed to delete entry");
       }
     },
     [t]
@@ -436,17 +415,10 @@ const ProgressScreen = () => {
     (item) => {
       Alert.alert(
         t.confirmDelete || "Confirm Delete",
-        `${
-          t.deleteConfirmation ||
-          "Are you sure you want to delete this entry from"
-        } (${item.date})?`,
+        `${t.deleteConfirmation || "Are you sure you want to delete this entry from"} (${item.date})?`,
         [
           { text: t.cancel || "Cancel", style: "cancel" },
-          {
-            text: t.delete || "Delete",
-            style: "destructive",
-            onPress: () => handleDeleteEntry(item),
-          },
+          { text: t.delete || "Delete", style: "destructive", onPress: () => handleDeleteEntry(item) },
         ]
       );
     },
@@ -525,10 +497,7 @@ const ProgressScreen = () => {
 
     try {
       const db = await getDb();
-
       const navLifestyleData = route.params?.lifestyleData;
-      const navPredictionData = route.params?.predictionData;
-
       const today = formatDate(new Date().toISOString().split("T")[0]);
       let currentDayData = null;
 
@@ -652,9 +621,7 @@ const ProgressScreen = () => {
 
       if (currentDayData) {
         const existingIndex = allData.findIndex(
-          (existing) =>
-            existing.date === currentDayData.date &&
-            existing.source === "UserProfile"
+          (existing) => existing.date === currentDayData.date && existing.source === "UserProfile"
         );
         if (existingIndex >= 0) {
           allData[existingIndex] = currentDayData;
@@ -695,13 +662,7 @@ const ProgressScreen = () => {
 
   useEffect(() => {
     fetchProgressData();
-  }, [fetchProgressData, refreshKey, route.params]);
-
-  useEffect(() => {
-    if (route.params?.lifestyleData) {
-      setRefreshKey((prev) => prev + 1);
-    }
-  }, [route.params]);
+  }, [fetchProgressData, refreshKey]);
 
   const calculateDiseaseRisks = useCallback((data) => {
     if (!data) return { obesity: 1, hypertension: 1, stroke: 1 };
@@ -732,18 +693,14 @@ const ProgressScreen = () => {
     else if (data.daily_steps < 7000) hypertensionScore += 10;
 
     if (data.salt_intake?.toUpperCase() === "HIGH") hypertensionScore += 20;
-    else if (data.salt_intake?.toUpperCase() === "MODERATE")
-      hypertensionScore += 10;
+    else if (data.salt_intake?.toUpperCase() === "MODERATE") hypertensionScore += 10;
 
     if (data.alcohol_consumption === "Yes") hypertensionScore += 15;
 
     if (data.stress_level > 7) hypertensionScore += 20;
     else if (data.stress_level > 3) hypertensionScore += 10;
 
-    risks.hypertension = Math.max(
-      1,
-      Math.min(100, Math.round(hypertensionScore))
-    );
+    risks.hypertension = Math.max(1, Math.min(100, Math.round(hypertensionScore)));
 
     let strokeScore = 0;
     if (data.bmi >= 30) strokeScore += 25;
@@ -768,7 +725,6 @@ const ProgressScreen = () => {
 
     let totalScore = 0;
 
-    // BMI Score
     const bmiScore = (() => {
       const bmi = data.bmi || 0;
       if (bmi >= 18.5 && bmi < 25) return 15;
@@ -781,7 +737,6 @@ const ProgressScreen = () => {
       return 0;
     })();
 
-    // Daily Steps Score
     const stepsScore = (() => {
       const steps = data.daily_steps || 0;
       if (steps >= 10000) return 15;
@@ -792,7 +747,6 @@ const ProgressScreen = () => {
       return 0;
     })();
 
-    // Sleep Hours Score
     const sleepScore = (() => {
       const hours = data.sleep_hours || 0;
       if (hours >= 7 && hours <= 9) return 15;
@@ -805,7 +759,6 @@ const ProgressScreen = () => {
       return 0;
     })();
 
-    // Exercise Frequency Score
     const exerciseScore = (() => {
       const frequency = data.exercise_frequency || 0;
       if (frequency >= 5) return 15;
@@ -815,7 +768,6 @@ const ProgressScreen = () => {
       return 0;
     })();
 
-    // Diet Quality Score
     const dietScore = (() => {
       const quality = data.diet_quality?.toLowerCase() || "poor";
       switch (quality) {
@@ -832,7 +784,6 @@ const ProgressScreen = () => {
       }
     })();
 
-    // Fruits and Veggies Score
     const fruitsVeggiesScore = (() => {
       const servings = data.fruits_veggies || 0;
       if (servings >= 5) return 10;
@@ -843,7 +794,6 @@ const ProgressScreen = () => {
       return 0;
     })();
 
-    // Stress Level Score
     const stressScore = (() => {
       const stress = data.stress_level || 5;
       if (stress <= 2) return 10;
@@ -853,7 +803,6 @@ const ProgressScreen = () => {
       return 0;
     })();
 
-    // Screen Time Score
     const screenTimeScore = (() => {
       const hours = data.screen_time_hours || 0;
       if (hours <= 2) return 5;
@@ -864,16 +813,13 @@ const ProgressScreen = () => {
       return 0;
     })();
 
-    // Smoking Penalty
     const smokingPenalty = (() => {
       const smoking = data.smoking_habit?.toLowerCase() || "no";
-      if (smoking === "yes" || smoking === "daily" || smoking === "heavy")
-        return -10;
+      if (smoking === "yes" || smoking === "regularly") return -10;
       if (smoking === "occasionally" || smoking === "social") return -5;
       return 0;
     })();
 
-    // Alcohol Penalty
     const alcoholPenalty = (() => {
       const alcohol = data.alcohol_consumption?.toLowerCase() || "no";
       if (alcohol === "heavy" || alcohol === "daily") return -5;
@@ -898,117 +844,67 @@ const ProgressScreen = () => {
 
   const filteredData = useMemo(() => {
     const today = new Date();
-    const daysAgo = timeRange === "7days" ? 7 : 30;
-    const cutoffDate = formatDate(
-      new Date(today.setDate(today.getDate() - daysAgo))
-    );
-    return progressData
-      .filter((item) => {
-        const itemDate = new Date(item.date.split("/").reverse().join("-"));
-        const cutoff = new Date(cutoffDate.split("/").reverse().join("-"));
-        return itemDate >= cutoff;
-      })
-      .sort((a, b) => {
-        const dateA = new Date(a.date.split("/").reverse().join("-"));
-        const dateB = new Date(b.date.split("/").reverse().join("-"));
-        return dateA - dateB;
-      });
+    let cutoffDate = new Date();
+
+    if (timeRange === "7days") {
+      cutoffDate.setDate(today.getDate() - 7);
+    } else if (timeRange === "30days") {
+      cutoffDate.setDate(today.getDate() - 30);
+    }
+
+    return progressData.filter((item) => {
+      const itemDate = new Date(item.date.split("/").reverse().join("-"));
+      return itemDate >= cutoffDate;
+    });
   }, [progressData, timeRange]);
 
-  const lifestyleScores = useMemo(
-    () => filteredData.map((item) => calculateLifestyleScore(item)),
-    [filteredData, calculateLifestyleScore]
-  );
+  const lifestyleScores = useMemo(() => filteredData.map((item) => calculateLifestyleScore(item)), [filteredData, calculateLifestyleScore]);
 
-  const stepsData = useMemo(
-    () => filteredData.map((item) => item.daily_steps || 0),
-    [filteredData]
-  );
+  const stepsData = useMemo(() => filteredData.map((item) => item.daily_steps || 0), [filteredData]);
 
-  const sleepData = useMemo(
-    () => filteredData.map((item) => item.sleep_hours || 0),
-    [filteredData]
-  );
+  const sleepData = useMemo(() => filteredData.map((item) => item.sleep_hours || 0), [filteredData]);
 
-  const riskData = useMemo(
-    () => filteredData.map((item) => calculateDiseaseRisks(item)),
-    [filteredData, calculateDiseaseRisks]
-  );
+  const shapRankings = useMemo(() => {
+    if (!latestUserProfile) return [];
 
-  const shapRankings = useMemo(
-    () => [
-      { factor: t.steps || "Steps", value: 0.25 },
-      { factor: t.bmi || "BMI", value: 0.2 },
-      { factor: t.exerciseFrequency || "Exercise Frequency", value: 0.2 },
-      { factor: t.sleep || "Sleep", value: 0.15 },
-      { factor: t.dietQuality?.label || "Diet Quality", value: 0.1 },
-      { factor: t.fruitsVeggies || "Fruits & Veggies", value: 0.1 },
-    ],
-    [
-      t.steps,
-      t.bmi,
-      t.exerciseFrequency,
-      t.sleep,
-      t.dietQuality,
-      t.fruitsVeggies,
-    ]
-  );
+    const factors = [
+      { factor: t.bmi || "BMI", value: latestUserProfile.bmi >= 30 ? 0.3 : latestUserProfile.bmi >= 25 ? 0.2 : 0.1 },
+      { factor: t.steps || "Steps", value: latestUserProfile.daily_steps < 5000 ? 0.2 : latestUserProfile.daily_steps < 8000 ? 0.1 : 0.05 },
+      { factor: t.sleep || "Sleep", value: latestUserProfile.sleep_hours < 6 ? 0.2 : latestUserProfile.sleep_hours > 9 ? 0.15 : 0.05 },
+      { factor: t.exercise || "Exercise", value: latestUserProfile.exercise_frequency < 3 ? 0.15 : 0.05 },
+      { factor: t.dietQuality?.label || "Diet", value: latestUserProfile.diet_quality === "Poor" ? 0.15 : 0.05 },
+      { factor: t.stress || "Stress", value: latestUserProfile.stress_level > 7 ? 0.15 : 0.05 },
+    ];
 
-  const chartConfig = {
-    backgroundColor: "#ffffff",
-    backgroundGradientFrom: "#ffffff",
-    backgroundGradientTo: "#ffffff",
-    decimalPlaces: 1,
-    color: (opacity = 1) => `rgba(0, 128, 128, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(30, 41, 59, ${opacity})`,
-    style: {
-      borderRadius: 16,
-    },
-    propsForDots: {
-      r: "4",
-      strokeWidth: "2",
-      stroke: "#008080",
-    },
-  };
+    return factors.sort((a, b) => b.value - a.value);
+  }, [latestUserProfile, t]);
 
   const summaryStats = useMemo(() => {
     if (!latestUserProfile) return null;
 
     const latestData = latestUserProfile;
-    const userProfileData = filteredData.filter(
-      (item) => item.source === "UserProfile"
-    );
-    const previousData =
-      userProfileData.length > 1
-        ? userProfileData[userProfileData.length - 2]
-        : null;
-
     const latestScore = calculateLifestyleScore(latestData);
-    const previousScore = previousData
-      ? calculateLifestyleScore(previousData)
-      : latestScore;
-    const scoreChange = latestScore - previousScore;
-
     const latestRisks = calculateDiseaseRisks(latestData);
+
+    let scoreChange = "stable";
     let riskChange = "stable";
 
-    if (previousData) {
-      const previousRisks = calculateDiseaseRisks(previousData);
-      const avgPreviousRisk =
-        (previousRisks.obesity +
-          previousRisks.hypertension +
-          previousRisks.stroke) /
-        3;
-      const avgLatestRisk =
-        (latestRisks.obesity + latestRisks.hypertension + latestRisks.stroke) /
-        3;
+    const previousData = filteredData.find(
+      (item) =>
+        item.date !== latestData.date &&
+        new Date(item.date.split("/").reverse().join("-")) <
+        new Date(latestData.date.split("/").reverse().join("-"))
+    );
 
-      riskChange =
-        avgLatestRisk < avgPreviousRisk
-          ? "improved"
-          : avgLatestRisk > avgPreviousRisk
-            ? "worsened"
-            : "stable";
+    if (previousData) {
+      const previousScore = calculateLifestyleScore(previousData);
+      scoreChange = latestScore > previousScore ? "improved" : latestScore < previousScore ? "worsened" : "stable";
+
+      const previousRisks = calculateDiseaseRisks(previousData);
+      const avgPreviousRisk = (previousRisks.obesity + previousRisks.hypertension + previousRisks.stroke) / 3;
+      const avgLatestRisk = (latestRisks.obesity + latestRisks.hypertension + latestRisks.stroke) / 3;
+
+      riskChange = avgLatestRisk < avgPreviousRisk ? "improved" : avgLatestRisk > avgPreviousRisk ? "worsened" : "stable";
     }
 
     return {
@@ -1019,29 +915,11 @@ const ProgressScreen = () => {
       bmi: latestData.bmi || null,
       weight: latestData.weight_kg || null,
       height: latestData.height_cm || null,
-      riskLevel:
-        (latestRisks.obesity + latestRisks.hypertension + latestRisks.stroke) /
-        3,
+      riskLevel: (latestRisks.obesity + latestRisks.hypertension + latestRisks.stroke) / 3,
       riskChange,
       latestRisks,
     };
-  }, [
-    latestUserProfile,
-    filteredData,
-    calculateLifestyleScore,
-    calculateDiseaseRisks,
-  ]);
-
-  const data = useMemo(
-    () => [
-      { type: "quickStats" },
-      { type: "timeRange" },
-      { type: "lifestyleChart" },
-      { type: "stepsSleepCharts" },
-      { type: "tabs" },
-    ],
-    []
-  );
+  }, [latestUserProfile, filteredData, calculateLifestyleScore, calculateDiseaseRisks]);
 
   const handleChartSelect = useCallback(
     (dataPoint, index) => {
@@ -1058,255 +936,183 @@ const ProgressScreen = () => {
     [filteredData]
   );
 
-  const renderQuickStats = useCallback(
-    () => (
-      <View style={styles.topSection}>
-        <View style={styles.quickStatsCard}>
-          <Text style={styles.smallChartTitle}>
-            {t.quickStats || "Quick Stats"}
-          </Text>
-          {isLoading ? (
-            <Text style={styles.loadingText}>{t.loading || "Loading..."}</Text>
-          ) : error ? (
-            <Text style={styles.errorText}>{error}</Text>
-          ) : summaryStats ? (
-            <View style={styles.compactStatsGrid}>
-              <View style={styles.compactStatItem}>
-                <Text style={styles.compactStatValue}>
-                  {summaryStats.score}
-                </Text>
-                <Text style={styles.compactStatLabel}>
-                  {t.lifestyleScore || "Lifestyle Score"}
-                </Text>
-              </View>
-              <View style={styles.compactStatItem}>
-                <Text style={styles.compactStatValue}>
-                  {Math.round(summaryStats.steps).toLocaleString()}
-                </Text>
-                <Text style={styles.compactStatLabel}>
-                  {t.steps || "Steps"}
-                </Text>
-              </View>
-              <View style={styles.compactStatItem}>
-                <Text style={styles.compactStatValue}>
-                  {summaryStats.sleep}
-                </Text>
-                <Text style={styles.compactStatLabel}>
-                  {t.sleep || "Sleep"}
-                </Text>
-              </View>
-              <View style={styles.compactStatItem}>
-                <Text style={styles.compactStatValue}>
-                  {summaryStats.bmi || t.unknown || "N/A"}
-                </Text>
-                <Text style={styles.compactStatLabel}>{t.bmi || "BMI"}</Text>
-              </View>
-              <View style={styles.compactStatItem}>
-                <Text style={styles.compactStatValue}>
-                  {summaryStats.weight || t.unknown || "N/A"}
-                  {summaryStats.weight ? t.kgAbbreviation || "kg" : ""}
-                </Text>
-                <Text style={styles.compactStatLabel}>
-                  {t.weight || "Weight"}
-                </Text>
-              </View>
-              <View style={styles.compactStatItem}>
-                <Text style={styles.compactStatValue}>
-                  {Math.round(summaryStats.riskLevel)}
-                  {t.percentSymbol || "%"}
-                </Text>
-                <Text style={styles.compactStatLabel}>
-                  {t.avgRisk || "Avg Risk"}
-                </Text>
-              </View>
+  const renderQuickStats = useCallback(() => (
+    <View style={styles.topSection}>
+      <View style={styles.quickStatsCard}>
+        <Text style={styles.smallChartTitle}>{t.quickStats || "Quick Stats"}</Text>
+        {isLoading ? (
+          <Text style={styles.loadingText}>{t.loading || "Loading..."}</Text>
+        ) : error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : summaryStats ? (
+          <View style={styles.compactStatsGrid}>
+            <View style={styles.compactStatItem}>
+              <Text style={styles.compactStatValue}>{summaryStats.score}</Text>
+              <Text style={styles.compactStatLabel}>{t.lifestyleScore || "Lifestyle Score"}</Text>
             </View>
-          ) : (
-            <Text style={styles.compactStatLabel}>
-              {t.noStatsAvailable || "No stats available"}
-            </Text>
-          )}
-        </View>
-      </View>
-    ),
-    [isLoading, error, summaryStats, t]
-  );
-
-  const renderTimeRange = useCallback(
-    () => (
-      <View style={styles.timeRangeCard}>
-        <View style={styles.timeRangeContainer}>
-          <TouchableOpacity
-            style={[
-              styles.timeRangeButton,
-              timeRange === "7days" && styles.activeTimeRange,
-            ]}
-            onPress={() => setTimeRange("7days")}
-            accessibilityLabel={t.sevenDays || "7 Days"}
-          >
-            <Text
-              style={[
-                styles.timeRangeText,
-                timeRange === "7days"
-                  ? styles.activeTimeRangeText
-                  : styles.inactiveTimeRangeText,
-              ]}
-            >
-              {t.sevenDays || "7 Days"}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.timeRangeButton,
-              timeRange === "30days" && styles.activeTimeRange,
-            ]}
-            onPress={() => setTimeRange("30days")}
-            accessibilityLabel={t.thirtyDays || "30 Days"}
-          >
-            <Text
-              style={[
-                styles.timeRangeText,
-                timeRange === "30days"
-                  ? styles.activeTimeRangeText
-                  : styles.inactiveTimeRangeText,
-              ]}
-            >
-              {t.thirtyDays || "30 Days"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    ),
-    [timeRange, t]
-  );
-
-  const renderLifestyleChart = useCallback(
-    () => (
-      <View style={styles.fullWidthChartCard}>
-        <Text style={styles.chartTitle}>
-          {t.lifestyleScoreTrend || "Lifestyle Score Trend"}
-        </Text>
-        {lifestyleScores.length > 0 ? (
-          <LineChart
-            data={{
-              labels: filteredData.map((item) => item.date.slice(0, 5)),
-              datasets: [
-                {
-                  data: lifestyleScores,
-                  color: (opacity = 1) => `rgba(0, 128, 128, ${opacity})`,
-                  strokeWidth: 2,
-                },
-              ],
-            }}
-            width={screenWidth - 64}
-            height={180}
-            chartConfig={chartConfig}
-            bezier
-            onDataPointClick={handleChartSelect}
-            style={{
-              marginVertical: 8,
-              borderRadius: 16,
-            }}
-          />
+            <View style={styles.compactStatItem}>
+              <Text style={styles.compactStatValue}>{Math.round(summaryStats.steps).toLocaleString()}</Text>
+              <Text style={styles.compactStatLabel}>{t.steps || "Steps"}</Text>
+            </View>
+            <View style={styles.compactStatItem}>
+              <Text style={styles.compactStatValue}>{summaryStats.sleep}</Text>
+              <Text style={styles.compactStatLabel}>{t.sleep || "Sleep"}</Text>
+            </View>
+            <View style={styles.compactStatItem}>
+              <Text style={styles.compactStatValue}>{summaryStats.bmi || t.unknown || "N/A"}</Text>
+              <Text style={styles.compactStatLabel}>{t.bmi || "BMI"}</Text>
+            </View>
+            <View style={styles.compactStatItem}>
+              <Text style={styles.compactStatValue}>
+                {summaryStats.weight || t.unknown || "N/A"}
+                {summaryStats.weight ? t.kgAbbreviation || "kg" : ""}
+              </Text>
+              <Text style={styles.compactStatLabel}>{t.weight || "Weight"}</Text>
+            </View>
+            <View style={styles.compactStatItem}>
+              <Text style={styles.compactStatValue}>
+                {Math.round(summaryStats.riskLevel)}
+                {t.percentSymbol || "%"}
+              </Text>
+              <Text style={styles.compactStatLabel}>{t.avgRisk || "Avg Risk"}</Text>
+            </View>
+          </View>
         ) : (
-          <Text style={styles.compactStatLabel}>
-            {t.noDataAvailable || "No data available"}
-          </Text>
+          <Text style={styles.compactStatLabel}>{t.noStatsAvailable || "No stats available"}</Text>
         )}
       </View>
-    ),
-    [lifestyleScores, filteredData, chartConfig, t, handleChartSelect]
-  );
+    </View>
+  ), [isLoading, error, summaryStats, t]);
 
-  const renderStepsSleepCharts = useCallback(
-    () => (
-      <View style={styles.chartsSection}>
-        <View style={styles.chartRow}>
-          <View style={styles.chartCard}>
-            <Text style={styles.smallChartTitle}>
-              {t.stepsChart || "Daily Steps"}
-            </Text>
-            <View style={styles.miniChartContainer}>
-              {stepsData.length > 0 ? (
-                <LineChart
-                  data={{
-                    labels: filteredData.map((item) => item.date.slice(0, 5)),
-                    datasets: [
-                      {
-                        data: stepsData,
-                        color: (opacity = 1) => `rgba(0, 128, 128, ${opacity})`,
-                        strokeWidth: 2,
-                      },
-                    ],
-                  }}
-                  width={screenWidth / 2 - 40}
-                  height={120}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={{
-                    marginVertical: 8,
-                    borderRadius: 16,
-                  }}
-                />
-              ) : (
-                <Text style={styles.compactStatLabel}>
-                  {t.noData || "No data"}
+  const renderTimeRange = useCallback(() => (
+    <View style={styles.timeRangeCard}>
+      <View style={styles.timeRangeContainer}>
+        <TouchableOpacity
+          style={[styles.timeRangeButton, timeRange === "7days" && styles.activeTimeRange]}
+          onPress={() => setTimeRange("7days")}
+          accessibilityLabel={t.sevenDays || "7 Days"}
+        >
+          <Text
+            style={[styles.timeRangeText, timeRange === "7days" ? styles.activeTimeRangeText : styles.inactiveTimeRangeText]}
+          >
+            {t.sevenDays || "7 Days"}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.timeRangeButton, timeRange === "30days" && styles.activeTimeRange]}
+          onPress={() => setTimeRange("30days")}
+          accessibilityLabel={t.thirtyDays || "30 Days"}
+        >
+          <Text
+            style={[styles.timeRangeText, timeRange === "30days" ? styles.activeTimeRangeText : styles.inactiveTimeRangeText]}
+          >
+            {t.thirtyDays || "30 Days"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  ), [timeRange, t]);
+
+  const renderLifestyleChart = useCallback(() => (
+    <View style={styles.fullWidthChartCard}>
+      <Text style={styles.chartTitle}>{t.lifestyleScoreTrend || "Lifestyle Score Trend"}</Text>
+      {lifestyleScores.length > 0 ? (
+        <LineChart
+          data={{
+            labels: filteredData.map((item) => item.date.slice(0, 5)),
+            datasets: [
+              {
+                data: lifestyleScores,
+                color: (opacity = 1) => `rgba(0, 128, 128, ${opacity})`,
+                strokeWidth: 2,
+              },
+            ],
+          }}
+          width={screenWidth - 64}
+          height={180}
+          chartConfig={chartConfig}
+          bezier
+          onDataPointClick={handleChartSelect}
+          style={{ marginVertical: 8, borderRadius: 16 }}
+        />
+      ) : (
+        <Text style={styles.compactStatLabel}>{t.noDataAvailable || "No data available"}</Text>
+      )}
+    </View>
+  ), [lifestyleScores, filteredData, chartConfig, t, handleChartSelect]);
+
+  const renderStepsSleepCharts = useCallback(() => (
+    <View style={styles.chartsSection}>
+      <View style={styles.chartRow}>
+        <View style={styles.chartCard}>
+          <Text style={styles.smallChartTitle}>{t.stepsChart || "Daily Steps"}</Text>
+          <View style={styles.miniChartContainer}>
+            {stepsData.length > 0 ? (
+              <LineChart
+                data={{
+                  labels: filteredData.map((item) => item.date.slice(0, 5)),
+                  datasets: [
+                    {
+                      data: stepsData,
+                      color: (opacity = 1) => `rgba(0, 128, 128, ${opacity})`,
+                      strokeWidth: 2,
+                    },
+                  ],
+                }}
+                width={screenWidth / 2 - 40}
+                height={120}
+                chartConfig={chartConfig}
+                bezier
+                style={{ marginVertical: 8, borderRadius: 16 }}
+              />
+            ) : (
+              <Text style={styles.compactStatLabel}>{t.noData || "No data"}</Text>
+            )}
+            {summaryStats && (
+              <View style={styles.trendContainer}>
+                <Text style={[styles.trendText, styles.neutralTrend]}>
+                  {t.latest || "Latest"}: {summaryStats.steps.toLocaleString()}
                 </Text>
-              )}
-              {summaryStats && (
-                <View style={styles.trendContainer}>
-                  <Text style={[styles.trendText, styles.neutralTrend]}>
-                    {t.latest || "Latest"}:{" "}
-                    {summaryStats.steps.toLocaleString()}
-                  </Text>
-                </View>
-              )}
-            </View>
+              </View>
+            )}
           </View>
-          <View style={styles.chartCard}>
-            <Text style={styles.smallChartTitle}>
-              {t.sleepChart || "Sleep Hours"}
-            </Text>
-            <View style={styles.miniChartContainer}>
-              {sleepData.length > 0 ? (
-                <LineChart
-                  data={{
-                    labels: filteredData.map((item) => item.date.slice(0, 5)),
-                    datasets: [
-                      {
-                        data: sleepData,
-                        color: (opacity = 1) => `rgba(0, 128, 128, ${opacity})`,
-                        strokeWidth: 2,
-                      },
-                    ],
-                  }}
-                  width={screenWidth / 2 - 40}
-                  height={120}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={{
-                    marginVertical: 8,
-                    borderRadius: 16,
-                  }}
-                />
-              ) : (
-                <Text style={styles.compactStatLabel}>
-                  {t.noData || "No data"}
+        </View>
+        <View style={styles.chartCard}>
+          <Text style={styles.smallChartTitle}>{t.sleepChart || "Sleep Hours"}</Text>
+          <View style={styles.miniChartContainer}>
+            {sleepData.length > 0 ? (
+              <LineChart
+                data={{
+                  labels: filteredData.map((item) => item.date.slice(0, 5)),
+                  datasets: [
+                    {
+                      data: sleepData,
+                      color: (opacity = 1) => `rgba(0, 128, 128, ${opacity})`,
+                      strokeWidth: 2,
+                    },
+                  ],
+                }}
+                width={screenWidth / 2 - 40}
+                height={120}
+                chartConfig={chartConfig}
+                bezier
+                style={{ marginVertical: 8, borderRadius: 16 }}
+              />
+            ) : (
+              <Text style={styles.compactStatLabel}>{t.noData || "No data"}</Text>
+            )}
+            {summaryStats && (
+              <View style={styles.trendContainer}>
+                <Text style={[styles.trendText, styles.neutralTrend]}>
+                  {t.latest || "Latest"}: {summaryStats.sleep}h
                 </Text>
-              )}
-              {summaryStats && (
-                <View style={styles.trendContainer}>
-                  <Text style={[styles.trendText, styles.neutralTrend]}>
-                    {t.latest || "Latest"}: {summaryStats.sleep}h
-                  </Text>
-                </View>
-              )}
-            </View>
+              </View>
+            )}
           </View>
         </View>
       </View>
-    ),
-    [stepsData, sleepData, filteredData, chartConfig, summaryStats, t]
-  );
+    </View>
+  ), [stepsData, sleepData, filteredData, chartConfig, summaryStats, t]);
 
   const renderTooltip = useCallback(() => {
     if (!selectedDataPoint) return null;
@@ -1335,18 +1141,11 @@ const ProgressScreen = () => {
       >
         <View style={styles.tooltipModal}>
           <View style={styles.tooltipContent}>
-            <Text style={styles.tooltipTitle}>
-              {title} - {date}
-            </Text>
+            <Text style={styles.tooltipTitle}>{title} - {date}</Text>
+            <Text style={styles.tooltipText}>{t.value || "Value"}: {valueText}</Text>
+            <Text style={styles.tooltipText}>{t.bmi || "BMI"}: {details.bmi || "N/A"}</Text>
             <Text style={styles.tooltipText}>
-              {t.value || "Value"}: {valueText}
-            </Text>
-            <Text style={styles.tooltipText}>
-              {t.bmi || "BMI"}: {details.bmi || "N/A"}
-            </Text>
-            <Text style={styles.tooltipText}>
-              {t.exercise || "Exercise"}: {details.exercise_frequency || 0}/
-              {t.perWeek || "week"}
+              {t.exercise || "Exercise"}: {details.exercise_frequency || 0}/{t.perWeek || "week"}
             </Text>
             <Text style={styles.tooltipText}>
               {t.dietQuality?.label || "Diet"}: {details.diet_quality || "N/A"}
@@ -1379,53 +1178,29 @@ const ProgressScreen = () => {
       <View style={styles.bottomSection}>
         <View style={styles.tabContainer}>
           <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === "factors" && styles.activeTab,
-            ]}
+            style={[styles.tabButton, activeTab === "factors" && styles.activeTab]}
             onPress={() => setActiveTab("factors")}
             accessibilityLabel={t.factors || "Factors"}
           >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "factors" && styles.activeTabText,
-              ]}
-            >
+            <Text style={[styles.tabText, activeTab === "factors" && styles.activeTabText]}>
               {t.factors || "Factors"}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === "risks" && styles.activeTab,
-            ]}
+            style={[styles.tabButton, activeTab === "risks" && styles.activeTab]}
             onPress={() => setActiveTab("risks")}
             accessibilityLabel={t.risks || "Risks"}
           >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "risks" && styles.activeTabText,
-              ]}
-            >
+            <Text style={[styles.tabText, activeTab === "risks" && styles.activeTabText]}>
               {t.risks || "Risks"}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[
-              styles.tabButton,
-              activeTab === "history" && styles.activeTab,
-            ]}
+            style={[styles.tabButton, activeTab === "history" && styles.activeTab]}
             onPress={() => setActiveTab("history")}
             accessibilityLabel={t.history || "History"}
           >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "history" && styles.activeTabText,
-              ]}
-            >
+            <Text style={[styles.tabText, activeTab === "history" && styles.activeTabText]}>
               {t.history || "History"}
             </Text>
           </TouchableOpacity>
@@ -1436,9 +1211,7 @@ const ProgressScreen = () => {
               {shapRankings.map((item, index) => (
                 <View key={index} style={styles.factorItem}>
                   <Text style={styles.factorName}>{item.factor}</Text>
-                  <Text style={styles.factorValue}>
-                    {(item.value * 100).toFixed(0)}%
-                  </Text>
+                  <Text style={styles.factorValue}>{(item.value * 100).toFixed(0)}%</Text>
                 </View>
               ))}
             </View>
@@ -1448,34 +1221,20 @@ const ProgressScreen = () => {
               {summaryStats ? (
                 <>
                   <View style={styles.riskIndicator}>
-                    <Text style={styles.riskName}>
-                      {t.obesityRisk || "Obesity Risk"}
-                    </Text>
-                    <Text style={styles.riskValue}>
-                      {summaryStats.latestRisks.obesity}%
-                    </Text>
+                    <Text style={styles.riskName}>{t.obesityRisk || "Obesity Risk"}</Text>
+                    <Text style={styles.riskValue}>{summaryStats.latestRisks.obesity}%</Text>
                   </View>
                   <View style={styles.riskIndicator}>
-                    <Text style={styles.riskName}>
-                      {t.hypertensionRisk || "Hypertension Risk"}
-                    </Text>
-                    <Text style={styles.riskValue}>
-                      {summaryStats.latestRisks.hypertension}%
-                    </Text>
+                    <Text style={styles.riskName}>{t.hypertensionRisk || "Hypertension Risk"}</Text>
+                    <Text style={styles.riskValue}>{summaryStats.latestRisks.hypertension}%</Text>
                   </View>
                   <View style={styles.riskIndicator}>
-                    <Text style={styles.riskName}>
-                      {t.strokeRisk || "Stroke Risk"}
-                    </Text>
-                    <Text style={styles.riskValue}>
-                      {summaryStats.latestRisks.stroke}%
-                    </Text>
+                    <Text style={styles.riskName}>{t.strokeRisk || "Stroke Risk"}</Text>
+                    <Text style={styles.riskValue}>{summaryStats.latestRisks.stroke}%</Text>
                   </View>
                 </>
               ) : (
-                <Text style={styles.riskName}>
-                  {t.noDataAvailable || "No data available"}
-                </Text>
+                <Text style={styles.riskName}>{t.noDataAvailable || "No data available"}</Text>
               )}
             </View>
           )}
@@ -1484,35 +1243,23 @@ const ProgressScreen = () => {
               <View style={styles.historyControls}>
                 <View style={styles.timeRangeContainer}>
                   <TouchableOpacity
-                    style={[
-                      styles.controlButton,
-                      sortOrder === "asc" && styles.activeControlButton,
-                    ]}
+                    style={[styles.controlButton, sortOrder === "asc" && styles.activeControlButton]}
                     onPress={() => setSortOrder("asc")}
                     accessibilityLabel={t.sortAsc || "Sort Ascending"}
                   >
                     <Text
-                      style={[
-                        styles.controlButtonText,
-                        sortOrder === "asc" && styles.activeControlButtonText,
-                      ]}
+                      style={[styles.controlButtonText, sortOrder === "asc" && styles.activeControlButtonText]}
                     >
                       {t.sortAsc || "Sort Asc"}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[
-                      styles.controlButton,
-                      sortOrder === "desc" && styles.activeControlButton,
-                    ]}
+                    style={[styles.controlButton, sortOrder === "desc" && styles.activeControlButton]}
                     onPress={() => setSortOrder("desc")}
                     accessibilityLabel={t.sortDesc || "Sort Descending"}
                   >
                     <Text
-                      style={[
-                        styles.controlButtonText,
-                        sortOrder === "desc" && styles.activeControlButtonText,
-                      ]}
+                      style={[styles.controlButtonText, sortOrder === "desc" && styles.activeControlButtonText]}
                     >
                       {t.sortDesc || "Sort Desc"}
                     </Text>
@@ -1520,19 +1267,12 @@ const ProgressScreen = () => {
                 </View>
                 <View style={styles.timeRangeContainer}>
                   <TouchableOpacity
-                    style={[
-                      styles.controlButton,
-                      sourceFilter === "all" && styles.activeControlButton,
-                    ]}
+                    style={[styles.controlButton, sourceFilter === "all" && styles.activeControlButton]}
                     onPress={() => setSourceFilter("all")}
                     accessibilityLabel={t.allSources || "All Sources"}
                   >
                     <Text
-                      style={[
-                        styles.controlButtonText,
-                        sourceFilter === "all" &&
-                          styles.activeControlButtonText,
-                      ]}
+                      style={[styles.controlButtonText, sourceFilter === "all" && styles.activeControlButtonText]}
                     >
                       {t.allSources || "All"}
                     </Text>
@@ -1541,30 +1281,22 @@ const ProgressScreen = () => {
               </View>
               {filteredHistoryData.length > 0 ? (
                 filteredHistoryData.map((item, index) => (
-                  <View
-                    key={`${item.date}-${item.source}-${index}`}
-                    style={styles.progressItem}
-                  >
+                  <View key={`${item.date}-${item.source}-${index}`} style={styles.progressItem}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.progressDate}>{item.date}</Text>
                       <View style={styles.progressDetails}>
                         <Text style={styles.progressDetailItem}>
-                          {t.steps || "Steps"}:{" "}
-                          {item.daily_steps?.toLocaleString() || 0}
+                          {t.steps || "Steps"}: {item.daily_steps?.toLocaleString() || 0}
                         </Text>
                         <Text style={styles.progressDetailItem}>
                           {t.sleep || "Sleep"}: {item.sleep_hours || 0} {t.hrs}
                         </Text>
+                        <Text style={styles.progressDetailItem}>BMI: {item.bmi || "N/A"}</Text>
                         <Text style={styles.progressDetailItem}>
-                          BMI: {item.bmi || "N/A"}
+                          {t.kgAbbreviation || "Weight"}: {item.weight_kg || "N/A"} {t.kgAbbreviation}
                         </Text>
                         <Text style={styles.progressDetailItem}>
-                          {t.kgAbbreviation || "Weight"}:{" "}
-                          {item.weight_kg || "N/A"} {t.kgAbbreviation}
-                        </Text>
-                        <Text style={styles.progressDetailItem}>
-                          {t.exercise || "Exercise"}:{" "}
-                          {item.exercise_frequency || 0}/{t.perWeek || "week"}
+                          {t.exercise || "Exercise"}: {item.exercise_frequency || 0}/{t.perWeek || "week"}
                         </Text>
                         <Text style={styles.progressDetailItem}>
                           {t.stress || "Stress"}: {item.stress_level || 0}/10
@@ -1572,13 +1304,11 @@ const ProgressScreen = () => {
                         <Text style={styles.progressDetailItem}>
                           {t.dietQuality?.label || "Diet"}:{" "}
                           {item.diet_quality
-                            ? t.dietQuality[item.diet_quality.toLowerCase()] ||
-                              item.diet_quality
+                            ? t.dietQuality[item.diet_quality.toLowerCase()] || item.diet_quality
                             : t.dietQuality.unknown || "N/A"}
                         </Text>
                         <Text style={styles.progressDetailItem}>
-                          {t.screenTime || "Screen"}:{" "}
-                          {item.screen_time_hours || 0} {t.hrs}
+                          {t.screenTime || "Screen"}: {item.screen_time_hours || 0} {t.hrs}
                         </Text>
                       </View>
                     </View>
@@ -1587,128 +1317,62 @@ const ProgressScreen = () => {
                       onPress={() => confirmDelete(item)}
                       accessibilityLabel={t.deleteEntry || "Delete Entry"}
                     >
-                      <Text style={styles.deleteButtonText}>
-                        {t.delete || "Delete"}
-                      </Text>
+                      <Text style={styles.deleteButtonText}>{t.delete || "Delete"}</Text>
                     </TouchableOpacity>
                   </View>
                 ))
               ) : (
-                <Text style={styles.riskName}>
-                  {t.noHistoryDataAvailable || "No history data available"}
-                </Text>
+                <Text style={styles.riskName}>{t.noHistoryDataAvailable || "No history data available"}</Text>
               )}
             </View>
           )}
         </View>
       </View>
     );
-  }, [
-    activeTab,
-    shapRankings,
-    summaryStats,
-    filteredData,
-    t,
-    sortOrder,
-    sourceFilter,
-    confirmDelete,
-  ]);
+  }, [activeTab, shapRankings, summaryStats, filteredData, t, sortOrder, sourceFilter, confirmDelete]);
+
+  const data = useMemo(() => [
+    { type: "quickStats" },
+    { type: "timeRange" },
+    { type: "lifestyleChart" },
+    { type: "stepsSleepCharts" },
+    { type: "tabs" },
+  ], []);
 
   const renderItem = useCallback(
     ({ item }) => {
       switch (item.type) {
-        case "quickStats":
-          return renderQuickStats();
-        case "timeRange":
-          return renderTimeRange();
-        case "lifestyleChart":
-          return renderLifestyleChart();
-        case "stepsSleepCharts":
-          return renderStepsSleepCharts();
-        case "tabs":
-          return renderTabs();
-        default:
-          return null;
+        case "quickStats": return renderQuickStats();
+        case "timeRange": return renderTimeRange();
+        case "lifestyleChart": return renderLifestyleChart();
+        case "stepsSleepCharts": return renderStepsSleepCharts();
+        case "tabs": return renderTabs();
+        default: return null;
       }
     },
-    [
-      renderQuickStats,
-      renderTimeRange,
-      renderLifestyleChart,
-      renderStepsSleepCharts,
-      renderTabs,
-    ]
+    [renderQuickStats, renderTimeRange, renderLifestyleChart, renderStepsSleepCharts, renderTabs]
   );
-
-  const fadeAnim = scrollY.interpolate({
-    inputRange: [0, 50],
-    outputRange: [1, 0],
-    extrapolate: "clamp",
-  });
-
-  const slideAnim = scrollY.interpolate({
-    inputRange: [0, 50],
-    outputRange: [0, -20],
-    extrapolate: "clamp",
-  });
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
-      <Animated.View
-        style={[
-          styles.header,
-          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-        ]}
-      >
-        <Text style={styles.headerTitle}>
-          {t.progressTitle || "Your Health Progress"}
-        </Text>
-        <Animated.Text
-          style={[
-            styles.headerSubtitle,
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-          ]}
-        >
-          {t.progressTagline || "Track and improve your wellbeing"}
-        </Animated.Text>
-      </Animated.View>
-      <AnimatedFlatList
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>{t.progressTitle || "Your Health Progress"}</Text>
+        <Text style={styles.headerSubtitle}>{t.progressTagline || "Track and improve your wellbeing"}</Text>
+      </View>
+      <FlatList
         data={data}
         renderItem={renderItem}
         keyExtractor={(item, index) => `${item.type}-${index}`}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.mainContent}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true }
-        )}
-        scrollEventThrottle={16}
         removeClippedSubviews={true}
         maxToRenderPerBatch={2}
         windowSize={5}
         initialNumToRender={3}
         getItemLayout={(data, index) => ({
-          length:
-            index === 0
-              ? 120
-              : index === 1
-                ? 60
-                : index === 2
-                  ? 240
-                  : index === 3
-                    ? 220
-                    : 300,
-          offset:
-            index === 0
-              ? 0
-              : index === 1
-                ? 120
-                : index === 2
-                  ? 180
-                  : index === 3
-                    ? 420
-                    : 640,
+          length: index === 0 ? 120 : index === 1 ? 60 : index === 2 ? 240 : index === 3 ? 220 : 300,
+          offset: index === 0 ? 0 : index === 1 ? 120 : index === 2 ? 180 : index === 3 ? 420 : 640,
           index,
         })}
       />
