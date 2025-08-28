@@ -17,7 +17,6 @@ import {
   Alert,
   StyleSheet,
   Switch,
-  Animated,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import Slider from "@react-native-community/slider";
@@ -488,27 +487,12 @@ const calculateLifestyleScore = (lifestyleData) => {
 };
 
 const ProgressBar = React.memo(({ currentStep, totalSteps, t }) => {
-  const progressAnim = useRef(
-    new Animated.Value(currentStep / totalSteps)
-  ).current;
-
-  useEffect(() => {
-    Animated.timing(progressAnim, {
-      toValue: currentStep / totalSteps,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  }, [currentStep, totalSteps]);
-
-  const animatedWidth = progressAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0%", "100%"],
-  });
+  const progressBarWidth = `${(currentStep / totalSteps) * 100}%`;
 
   return (
     <View style={styles.progressContainer}>
       <View style={styles.progressBarContainer}>
-        <Animated.View style={[styles.progressBar, { width: animatedWidth }]} />
+        <View style={[styles.progressBar, { width: progressBarWidth }]} />
       </View>
       <Text style={styles.progressText}>
         {formatString
@@ -635,8 +619,6 @@ const LifestyleDataInputScreen = () => {
     }, 16),
     []
   );
-
-  // ... [Rest of your existing methods remain the same] ...
 
   const loadOfflineFilesFromAssets = async () => {
     try {
