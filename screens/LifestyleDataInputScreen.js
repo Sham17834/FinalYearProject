@@ -1050,8 +1050,6 @@ const LifestyleDataInputScreen = () => {
             dims: inputTensor.dims,
             data: Array.from(inputTensor.data),
           });
-
-          // Verify .onnx files exist
           const modelPaths = [
             `${FileSystem.documentDirectory}xgb_model_output_0.onnx`,
             `${FileSystem.documentDirectory}xgb_model_output_1.onnx`,
