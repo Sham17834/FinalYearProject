@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     borderColor: "#008080",
     borderWidth: 1,
     minHeight: 44,
-    minWidth: 120,
+    minWidth: 180,
     alignSelf: "center",
   },
   sliderLabelRow: {
