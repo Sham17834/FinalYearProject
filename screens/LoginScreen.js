@@ -169,10 +169,20 @@ const LoginScreen = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      await GoogleSignin.hasPlayServices({
-        showPlayServicesUpdateDialog: true,
-      });
-      const userInfo = await GoogleSignin.signIn();
+      // Check if user is already signed in
+      const isSignedIn = await GoogleSignin.isSignedIn();
+      let userInfo;
+
+      if (isSignedIn) {
+        // Silent sign-in for already authenticated users
+        userInfo = await GoogleSignin.getCurrentUser();
+      } else {
+        // Perform sign-in if not already authenticated
+        await GoogleSignin.hasPlayServices({
+          showPlayServicesUpdateDialog: true,
+        });
+        userInfo = await GoogleSignin.signIn();
+      }
 
       const idToken = userInfo.data?.idToken || userInfo.idToken;
       const accessToken = userInfo.data?.accessToken || userInfo.accessToken;
@@ -208,9 +218,7 @@ const LoginScreen = () => {
             onPress: () => {
               navigation.navigate(
                 isFirstTimeUser ? "LifestyleDataInput" : "MainApp",
-                {
-                  userData,
-                }
+                { userData }
               );
             },
           },
@@ -218,7 +226,6 @@ const LoginScreen = () => {
         { cancelable: false }
       );
     } catch (error) {
-      // ... error handling
     } finally {
       setIsLoading(false);
     }
