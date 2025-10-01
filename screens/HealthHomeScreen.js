@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: "#008080",
     width: "100%",
-    paddingTop: 20,
+    paddingTop: 40,
     paddingBottom: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },

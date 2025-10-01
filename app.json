@@ -21,7 +21,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.fyp.healthapps",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "googleServicesFile": "./GoogleService-Info.plist"
       }
     },
     "android": {
@@ -29,7 +30,6 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      
       "edgeToEdgeEnabled": true,
       "package": "com.fyp.healthapps",
       "googleServicesFile": "./google-services.json"
@@ -43,11 +43,11 @@
       "expo-asset",
       "expo-font"
     ],
+    "owner": "sham1220",
     "extra": {
       "eas": {
-        "projectId": "c756094c-6d93-4725-a12f-015631077166"
+        "projectId": "288c06b1-c792-44be-88a8-a1088f232722"
       }
-    },
-    "owner": "sham1767"
+    }
   }
 }

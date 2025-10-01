@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8fafc",
   },
   header: {
-    paddingTop: 16,
+    paddingTop: 40,
     backgroundColor: "#008080",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -1245,9 +1245,12 @@ const LifestyleDataInputScreen = () => {
       );
 
       navigation.navigate("MainApp", {
-        lifestyleData: data,
-        predictionData: predictions,
-        lifestyleScore,
+        screen: "Home",
+        params: {
+          lifestyleData: data,
+          predictionData: predictions,
+          lifestyleScore,
+        },
       });
     } catch (error) {
       console.error("Error in handleSubmit:", error);

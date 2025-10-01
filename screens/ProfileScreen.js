@@ -13,7 +13,11 @@ import {
   StyleSheet,
   Switch,
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import {
+  useNavigation,
+  useRoute,
+  CommonActions,
+} from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getDb } from "./db";
@@ -196,36 +200,6 @@ const ProfileScreen = () => {
     );
   };
 
-  const handleDeleteAccount = async () => {
-    Alert.alert(
-      t.deleteAccount || "Delete Account",
-      t.deleteAccountConfirm || "Are you sure you want to delete your account?",
-      [
-        { text: t.cancel || "Cancel", style: "cancel" },
-        {
-          text: t.delete || "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const db = await getDb();
-              await AsyncStorage.removeItem("userProfileData");
-              await db.runAsync("DELETE FROM UserProfile WHERE email = ?", [
-                email,
-              ]);
-
-              await auth.signOut();
-            } catch (error) {
-              Alert.alert(
-                t.error || "Error",
-                t.deleteAccountError || "Failed to delete account data."
-              );
-            }
-          },
-        },
-      ]
-    );
-  };
-
   const handleLogout = async () => {
     Alert.alert(
       t.logOut || "Log Out",
@@ -238,7 +212,6 @@ const ProfileScreen = () => {
           onPress: async () => {
             try {
               await AsyncStorage.removeItem("userProfileData");
-
               await auth.signOut();
             } catch (error) {
               Alert.alert(
@@ -394,14 +367,6 @@ const ProfileScreen = () => {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.dangerButton}
-              onPress={handleDeleteAccount}
-            >
-              <Text style={styles.dangerButtonText}>
-                {t.deleteAccount || "Delete Account"}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
               style={styles.secondaryButton}
               onPress={handleLogout}
             >
@@ -437,8 +402,8 @@ const ProfileScreen = () => {
                   language === lang.code && styles.modalOptionSelected,
                 ]}
                 onPress={() => {
-                  changeLanguage(lang.code); // Update language
-                  setShowLanguageModal(false); // Close modal
+                  changeLanguage(lang.code);
+                  setShowLanguageModal(false);
                 }}
               >
                 <View style={styles.languageOptionContent}>
@@ -479,7 +444,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: "#008080",
     width: "100%",
-    paddingTop: 20,
+    paddingTop: 40,
     paddingBottom: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -757,27 +722,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: COLORS.text,
-    letterSpacing: 0.2,
-  },
-  dangerButton: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: COLORS.danger,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-    marginBottom: 12,
-  },
-  dangerButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: COLORS.danger,
     letterSpacing: 0.2,
   },
   switchContainer: {

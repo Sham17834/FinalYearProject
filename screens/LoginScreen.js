@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import Icon from "react-native-vector-icons/FontAwesome";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import * as Google from "expo-auth-session/providers/google";
 import {
   signInWithEmailAndPassword,
   signInWithCredential,
@@ -38,13 +38,95 @@ const LoginScreen = () => {
   const navigation = useNavigation();
   const { t } = useContext(LanguageContext);
 
-  GoogleSignin.configure({
-    webClientId:
+  // Configure Google Auth
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    expoClientId:
       "197590438015-jkpo6rbjq2icl5uqsqkkik3r85q3s19k.apps.googleusercontent.com",
-    offlineAccess: true,
-    forceCodeForRefreshToken: true,
-    scopes: ["email", "profile"],
+    androidClientId:
+      "197590438015-84oj8si3rlq22pgq73iqsgm8frtp902v.apps.googleusercontent.com",
+    iosClientId:
+      "197590438015-2lrdo9hkmbuv889vggpol35png2orm9v.apps.googleusercontent.com",
+    scopes: ["profile", "email", "openid"],
+    usePKCE: true,
+    redirectUri: "com.fyp.healthapps://",
   });
+
+  // Handle Google Sign-In response
+  useEffect(() => {
+    if (response?.type === "success") {
+      console.log("Auth Response:", JSON.stringify(response, null, 2));
+      handleGoogleAuthResponse(response);
+    } else if (response?.type === "error") {
+      console.error("Google Sign-In Error:", response.error);
+      Alert.alert(
+        t.error || "Error",
+        response.error?.message ||
+          t.googleSignInFailed ||
+          "Google Sign-In failed."
+      );
+      setIsLoading(false);
+    } else if (response?.type === "cancel") {
+      Alert.alert(
+        t.cancel || "Cancelled",
+        t.googleSignInCancelled || "Google Sign-In was cancelled."
+      );
+      setIsLoading(false);
+    }
+  }, [response]);
+
+  const handleGoogleAuthResponse = async ({ authentication, params }) => {
+    setIsLoading(true);
+    try {
+      console.log(
+        "Extracted authentication:",
+        JSON.stringify(authentication, null, 2)
+      );
+      console.log("Extracted params:", JSON.stringify(params, null, 2));
+
+      let idToken = params?.id_token || authentication?.idToken;
+      if (!idToken) {
+        throw new Error(
+          `No ID token found. Authentication: ${JSON.stringify(authentication || {}, null, 2)}, Params: ${JSON.stringify(params || {}, null, 2)}`
+        );
+      }
+
+      const accessToken = params?.access_token || authentication?.accessToken;
+      console.log("Using idToken:", idToken);
+      console.log("Using accessToken:", accessToken);
+
+      const credential = GoogleAuthProvider.credential(idToken, accessToken);
+      const userCredential = await signInWithCredential(auth, credential);
+      const user = userCredential.user;
+
+      console.log("Firebase Sign-In Success:", user.uid);
+
+      const userData = {
+        fullName: user.displayName || params?.name || "Google User",
+        email: user.email || params?.email,
+      };
+
+      await saveUserData(userData);
+
+      const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
+
+      if (isFirstTimeUser) {
+        navigation.navigate("LifestyleDataInput", { userData });
+      } else {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "MainApp" }],
+        });
+      }
+    } catch (error) {
+      console.error("Google Sign-In Error:", error.code, error.message);
+      Alert.alert(
+        t.error || "Error",
+        error.message || t.googleSignInFailed || "Google Sign-In failed."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -82,12 +164,9 @@ const LoginScreen = () => {
   const saveUserData = async (userData) => {
     try {
       console.log("Saving user data:", userData);
-
       await AsyncStorage.setItem("userProfileData", JSON.stringify(userData));
 
-      // Save to database
       const db = await getDb();
-
       const existingUser = await db.getFirstAsync(
         `SELECT id FROM Users WHERE email = ?`,
         [userData.email]
@@ -124,15 +203,19 @@ const LoginScreen = () => {
       setErrors({ ...errors, [field]: "" });
     }
   };
+
   const checkIfFirstTimeUser = async (userEmail) => {
     try {
       const db = await getDb();
       const result = await db.getFirstAsync(
-        `SELECT * FROM UserProfile WHERE email = ?`,
+        `SELECT * FROM Users WHERE email = ?`,
         [userEmail]
       );
       return !result;
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error checking first-time user:", error);
+      return true;
+    }
   };
 
   const handleLogin = async () => {
@@ -152,81 +235,50 @@ const LoginScreen = () => {
         email: user.email,
       };
 
-      // Save user data before navigation
       await saveUserData(userData);
 
       const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
 
-      navigation.navigate(isFirstTimeUser ? "LifestyleDataInput" : "MainApp", {
-        userData,
-      });
+      if (isFirstTimeUser) {
+        navigation.navigate("LifestyleDataInput", { userData });
+      } else {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "MainApp" }],
+        });
+      }
     } catch (error) {
+      console.error("Email login error:", error);
+      Alert.alert(
+        t.error || "Error",
+        t.loginFailed || "Login failed. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
+    if (!request) {
+      console.error("Auth request not ready");
+      Alert.alert(
+        t.error || "Error",
+        t.googleSignInNotReady ||
+          "Google Sign-In is not ready. Please try again."
+      );
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Check if user is already signed in
-      const isSignedIn = await GoogleSignin.isSignedIn();
-      let userInfo;
-
-      if (isSignedIn) {
-        // Silent sign-in for already authenticated users
-        userInfo = await GoogleSignin.getCurrentUser();
-      } else {
-        // Perform sign-in if not already authenticated
-        await GoogleSignin.hasPlayServices({
-          showPlayServicesUpdateDialog: true,
-        });
-        userInfo = await GoogleSignin.signIn();
-      }
-
-      const idToken = userInfo.data?.idToken || userInfo.idToken;
-      const accessToken = userInfo.data?.accessToken || userInfo.accessToken;
-
-      if (!idToken) {
-        throw new Error("No ID token received from Google Sign-In");
-      }
-
-      const credential = GoogleAuthProvider.credential(idToken, accessToken);
-      const userCredential = await signInWithCredential(auth, credential);
-      const user = userCredential.user;
-
-      const userData = {
-        fullName:
-          user.displayName ||
-          userInfo.user?.name ||
-          (userInfo.user?.givenName && userInfo.user?.familyName
-            ? `${userInfo.user.givenName} ${userInfo.user.familyName}`
-            : "Google User"),
-        email: user.email || userInfo.user?.email,
-      };
-
-      await saveUserData(userData);
-
-      const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
-
-      Alert.alert(
-        t.success || "Success",
-        t.googleSignInSuccess || "Successfully signed in with Google!",
-        [
-          {
-            text: t.ok || "OK",
-            onPress: () => {
-              navigation.navigate(
-                isFirstTimeUser ? "LifestyleDataInput" : "MainApp",
-                { userData }
-              );
-            },
-          },
-        ],
-        { cancelable: false }
-      );
+      console.log("Initiating Google Sign-In...");
+      await promptAsync();
     } catch (error) {
-    } finally {
+      console.error("Google Sign-In Prompt Error:", error.code, error.message);
+      Alert.alert(
+        t.error || "Error",
+        error.message || t.googleSignInFailed || "Google Sign-In failed."
+      );
       setIsLoading(false);
     }
   };
@@ -368,7 +420,7 @@ const LoginScreen = () => {
             style={[styles.googleButton, isLoading && styles.disabledButton]}
             onPress={handleGoogleSignIn}
             activeOpacity={0.9}
-            disabled={isLoading}
+            disabled={isLoading || !request}
           >
             <View style={styles.googleButtonContent}>
               <Icon name="google" size={20} color="#DB4437" />
@@ -395,6 +447,7 @@ const LoginScreen = () => {
   );
 };
 
+// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,

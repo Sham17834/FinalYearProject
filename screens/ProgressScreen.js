@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: "#008080",
     width: "100%",
-    paddingTop: 20,
+    paddingTop: 40,
     paddingBottom: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -580,38 +580,13 @@ const ProgressScreen = () => {
         ...transformedHealthRecordsData,
       ];
 
-      const uniqueData = [];
-      const seenDates = new Set();
-
       if (currentDayData) {
-        const existingIndex = allData.findIndex(
-          (existing) =>
-            existing.date === currentDayData.date &&
-            existing.source === "UserProfile"
-        );
-        if (existingIndex >= 0) {
-          allData[existingIndex] = currentDayData;
-        } else {
-          allData.push(currentDayData);
-        }
+        allData.push(currentDayData);
       }
 
-      allData
-        .sort((a, b) => {
-          const dateA = new Date(a.date.split("/").reverse().join("-"));
-          const dateB = new Date(b.date.split("/").reverse().join("-"));
-          return dateB - dateA;
-        })
-        .forEach((item) => {
-          const key = `${item.date}-${item.source}`;
-          if (!seenDates.has(key)) {
-            seenDates.add(key);
-            uniqueData.push(item);
-          }
-        });
-
+      // Sort all data by date in ascending order
       setProgressData(
-        uniqueData.sort((a, b) => {
+        allData.sort((a, b) => {
           const dateA = new Date(a.date.split("/").reverse().join("-"));
           const dateB = new Date(b.date.split("/").reverse().join("-"));
           return dateA - dateB;
@@ -619,7 +594,6 @@ const ProgressScreen = () => {
       );
     } catch (error) {
       setError("Failed to load data from database");
-
       setLatestUserProfile(null);
     } finally {
       setIsLoading(false);
