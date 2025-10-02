@@ -1053,7 +1053,7 @@ const LifestyleDataInputScreen = () => {
                 `Failed to create InferenceSession for ${modelPaths[i]}`
               );
             }
-            const feeds = { float_input: inputTensor };
+            const feeds = { input: inputTensor };
             console.log("feeds:", {
               float_input: {
                 type: inputTensor.type,

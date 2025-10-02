@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "HealthApps",
+    "name": "HealthTrack",
     "slug": "fyp",
     "version": "1.0.0",
     "assetBundlePatterns": [
       "**/*",
-      "assets/model/"
+      "assets/model/*"
     ],
     "scheme": "com.fyp.healthapps",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon2.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -27,7 +27,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon2.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
