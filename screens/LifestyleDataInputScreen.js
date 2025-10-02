@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8fafc",
   },
   header: {
-    paddingTop: 40,
+    paddingTop: 20,
     backgroundColor: "#008080",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },

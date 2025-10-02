@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: "#008080",
     width: "100%",
-    paddingTop: 40,
+    paddingTop: 20,
     paddingBottom: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -690,69 +690,571 @@ const HealthHomeScreen = () => {
       return;
     }
 
+    const currentDate = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    const scoreColor =
+      lifestyleScore >= 80
+        ? "#34C759"
+        : lifestyleScore >= 60
+          ? "#FFD60A"
+          : "#FF3B30";
+    const scoreStatus =
+      lifestyleScore >= 80
+        ? "Excellent"
+        : lifestyleScore >= 60
+          ? "Good"
+          : "Needs Improvement";
+
     const htmlContent = `
       <html>
         <head>
+          <meta charset="UTF-8">
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h1 { color: #008080; text-align: center; }
-            .section { margin-bottom: 20px; }
-            .section-title { font-size: 18px; font-weight: bold; color: #1D3557; }
-            .metric { margin: 10px 0; }
-            .metric-title { font-weight: bold; color: #457B9D; }
-            .metric-value { color: #1D3557; }
-            .risk-high { color: #FF3B30; }
-            .risk-medium { color: #FFD60A; }
-            .risk-low { color: #34C759; }
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            
+            body { 
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+              padding: 0;
+              margin: 0;
+            }
+            
+            .container {
+              max-width: 800px;
+              margin: 0 auto;
+              background: white;
+              box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            }
+            
+            .header {
+              background: linear-gradient(135deg, #008080 0%, #005f5f 100%);
+              color: white;
+              padding: 40px 30px;
+              text-align: center;
+              position: relative;
+              overflow: hidden;
+            }
+            
+            .header::before {
+              content: '';
+              position: absolute;
+              top: -50%;
+              right: -20%;
+              width: 300px;
+              height: 300px;
+              background: rgba(255,255,255,0.1);
+              border-radius: 50%;
+            }
+            
+            .header::after {
+              content: '';
+              position: absolute;
+              bottom: -50%;
+              left: -10%;
+              width: 250px;
+              height: 250px;
+              background: rgba(255,255,255,0.08);
+              border-radius: 50%;
+            }
+            
+            .header-content {
+              position: relative;
+              z-index: 1;
+            }
+            
+            h1 { 
+              font-size: 36px;
+              font-weight: 700;
+              margin-bottom: 8px;
+              letter-spacing: -0.5px;
+            }
+            
+            .report-date {
+              font-size: 14px;
+              opacity: 0.9;
+              font-weight: 300;
+            }
+            
+            .score-banner {
+              background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+              padding: 40px 30px;
+              text-align: center;
+              border-bottom: 3px solid #e9ecef;
+            }
+            
+            .score-circle {
+              width: 180px;
+              height: 180px;
+              border-radius: 50%;
+              margin: 0 auto 20px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              background: white;
+              box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+              border: 8px solid ${scoreColor};
+              position: relative;
+            }
+            
+            .score-number {
+              font-size: 56px;
+              font-weight: 700;
+              color: ${scoreColor};
+              line-height: 1;
+            }
+            
+            .score-text {
+              font-size: 14px;
+              color: #6c757d;
+              margin-top: 8px;
+            }
+            
+            .score-status {
+              font-size: 20px;
+              font-weight: 600;
+              color: #1D3557;
+              margin-top: 12px;
+            }
+            
+            .score-badge {
+              display: inline-block;
+              padding: 8px 20px;
+              background: ${scoreColor};
+              color: white;
+              border-radius: 20px;
+              font-size: 14px;
+              font-weight: 600;
+              margin-top: 8px;
+            }
+            
+            .content {
+              padding: 40px 30px;
+            }
+            
+            .section { 
+              margin-bottom: 40px;
+              page-break-inside: avoid;
+            }
+            
+            .section-header {
+              display: flex;
+              align-items: center;
+              margin-bottom: 20px;
+              padding-bottom: 12px;
+              border-bottom: 2px solid #008080;
+            }
+            
+            .section-icon {
+              width: 32px;
+              height: 32px;
+              background: linear-gradient(135deg, #008080 0%, #005f5f 100%);
+              border-radius: 8px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-weight: bold;
+              margin-right: 12px;
+              font-size: 18px;
+            }
+            
+            .section-title { 
+              font-size: 22px;
+              font-weight: 700;
+              color: #1D3557;
+              margin: 0;
+            }
+            
+            .metrics-grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 20px;
+              margin-top: 20px;
+            }
+            
+            .metric-card {
+              background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+              border-radius: 12px;
+              padding: 20px;
+              border-left: 4px solid #008080;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+              transition: transform 0.2s;
+            }
+            
+            .metric-label {
+              font-size: 13px;
+              color: #6c757d;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              font-weight: 600;
+              margin-bottom: 8px;
+            }
+            
+            .metric-value {
+              font-size: 28px;
+              font-weight: 700;
+              color: #1D3557;
+              margin-bottom: 4px;
+            }
+            
+            .metric-status {
+              font-size: 14px;
+              color: #495057;
+              font-weight: 500;
+            }
+            
+            .risk-cards {
+              display: flex;
+              flex-direction: column;
+              gap: 16px;
+            }
+            
+            .risk-card {
+              background: white;
+              border-radius: 12px;
+              padding: 20px;
+              border: 2px solid #e9ecef;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            }
+            
+            .risk-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 12px;
+            }
+            
+            .risk-name {
+              font-size: 18px;
+              font-weight: 600;
+              color: #1D3557;
+            }
+            
+            .risk-percentage {
+              font-size: 24px;
+              font-weight: 700;
+            }
+            
+            .risk-bar {
+              height: 12px;
+              background: #e9ecef;
+              border-radius: 6px;
+              overflow: hidden;
+              margin-top: 8px;
+            }
+            
+            .risk-bar-fill {
+              height: 100%;
+              border-radius: 6px;
+              transition: width 0.3s;
+            }
+            
+            .risk-label {
+              display: inline-block;
+              padding: 4px 12px;
+              border-radius: 12px;
+              font-size: 12px;
+              font-weight: 600;
+              margin-top: 8px;
+              color: white;
+            }
+            
+            .risk-high { 
+              color: #FF3B30;
+              background-color: #FFE5E5;
+            }
+            
+            .risk-medium { 
+              color: #FFB800;
+              background-color: #FFF8E1;
+            }
+            
+            .risk-low { 
+              color: #34C759;
+              background-color: #E8F5E9;
+            }
+            
+            .tips-list {
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
+            }
+            
+            .tip-item {
+              display: flex;
+              align-items: flex-start;
+              padding: 16px;
+              background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 100%);
+              border-radius: 10px;
+              border-left: 4px solid #34C759;
+            }
+            
+            .tip-icon {
+              width: 24px;
+              height: 24px;
+              background: #34C759;
+              color: white;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin-right: 12px;
+              flex-shrink: 0;
+              font-weight: bold;
+              font-size: 14px;
+            }
+            
+            .tip-text {
+              flex: 1;
+              color: #2d5016;
+              font-size: 14px;
+              line-height: 1.5;
+            }
+            
+            .lifestyle-grid {
+              display: grid;
+              grid-template-columns: 1fr;
+              gap: 16px;
+            }
+            
+            .lifestyle-card {
+              background: white;
+              border-radius: 12px;
+              padding: 20px;
+              border: 2px solid #e9ecef;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            
+            .lifestyle-info h4 {
+              font-size: 14px;
+              color: #6c757d;
+              margin-bottom: 6px;
+              font-weight: 600;
+            }
+            
+            .lifestyle-info p {
+              font-size: 20px;
+              font-weight: 700;
+              color: #1D3557;
+            }
+            
+            .footer {
+              background: #f8f9fa;
+              padding: 30px;
+              text-align: center;
+              border-top: 2px solid #e9ecef;
+            }
+            
+            .footer-text {
+              font-size: 12px;
+              color: #6c757d;
+              line-height: 1.6;
+            }
+            
+            .disclaimer {
+              background: #fff3cd;
+              border-left: 4px solid #ffc107;
+              padding: 16px;
+              margin-top: 30px;
+              border-radius: 8px;
+            }
+            
+            .disclaimer-title {
+              font-weight: 700;
+              color: #856404;
+              margin-bottom: 8px;
+              font-size: 14px;
+            }
+            
+            .disclaimer-text {
+              font-size: 12px;
+              color: #856404;
+              line-height: 1.5;
+            }
           </style>
         </head>
         <body>
-          <h1>${t.healthReport || "Health Report"}</h1>
-          <div class="section">
-            <div class="section-title">${t.keyMetrics || "Key Metrics"}</div>
-            <div class="metric">
-              <span class="metric-title">${t.bmiLabel?.replace(": ", "") || "BMI"}: </span>
-              <span class="metric-value">${lifestyleData?.BMI?.toFixed(1) ?? t.unknown} (${getBMICategory(lifestyleData?.BMI)})</span>
+          <div class="container">
+            <!-- Header -->
+            <div class="header">
+              <div class="header-content">
+                <h1>🏥 ${t.healthReport || "Health Report"}</h1>
+                <p class="report-date">Generated on ${currentDate}</p>
+              </div>
             </div>
-            <div class="metric">
-              <span class="metric-title">${t.steps || "Steps"}: </span>
-              <span class="metric-value">${formatNumber(lifestyleData?.Daily_Steps) ?? "0"} (${t.daily || "Daily"})</span>
+            
+            <!-- Score Banner -->
+            <div class="score-banner">
+              <div class="score-circle">
+                <div class="score-number">${lifestyleScore ?? 0}</div>
+                <div class="score-text">${t.outOf100 || "out of 100"}</div>
+              </div>
+              <div class="score-status">${t.lifestyleScore || "Lifestyle Score"}</div>
+              <div class="score-badge">${scoreStatus}</div>
             </div>
-            <div class="metric">
-              <span class="metric-title">${t.sleep || "Sleep"}: </span>
-              <span class="metric-value">${lifestyleData?.Sleep_Hours !== undefined ? `${lifestyleData.Sleep_Hours} ${t.hrs || "h"}` : `0 ${t.hrs || "h"}`} (${getSleepStatus(lifestyleData?.Sleep_Hours)})</span>
+            
+            <!-- Content -->
+            <div class="content">
+              <!-- Key Metrics Section -->
+              <div class="section">
+                <div class="section-header">
+                  <div class="section-icon">📊</div>
+                  <h2 class="section-title">${t.keyMetrics || "Key Metrics"}</h2>
+                </div>
+                <div class="metrics-grid">
+                  <div class="metric-card">
+                    <div class="metric-label">${t.bmiLabel?.replace(": ", "") || "BMI"}</div>
+                    <div class="metric-value">${lifestyleData?.BMI?.toFixed(1) ?? t.unknown}</div>
+                    <div class="metric-status">${getBMICategory(lifestyleData?.BMI)}</div>
+                  </div>
+                  <div class="metric-card">
+                    <div class="metric-label">${t.steps || "Daily Steps"}</div>
+                    <div class="metric-value">${formatNumber(lifestyleData?.Daily_Steps) ?? "0"}</div>
+                    <div class="metric-status">${t.daily || "Daily Average"}</div>
+                  </div>
+                  <div class="metric-card">
+                    <div class="metric-label">${t.sleep || "Sleep"}</div>
+                    <div class="metric-value">${lifestyleData?.Sleep_Hours !== undefined ? `${lifestyleData.Sleep_Hours}h` : `0h`}</div>
+                    <div class="metric-status">${getSleepStatus(lifestyleData?.Sleep_Hours)}</div>
+                  </div>
+                  <div class="metric-card">
+                    <div class="metric-label">${t.exercise || "Exercise"}</div>
+                    <div class="metric-value">${lifestyleData?.Exercise_Frequency !== undefined ? `${lifestyleData.Exercise_Frequency}x` : `0x`}</div>
+                    <div class="metric-status">${getExerciseStatus(lifestyleData?.Exercise_Frequency)}</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Lifestyle Factors -->
+              <div class="section">
+                <div class="section-header">
+                  <div class="section-icon">🌟</div>
+                  <h2 class="section-title">${t.lifestyleFactors || "Lifestyle Factors"}</h2>
+                </div>
+                <div class="lifestyle-grid">
+                  <div class="lifestyle-card">
+                    <div class="lifestyle-info">
+                      <h4>${t.dietQuality?.label || "Diet Quality"}</h4>
+                      <p>${getDietQualityText(lifestyleData?.Diet_Quality)}</p>
+                    </div>
+                  </div>
+                  <div class="lifestyle-card">
+                    <div class="lifestyle-info">
+                      <h4>${t.fruitsVeggies || "Fruits & Vegetables"}</h4>
+                      <p>${lifestyleData?.FRUITS_VEGGIES ?? 0} ${t.servingsDaily || "servings/day"}</p>
+                    </div>
+                  </div>
+                  <div class="lifestyle-card">
+                    <div class="lifestyle-info">
+                      <h4>${t.stressLevel || "Stress Level"}</h4>
+                      <p>${getStressLevelText(lifestyleData?.Stress_Level)} (${lifestyleData?.Stress_Level ?? 0}/10)</p>
+                    </div>
+                  </div>
+                  <div class="lifestyle-card">
+                    <div class="lifestyle-info">
+                      <h4>${t.screenTime || "Screen Time"}</h4>
+                      <p>${lifestyleData?.Screen_Time_Hours ?? 0}h ${t.perDay || "per day"}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Disease Risk Section -->
+              <div class="section">
+                <div class="section-header">
+                  <div class="section-icon">⚕️</div>
+                  <h2 class="section-title">${t.chronicDiseaseRisk || "Chronic Disease Risk"}</h2>
+                </div>
+                <div class="risk-cards">
+                  <div class="risk-card">
+                    <div class="risk-header">
+                      <span class="risk-name">${t.obesityRisk || "Obesity Risk"}</span>
+                      <span class="risk-percentage" style="color: ${getRiskColor(diseaseRisks.obesity)}">${diseaseRisks.obesity.toFixed(1)}%</span>
+                    </div>
+                    <div class="risk-bar">
+                      <div class="risk-bar-fill" style="width: ${diseaseRisks.obesity}%; background-color: ${getRiskColor(diseaseRisks.obesity)}"></div>
+                    </div>
+                    <span class="risk-label risk-${diseaseRisks.obesity >= 67 ? "high" : diseaseRisks.obesity >= 34 ? "medium" : "low"}">
+                      ${diseaseRisks.obesity >= 67 ? t.high || "High" : diseaseRisks.obesity >= 34 ? t.medium || "Medium" : t.low || "Low"} Risk
+                    </span>
+                  </div>
+                  
+                  <div class="risk-card">
+                    <div class="risk-header">
+                      <span class="risk-name">${t.hypertensionRisk || "Hypertension Risk"}</span>
+                      <span class="risk-percentage" style="color: ${getRiskColor(diseaseRisks.hypertension)}">${diseaseRisks.hypertension.toFixed(1)}%</span>
+                    </div>
+                    <div class="risk-bar">
+                      <div class="risk-bar-fill" style="width: ${diseaseRisks.hypertension}%; background-color: ${getRiskColor(diseaseRisks.hypertension)}"></div>
+                    </div>
+                    <span class="risk-label risk-${diseaseRisks.hypertension >= 67 ? "high" : diseaseRisks.hypertension >= 34 ? "medium" : "low"}">
+                      ${diseaseRisks.hypertension >= 67 ? t.high || "High" : diseaseRisks.hypertension >= 34 ? t.medium || "Medium" : t.low || "Low"} Risk
+                    </span>
+                  </div>
+                  
+                  <div class="risk-card">
+                    <div class="risk-header">
+                      <span class="risk-name">${t.strokeRisk || "Stroke Risk"}</span>
+                      <span class="risk-percentage" style="color: ${getRiskColor(diseaseRisks.stroke)}">${diseaseRisks.stroke.toFixed(1)}%</span>
+                    </div>
+                    <div class="risk-bar">
+                      <div class="risk-bar-fill" style="width: ${diseaseRisks.stroke}%; background-color: ${getRiskColor(diseaseRisks.stroke)}"></div>
+                    </div>
+                    <span class="risk-label risk-${diseaseRisks.stroke >= 67 ? "high" : diseaseRisks.stroke >= 34 ? "medium" : "low"}">
+                      ${diseaseRisks.stroke >= 67 ? t.high || "High" : diseaseRisks.stroke >= 34 ? t.medium || "Medium" : t.low || "Low"} Risk
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Personalized Tips Section -->
+              <div class="section">
+                <div class="section-header">
+                  <div class="section-icon">💡</div>
+                  <h2 class="section-title">${t.personalizedTips || "Personalized Recommendations"}</h2>
+                </div>
+                <div class="tips-list">
+                  ${generatePersonalizedTips()
+                    .map(
+                      (tip, index) => `
+                      <div class="tip-item">
+                        <div class="tip-icon">${index + 1}</div>
+                        <div class="tip-text">${tip.text}</div>
+                      </div>
+                    `
+                    )
+                    .join("")}
+                </div>
+              </div>
+              
+              <!-- Disclaimer -->
+              <div class="disclaimer">
+                <div class="disclaimer-title">⚠️ Important Disclaimer</div>
+                <div class="disclaimer-text">
+                  This report is generated based on self-reported data and predictive algorithms. It is intended for informational purposes only and should not be considered as medical advice. Please consult with a qualified healthcare professional for proper medical evaluation and personalized health recommendations.
+                </div>
+              </div>
             </div>
-            <div class="metric">
-              <span class="metric-title">${t.exercise || "Exercise"}: </span>
-              <span class="metric-value">${lifestyleData?.Exercise_Frequency !== undefined ? `${lifestyleData.Exercise_Frequency}/${t.daysPerWeek}` : `0/${t.daysPerWeek}`} (${getExerciseStatus(lifestyleData?.Exercise_Frequency)})</span>
+            
+            <!-- Footer -->
+            <div class="footer">
+              <div class="footer-text">
+                <strong>Generated by Health Lifestyle App</strong><br>
+                Report Date: ${currentDate}<br>
+                © ${new Date().getFullYear()} All Rights Reserved
+              </div>
             </div>
-          </div>
-          <div class="section">
-            <div class="section-title">${t.lifestyleScore || "Lifestyle Score"}</div>
-            <div class="metric">
-              <span class="metric-value">${lifestyleScore ?? 0} ${t.outOf100 || "out of 100"}</span>
-            </div>
-          </div>
-          <div class="section">
-            <div class="section-title">${t.chronicDiseaseRisk || "Chronic Disease Risk"}</div>
-            <div class="metric">
-              <span class="metric-title">${t.obesityRisk || "Obesity Risk"}: </span>
-              <span class="metric-value risk-${diseaseRisks.obesity >= 67 ? "high" : diseaseRisks.obesity >= 34 ? "medium" : "low"}">${diseaseRisks.obesity.toFixed(2)}% (${diseaseRisks.obesity >= 67 ? t.high : diseaseRisks.obesity >= 34 ? t.medium : t.low || "Low"})</span>
-            </div>
-            <div class="metric">
-              <span class="metric-title">${t.hypertensionRisk || "Hypertension Risk"}: </span>
-              <span class="metric-value risk-${diseaseRisks.hypertension >= 67 ? "high" : diseaseRisks.hypertension >= 34 ? "medium" : "low"}">${diseaseRisks.hypertension.toFixed(2)}% (${diseaseRisks.hypertension >= 67 ? t.high : diseaseRisks.hypertension >= 34 ? t.medium : t.low || "Low"})</span>
-            </div>
-            <div class="metric">
-              <span class="metric-title">${t.strokeRisk || "Stroke Risk"}: </span>
-              <span class="metric-value risk-${diseaseRisks.stroke >= 67 ? "high" : diseaseRisks.stroke >= 34 ? "medium" : "low"}">${diseaseRisks.stroke.toFixed(2)}% (${diseaseRisks.stroke >= 67 ? t.high : diseaseRisks.stroke >= 34 ? t.medium : t.low || "Low"})</span>
-            </div>
-          </div>
-          <div class="section">
-            <div class="section-title">${t.personalizedTips || "Personalized Tips"}</div>
-            ${generatePersonalizedTips()
-              .map((tip) => `<div class="metric">${tip.text}</div>`)
-              .join("")}
           </div>
         </body>
       </html>
