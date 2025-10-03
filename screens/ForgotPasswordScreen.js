@@ -69,7 +69,6 @@ const ForgotPasswordScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#008080" />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>{t.forgotPasswordTitle}</Text>
@@ -126,7 +125,7 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     paddingHorizontal: 20,
-    paddingTop: 30,
+    paddingTop: 50,
     paddingBottom: 20,
   },
   header: {
