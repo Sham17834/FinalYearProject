@@ -31,7 +31,7 @@ const styles = {
   },
   header: {
     backgroundColor: "#008080",
-    paddingTop: 20,
+    paddingTop: 30,
     paddingBottom: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },

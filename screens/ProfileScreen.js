@@ -11,7 +11,6 @@ import {
   Alert,
   Modal,
   StyleSheet,
-  Switch,
 } from "react-native";
 import {
   useNavigation,
@@ -52,7 +51,6 @@ const ProfileScreen = () => {
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState({ name: "", email: "" });
   const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
 
   useEffect(() => {
     const loadProfileData = async () => {
@@ -79,9 +77,6 @@ const ProfileScreen = () => {
           setName(data.fullName || "");
           setEmail(data.email || "");
         }
-
-        const offlineMode = await AsyncStorage.getItem("offlineMode");
-        setIsOfflineMode(offlineMode === "true");
       } catch (error) {
         Alert.alert(
           t.error || "Error",
@@ -165,28 +160,6 @@ const ProfileScreen = () => {
       Alert.alert(
         t.error || "Error",
         t.saveProfileError || "Failed to save profile data."
-      );
-    }
-  };
-
-  const handleOfflineModeToggle = async () => {
-    try {
-      const newOfflineMode = !isOfflineMode;
-      setIsOfflineMode(newOfflineMode);
-      await AsyncStorage.setItem("offlineMode", newOfflineMode.toString());
-      Alert.alert(
-        t.offlineModeChanged || "Offline Mode Changed",
-        newOfflineMode
-          ? t.offlineModeEnabled ||
-              "Offline mode enabled. Predictions will use local models."
-          : t.offlineModeDisabled ||
-              "Offline mode disabled. Predictions will use online API.",
-        [{ text: t.ok || "OK", style: "default" }]
-      );
-    } catch (error) {
-      Alert.alert(
-        t.error || "Error",
-        t.offlineModeError || "Failed to toggle offline mode."
       );
     }
   };
@@ -304,24 +277,6 @@ const ProfileScreen = () => {
                   </Text>
                   <Text style={styles.pickerArrow}>▼</Text>
                 </TouchableOpacity>
-              </View>
-              <View style={styles.pickerSection}>
-                <View style={styles.switchContainer}>
-                  <Text style={styles.inputLabel}>
-                    {t.offlineMode || "Offline Mode"}
-                  </Text>
-                  <Switch
-                    value={isOfflineMode}
-                    onValueChange={handleOfflineModeToggle}
-                    trackColor={{ false: "#e2e8f0", true: "#14b8a6" }}
-                    thumbColor={isOfflineMode ? "#ffffff" : "#f4f3f4"}
-                  />
-                </View>
-                <Text style={styles.switchDescription}>
-                  {isOfflineMode
-                    ? t.offlineModeDescOn || "Use local models for predictions"
-                    : t.offlineModeDescOff || "Use online API for predictions"}
-                </Text>
               </View>
             </View>
           </View>
@@ -444,7 +399,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: "#008080",
     width: "100%",
-    paddingTop: 20,
+    paddingTop: 30,
     paddingBottom: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -723,15 +678,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.text,
     letterSpacing: 0.2,
-  },
-  switchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  switchDescription: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
   },
 });
 

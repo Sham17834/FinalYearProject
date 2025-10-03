@@ -4,7 +4,6 @@ import React, {
   useEffect,
   useCallback,
   useMemo,
-  useRef,
 } from "react";
 import {
   View,
@@ -20,14 +19,10 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import Slider from "@react-native-community/slider";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import { formatString } from "./translations";
 import { getDb } from "./db";
-import * as ort from "onnxruntime-react-native";
-import * as FileSystem from "expo-file-system";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Asset } from "expo-asset";
 import debounce from "lodash.debounce";
 
 const fallbackTranslations = {
@@ -87,7 +82,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8fafc",
   },
   header: {
-    paddingTop: 20,
+    paddingTop: 30,
     backgroundColor: "#008080",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -202,21 +197,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     position: "relative",
   },
-  dropdownIcon: {
-    position: "absolute",
-    right: 16,
-    top: "50%",
-    transform: [{ translateY: -6 }],
-    width: 0,
-    height: 0,
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderTopWidth: 8,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    borderTopColor: "#64748b",
-    zIndex: 1,
-  },
   sliderGroup: {
     marginBottom: 24,
     padding: 16,
@@ -291,7 +271,6 @@ const styles = StyleSheet.create({
     marginTop: 32,
     marginBottom: 20,
     gap: 12,
-    // Ensure consistent button container height
     minHeight: 60,
   },
   button: {
@@ -304,7 +283,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    // Ensure consistent button height
     minHeight: 56,
   },
   primaryButton: {
@@ -316,7 +294,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderColor: "#e2e8f0",
     borderWidth: 2,
-    // Set minimum width for secondary button
     minWidth: 120,
   },
   primaryButtonText: {
@@ -339,7 +316,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 6,
     fontWeight: "500",
-    // Consistent error text height
     minHeight: 16,
   },
   stressLevelIndicator: {
@@ -525,11 +501,8 @@ const LifestyleDataInputScreen = () => {
   }, [context]);
 
   const navigation = useNavigation();
-  const route = useRoute();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
-  const [offlineFilesReady, setOfflineFilesReady] = useState(false);
   const totalSteps = 3;
 
   const [formData, setFormData] = useState({
@@ -620,204 +593,6 @@ const LifestyleDataInputScreen = () => {
     []
   );
 
-  const loadOfflineFilesFromAssets = async () => {
-    try {
-      console.log("Document directory:", FileSystem.documentDirectory);
-      console.log("Loading offline model files from assets...");
-
-      const assets = [
-        {
-          name: "label_encoders.json",
-          module: require("../assets/model/label_encoders.json"),
-          isJson: true,
-        },
-        {
-          name: "scaler.json",
-          module: require("../assets/model/scaler.json"),
-          isJson: true,
-        },
-        {
-          name: "selected_features.json",
-          module: require("../assets/model/selected_features.json"),
-          isJson: true,
-        },
-        {
-          name: "xgb_model_output_0.onnx",
-          module: require("../assets/model/xgb_model_output_0.onnx"),
-          isJson: false,
-        },
-        {
-          name: "xgb_model_output_1.onnx",
-          module: require("../assets/model/xgb_model_output_1.onnx"),
-          isJson: false,
-        },
-        {
-          name: "xgb_model_output_2.onnx",
-          module: require("../assets/model/xgb_model_output_2.onnx"),
-          isJson: false,
-        },
-      ];
-
-      for (const asset of assets) {
-        try {
-          console.log(`Attempting to load asset: ${asset.name}`);
-          console.log(`Required module: ${JSON.stringify(asset.module)}`);
-
-          if (asset.isJson && typeof asset.module === "object") {
-            console.log(
-              `JSON file ${asset.name} parsed by Metro, writing directly...`
-            );
-            const destinationPath = `${FileSystem.documentDirectory}${asset.name}`;
-            await FileSystem.writeAsStringAsync(
-              destinationPath,
-              JSON.stringify(asset.module)
-            );
-            console.log(
-              `Successfully wrote ${asset.name} to ${destinationPath}`
-            );
-          } else {
-            if (
-              !asset.module ||
-              (typeof asset.module === "object" && !asset.module.uri)
-            ) {
-              throw new Error(
-                `Invalid module for ${asset.name}. Ensure the file is correctly included in assets/model/ and bundled in app.json.`
-              );
-            }
-            const assetModule = Asset.fromModule(asset.module);
-            console.log(
-              `Asset module resolved: ${JSON.stringify(assetModule)}`
-            );
-            await assetModule.downloadAsync();
-            if (!assetModule.localUri) {
-              throw new Error(
-                `Failed to download asset: ${asset.name}. No local URI available. Check if the file is bundled in app.json.`
-              );
-            }
-            const destinationPath = `${FileSystem.documentDirectory}${asset.name}`;
-            console.log(
-              `Copying from ${assetModule.localUri} to ${destinationPath}`
-            );
-            await FileSystem.copyAsync({
-              from: assetModule.localUri,
-              to: destinationPath,
-            });
-            console.log(
-              `Successfully copied ${asset.name} to ${destinationPath}`
-            );
-          }
-
-          const fileInfo = await FileSystem.getInfoAsync(
-            `${FileSystem.documentDirectory}${asset.name}`
-          );
-          if (!fileInfo.exists) {
-            throw new Error(
-              `Copied file not found at ${FileSystem.documentDirectory}${asset.name}`
-            );
-          }
-        } catch (error) {
-          console.error(`Error processing asset ${asset.name}:`, error);
-          throw new Error(`Failed to load ${asset.name}: ${error.message}`);
-        }
-      }
-
-      const files = await FileSystem.readDirectoryAsync(
-        FileSystem.documentDirectory
-      );
-      console.log("Files in document directory:", files);
-
-      const scalerContent = await FileSystem.readAsStringAsync(
-        `${FileSystem.documentDirectory}scaler.json`
-      );
-      console.log("Raw scaler.json content:", scalerContent);
-
-      setOfflineFilesReady(true);
-      console.log("All offline files loaded successfully");
-      return true;
-    } catch (error) {
-      console.error("Error loading offline files:", error);
-      Alert.alert(
-        "Error Loading Offline Files",
-        `Failed to load model files: ${error.message}. Please ensure that all files are present in assets/model/ and included in app.json under assetBundlePatterns. Switching to online mode.`,
-        [{ text: "OK" }]
-      );
-      setOfflineFilesReady(false);
-      return false;
-    }
-  };
-
-  const checkOfflineFilesExist = async () => {
-    try {
-      const requiredFiles = [
-        "label_encoders.json",
-        "scaler.json",
-        "selected_features.json",
-        "xgb_model_output_0.onnx",
-        "xgb_model_output_1.onnx",
-        "xgb_model_output_2.onnx",
-      ];
-
-      const fileChecks = await Promise.all(
-        requiredFiles.map(async (filename) => {
-          const filePath = `${FileSystem.documentDirectory}${filename}`;
-          const fileInfo = await FileSystem.getInfoAsync(filePath);
-          console.log(
-            `Checking file ${filePath}: ${fileInfo.exists ? "exists" : "not found"}`
-          );
-          return fileInfo.exists;
-        })
-      );
-
-      const allFilesExist = fileChecks.every((exists) => exists);
-      console.log("Offline files exist in documents directory:", allFilesExist);
-      return allFilesExist;
-    } catch (error) {
-      console.error("Error checking offline files:", error);
-      return false;
-    }
-  };
-
-  useEffect(() => {
-    const initializeOfflineMode = async () => {
-      try {
-        const offlineMode = await AsyncStorage.getItem("offlineMode");
-        const shouldUseOffline = offlineMode === "true";
-        setIsOfflineMode(shouldUseOffline);
-
-        if (shouldUseOffline) {
-          const filesExist = await checkOfflineFilesExist();
-          if (!filesExist) {
-            console.log("Offline files not found, loading from assets...");
-            const success = await loadOfflineFilesFromAssets();
-            if (!success) {
-              setIsOfflineMode(false);
-              await AsyncStorage.setItem("offlineMode", "false");
-              Alert.alert(
-                "Offline Mode Disabled",
-                "Failed to load offline files. Switched to online mode.",
-                [{ text: "OK" }]
-              );
-            }
-          } else {
-            setOfflineFilesReady(true);
-            console.log("Offline files already exist in documents directory");
-          }
-        }
-      } catch (error) {
-        console.error("Error initializing offline mode:", error);
-        setIsOfflineMode(false);
-        await AsyncStorage.setItem("offlineMode", "false");
-        Alert.alert(
-          "Error",
-          "Failed to initialize offline mode. Using online mode.",
-          [{ text: "OK" }]
-        );
-      }
-    };
-
-    initializeOfflineMode();
-  }, []);
-
   const calculateBMI = useCallback(
     debounce((height, weight) => {
       if (height && weight && !isNaN(height) && !isNaN(weight)) {
@@ -906,301 +681,23 @@ const LifestyleDataInputScreen = () => {
     };
 
     try {
-      let predictions = {};
-
-      if (isOfflineMode && offlineFilesReady) {
-        try {
-          const labelEncodersContent = await FileSystem.readAsStringAsync(
-            `${FileSystem.documentDirectory}label_encoders.json`
-          );
-          console.log("Raw label_encoders.json content:", labelEncodersContent);
-          const labelEncoders = JSON.parse(labelEncodersContent);
-          if (!labelEncoders || typeof labelEncoders !== "object") {
-            throw new Error("Invalid label_encoders.json content");
-          }
-          console.log("labelEncoders:", labelEncoders);
-
-          const scalerContent = await FileSystem.readAsStringAsync(
-            `${FileSystem.documentDirectory}scaler.json`
-          );
-          console.log("Raw scaler.json content:", scalerContent);
-          const scaler = JSON.parse(scalerContent);
-          if (
-            !scaler.mean ||
-            !scaler.scale ||
-            !Array.isArray(scaler.mean) ||
-            !Array.isArray(scaler.scale)
-          ) {
-            throw new Error(
-              "Invalid scaler.json content: missing or invalid mean or scale arrays"
-            );
-          }
-          if (scaler.mean.length !== scaler.scale.length) {
-            throw new Error(
-              `scaler.json mismatch: mean length (${scaler.mean.length}) does not match scale length (${scaler.scale.length})`
-            );
-          }
-          console.log("scaler:", scaler);
-
-          const selectedFeaturesContent = await FileSystem.readAsStringAsync(
-            `${FileSystem.documentDirectory}selected_features.json`
-          );
-          console.log(
-            "Raw selected_features.json content:",
-            selectedFeaturesContent
-          );
-          const selectedFeatures = JSON.parse(selectedFeaturesContent);
-          if (!Array.isArray(selectedFeatures)) {
-            throw new Error(
-              "Invalid selected_features.json content: not an array"
-            );
-          }
-          if (selectedFeatures.length !== scaler.mean.length) {
-            throw new Error(
-              `Feature mismatch: selectedFeatures length (${selectedFeatures.length}) does not match scaler.mean length (${scaler.mean.length})`
-            );
-          }
-          console.log("selectedFeatures:", selectedFeatures);
-
-          const inputData = { ...data };
-          console.log("inputData before encoding:", inputData);
-
-          inputData.Gender = labelEncoders.Gender.indexOf(data.Gender);
-          if (inputData.Gender === -1)
-            throw new Error(`Invalid Gender value: ${data.Gender}`);
-
-          inputData.Chronic_Disease = labelEncoders.Chronic_Disease.indexOf(
-            data.Chronic_Disease
-          );
-          if (inputData.Chronic_Disease === -1)
-            throw new Error(
-              `Invalid Chronic_Disease value: ${data.Chronic_Disease}`
-            );
-
-          inputData.Alcohol_Consumption =
-            labelEncoders.Alcohol_Consumption.indexOf(data.Alcohol_Consumption);
-          if (inputData.Alcohol_Consumption === -1)
-            throw new Error(
-              `Invalid Alcohol_Consumption value: ${data.Alcohol_Consumption}`
-            );
-
-          inputData.Smoking_Habit = labelEncoders.Smoking_Habit.indexOf(
-            data.Smoking_Habit
-          );
-          if (inputData.Smoking_Habit === -1)
-            throw new Error(
-              `Invalid Smoking_Habit value: ${data.Smoking_Habit}`
-            );
-
-          inputData.Diet_Quality = labelEncoders.Diet_Quality.indexOf(
-            data.Diet_Quality
-          );
-          if (inputData.Diet_Quality === -1)
-            throw new Error(`Invalid Diet_Quality value: ${data.Diet_Quality}`);
-
-          console.log("inputData after encoding:", inputData);
-
-          const featureArray = selectedFeatures.map((feature) => {
-            if (inputData[feature] === undefined) {
-              throw new Error(`Feature ${feature} is undefined in inputData`);
-            }
-            return inputData[feature];
-          });
-          console.log("featureArray:", featureArray);
-
-          const scaledFeatures = featureArray.map((value, index) => {
-            if (
-              isNaN(value) ||
-              scaler.mean[index] === undefined ||
-              scaler.scale[index] === undefined
-            ) {
-              throw new Error(
-                `Invalid scaling at index ${index}: value=${value}, mean=${scaler.mean[index]}, scale=${scaler.scale[index]}`
-              );
-            }
-            return (value - scaler.mean[index]) / scaler.scale[index];
-          });
-          console.log("scaledFeatures:", scaledFeatures);
-
-          const inputTensor = new ort.Tensor(
-            "float32",
-            new Float32Array(scaledFeatures),
-            [1, scaledFeatures.length]
-          );
-          console.log("inputTensor:", {
-            type: inputTensor.type,
-            dims: inputTensor.dims,
-            data: Array.from(inputTensor.data),
-          });
-          const modelPaths = [
-            `${FileSystem.documentDirectory}xgb_model_output_0.onnx`,
-            `${FileSystem.documentDirectory}xgb_model_output_1.onnx`,
-            `${FileSystem.documentDirectory}xgb_model_output_2.onnx`,
-          ];
-
-          for (const modelPath of modelPaths) {
-            const fileInfo = await FileSystem.getInfoAsync(modelPath);
-            if (!fileInfo.exists) {
-              throw new Error(`ONNX model file not found: ${modelPath}`);
-            }
-          }
-
-          for (let i = 0; i < modelPaths.length; i++) {
-            console.log(`Creating inference session for ${modelPaths[i]}`);
-            const session = await ort.InferenceSession.create(modelPaths[i]);
-            if (!session) {
-              throw new Error(
-                `Failed to create InferenceSession for ${modelPaths[i]}`
-              );
-            }
-            const feeds = { input: inputTensor };
-            console.log("feeds:", {
-              float_input: {
-                type: inputTensor.type,
-                dims: inputTensor.dims,
-                data: Array.from(inputTensor.data),
-              },
-            });
-            try {
-              const results = await session.run(feeds);
-              console.log(
-                "Inference results:",
-                JSON.stringify(results, (key, value) => {
-                  if (
-                    value instanceof Float32Array ||
-                    value instanceof Float64Array
-                  ) {
-                    return Array.from(value);
-                  }
-                  if (typeof value === "bigint") {
-                    return Number(value);
-                  }
-                  if (
-                    value instanceof Int8Array ||
-                    value instanceof Uint8Array ||
-                    value instanceof Int16Array ||
-                    value instanceof Uint16Array ||
-                    value instanceof Int32Array ||
-                    value instanceof Uint32Array ||
-                    value instanceof BigInt64Array ||
-                    value instanceof BigUint64Array
-                  ) {
-                    return Array.from(value).map((v) => Number(v));
-                  }
-                  return value;
-                })
-              );
-
-              let prediction;
-              let probabilitiesData =
-                results.probabilities &&
-                (results.probabilities.cpuData || results.probabilities.data);
-              let labelData =
-                results.label && (results.label.cpuData || results.label.data);
-
-              console.log(
-                "probabilitiesData type:",
-                probabilitiesData
-                  ? Object.prototype.toString.call(probabilitiesData)
-                  : "undefined"
-              );
-              console.log(
-                "labelData type:",
-                labelData
-                  ? Object.prototype.toString.call(labelData)
-                  : "undefined"
-              );
-
-              if (probabilitiesData && probabilitiesData.length === 2) {
-                console.log("Using 'probabilities' output:", {
-                  dims: results.probabilities.dims,
-                  data: Array.from(probabilitiesData),
-                });
-                if (
-                  results.probabilities.dims[0] !== 1 ||
-                  results.probabilities.dims[1] !== 2
-                ) {
-                  throw new Error(
-                    `Invalid probabilities shape for ${modelPaths[i]}. Expected [1, 2], got ${JSON.stringify(results.probabilities.dims)}`
-                  );
-                }
-                prediction = probabilitiesData[1] > 0.5 ? 1 : 0;
-              } else if (labelData && labelData.length === 1) {
-                console.log("Using 'label' output:", {
-                  dims: results.label.dims,
-                  data: Array.from(labelData).map((v) => Number(v)),
-                });
-                if (results.label.dims[0] !== 1) {
-                  throw new Error(
-                    `Invalid label shape for ${modelPaths[i]}. Expected [1,], got ${JSON.stringify(results.label.dims)}`
-                  );
-                }
-                prediction = Number(labelData[0]);
-                if (
-                  isNaN(prediction) ||
-                  (prediction !== 0 && prediction !== 1)
-                ) {
-                  throw new Error(
-                    `Invalid label value for ${modelPaths[i]}: ${labelData[0]}`
-                  );
-                }
-              } else {
-                const outputKeys = Object.keys(results);
-                throw new Error(
-                  `No valid output ('probabilities' or 'label') found for ${modelPaths[i]}. Available keys: ${JSON.stringify(outputKeys)}`
-                );
-              }
-
-              predictions[
-                i === 0
-                  ? "Obesity_Flag"
-                  : i === 1
-                    ? "Hypertension_Flag"
-                    : "Stroke_Flag"
-              ] = prediction;
-            } catch (runError) {
-              throw new Error(
-                `Inference failed for ${modelPaths[i]}: ${runError.message}`
-              );
-            }
-          }
-          console.log("Offline predictions completed:", predictions);
-        } catch (offlineError) {
-          console.error("Offline prediction failed:", offlineError);
-          Alert.alert(
-            "Offline Mode Failed",
-            `Failed to use offline predictions: ${offlineError.message}. Please verify .onnx files, scaler.json, and input data. Switching to online mode.`,
-            [{ text: "OK" }]
-          );
-
-          const response = await fetch(
-            "https://finalyearproject-c5hy.onrender.com/predict",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(data),
-            }
-          );
-          if (!response.ok) throw new Error(await response.text());
-          predictions = await response.json();
-
-          setIsOfflineMode(false);
-          setOfflineFilesReady(false);
-          await AsyncStorage.setItem("offlineMode", "false");
+      console.log("Making prediction request to online API...");
+      const response = await fetch(
+        "https://finalyearproject-c5hy.onrender.com/predict",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
         }
-      } else {
-        console.log("Using online mode for predictions...");
-        const response = await fetch(
-          "https://finalyearproject-c5hy.onrender.com/predict",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-          }
-        );
-        if (!response.ok) throw new Error(await response.text());
-        predictions = await response.json();
+      );
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to get predictions");
       }
+      
+      const predictions = await response.json();
+      console.log("Predictions received:", predictions);
 
       const fullData = {
         ...data,
@@ -1254,7 +751,10 @@ const LifestyleDataInputScreen = () => {
       });
     } catch (error) {
       console.error("Error in handleSubmit:", error);
-      Alert.alert("Error", error.message || "Something went wrong");
+      Alert.alert(
+        "Error", 
+        error.message || "Failed to submit data. Please check your internet connection and try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -1333,7 +833,6 @@ const LifestyleDataInputScreen = () => {
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        // Additional props to reduce scrollbar jitter
         scrollEventThrottle={16}
         bounces={false}
         overScrollMode="never"
@@ -1363,10 +862,6 @@ const LifestyleDataInputScreen = () => {
                     }
                     onFocus={() => setFocusedInput("age")}
                     onBlur={() => setFocusedInput(null)}
-                    accessibilityLabel={t.age || fallbackTranslations.age}
-                    accessibilityHint={
-                      t.enterAge || fallbackTranslations.enterAge
-                    }
                   />
                   {errors.age ? (
                     <Text style={styles.errorText}>{errors.age}</Text>
@@ -1385,7 +880,6 @@ const LifestyleDataInputScreen = () => {
                     onValueChange={(itemValue) =>
                       setFormData((prev) => ({ ...prev, gender: itemValue }))
                     }
-                    accessibilityLabel={t.gender || fallbackTranslations.gender}
                   >
                     {genderOptions.map((option) => (
                       <Picker.Item
@@ -1421,12 +915,6 @@ const LifestyleDataInputScreen = () => {
                     }}
                     onFocus={() => setFocusedInput("heightCm")}
                     onBlur={() => setFocusedInput(null)}
-                    accessibilityLabel={
-                      t.heightCm || fallbackTranslations.heightCm
-                    }
-                    accessibilityHint={
-                      t.enterHeight || fallbackTranslations.enterHeight
-                    }
                   />
                   {errors.heightCm ? (
                     <Text style={styles.errorText}>{errors.heightCm}</Text>
@@ -1457,12 +945,6 @@ const LifestyleDataInputScreen = () => {
                     }}
                     onFocus={() => setFocusedInput("weightKg")}
                     onBlur={() => setFocusedInput(null)}
-                    accessibilityLabel={
-                      t.weightKg || fallbackTranslations.weightKg
-                    }
-                    accessibilityHint={
-                      t.enterWeight || fallbackTranslations.enterWeight
-                    }
                   />
                   {errors.weightKg ? (
                     <Text style={styles.errorText}>{errors.weightKg}</Text>
@@ -1482,7 +964,6 @@ const LifestyleDataInputScreen = () => {
                     t.bmiPlaceholder || fallbackTranslations.bmiPlaceholder
                   }
                   placeholderTextColor="#14b8a6"
-                  accessibilityLabel={t.bmi || fallbackTranslations.bmi}
                 />
               </View>
             </>
@@ -1503,9 +984,6 @@ const LifestyleDataInputScreen = () => {
                         ...prev,
                         chronicDisease: itemValue,
                       }))
-                    }
-                    accessibilityLabel={
-                      t.chronicDisease || fallbackTranslations.chronicDisease
                     }
                   >
                     {chronicDiseaseOptions.map((option) => (
@@ -1533,12 +1011,6 @@ const LifestyleDataInputScreen = () => {
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
                   onValueChange={debouncedSetDailySteps}
-                  accessibilityLabel={
-                    t.dailySteps || fallbackTranslations.dailySteps
-                  }
-                  accessibilityValue={{
-                    text: `${Math.round(formData.dailySteps)} steps`,
-                  }}
                 />
                 <View style={styles.sliderLabelRow}>
                   <Text style={styles.sliderMinMaxLabel}>0</Text>
@@ -1564,13 +1036,6 @@ const LifestyleDataInputScreen = () => {
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
                   onValueChange={debouncedSetExerciseFrequency}
-                  accessibilityLabel={
-                    t.exerciseFrequency ||
-                    fallbackTranslations.exerciseFrequency
-                  }
-                  accessibilityValue={{
-                    text: `${formData.exerciseFrequency} days per week`,
-                  }}
                 />
                 <View style={styles.sliderLabelRow}>
                   <Text style={styles.sliderMinMaxLabel}>
@@ -1599,10 +1064,6 @@ const LifestyleDataInputScreen = () => {
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
                   onValueChange={debouncedSetSleepHours}
-                  accessibilityLabel={
-                    t.sleepHours || fallbackTranslations.sleepHours
-                  }
-                  accessibilityValue={{ text: `${formData.sleepHours} hours` }}
                 />
                 <View style={styles.sliderLabelRow}>
                   <Text style={styles.sliderMinMaxLabel}>3h</Text>
@@ -1632,10 +1093,6 @@ const LifestyleDataInputScreen = () => {
                     thumbColor={
                       formData.alcoholConsumption ? "#ffffff" : "#f4f3f4"
                     }
-                    accessibilityLabel={
-                      t.alcoholConsumption ||
-                      fallbackTranslations.alcoholConsumption
-                    }
                   />
                 </View>
               </View>
@@ -1653,9 +1110,6 @@ const LifestyleDataInputScreen = () => {
                     }
                     trackColor={{ false: "#e2e8f0", true: "#14b8a6" }}
                     thumbColor={formData.smokingHabit ? "#ffffff" : "#f4f3f4"}
-                    accessibilityLabel={
-                      t.smokingHabit || fallbackTranslations.smokingHabit
-                    }
                   />
                 </View>
               </View>
@@ -1678,10 +1132,6 @@ const LifestyleDataInputScreen = () => {
                         ...prev,
                         dietQuality: itemValue,
                       }))
-                    }
-                    accessibilityLabel={
-                      t.dietQuality?.label ||
-                      fallbackTranslations.dietQuality.label
                     }
                   >
                     {dietQualityOptions.map((option) => (
@@ -1709,12 +1159,6 @@ const LifestyleDataInputScreen = () => {
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
                   onValueChange={debouncedSetFruitsVeggies}
-                  accessibilityLabel={
-                    t.fruitsVeggies || fallbackTranslations.fruitsVeggies
-                  }
-                  accessibilityValue={{
-                    text: `${formData.fruitsVeggies} servings per day`,
-                  }}
                 />
                 <View style={styles.sliderLabelRow}>
                   <Text style={styles.sliderMinMaxLabel}>0</Text>
@@ -1739,12 +1183,6 @@ const LifestyleDataInputScreen = () => {
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
                   onValueChange={debouncedSetStressLevel}
-                  accessibilityLabel={
-                    t.stressLevel || fallbackTranslations.stressLevel
-                  }
-                  accessibilityValue={{
-                    text: `${formData.stressLevel} out of 10`,
-                  }}
                 />
                 <View style={styles.sliderLabelRow}>
                   <Text style={styles.sliderMinMaxLabel}>
@@ -1786,12 +1224,6 @@ const LifestyleDataInputScreen = () => {
                   maximumTrackTintColor="#e2e8f0"
                   thumbTintColor="#008080"
                   onValueChange={debouncedSetScreenTimeHours}
-                  accessibilityLabel={
-                    t.screenTimeHours || fallbackTranslations.screenTimeHours
-                  }
-                  accessibilityValue={{
-                    text: `${formData.screenTimeHours} hours per day`,
-                  }}
                 />
                 <View style={styles.sliderLabelRow}>
                   <Text style={styles.sliderMinMaxLabel}>
@@ -1813,7 +1245,6 @@ const LifestyleDataInputScreen = () => {
               <TouchableOpacity
                 style={[styles.button, styles.secondaryButton]}
                 onPress={handlePrevious}
-                accessibilityLabel={t.previous || fallbackTranslations.previous}
               >
                 <Text style={styles.secondaryButtonText}>
                   {t.previous || fallbackTranslations.previous}
@@ -1825,7 +1256,6 @@ const LifestyleDataInputScreen = () => {
               <TouchableOpacity
                 style={[styles.button, styles.primaryButton]}
                 onPress={handleNext}
-                accessibilityLabel={t.next || fallbackTranslations.next}
               >
                 <Text style={styles.primaryButtonText}>
                   {t.next || fallbackTranslations.next}
@@ -1840,11 +1270,6 @@ const LifestyleDataInputScreen = () => {
                 ]}
                 onPress={handleSubmit}
                 disabled={isSubmitting}
-                accessibilityLabel={
-                  isSubmitting
-                    ? t.submitting || fallbackTranslations.submitting
-                    : t.submit || fallbackTranslations.submit
-                }
               >
                 <Text style={styles.primaryButtonText}>
                   {isSubmitting

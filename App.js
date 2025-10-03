@@ -16,39 +16,109 @@ import ProfileScreen from './screens/ProfileScreen';
 import { LanguageProvider, LanguageContext } from './screens/LanguageContext';
 import { getTranslations } from './screens/translations';
 import { auth } from './firebaseConfig';
+import { getDb } from './screens/db';
+import { enableScreens } from 'react-native-screens';
 import "setimmediate";
+
+enableScreens(); 
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const AuthStack = () => {
+const AuthStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="Welcome" component={WelcomeScreen} />
+    <Stack.Screen name="Register" component={RegisterScreen} />
+    <Stack.Screen name="Login" component={LoginScreen} />
+    <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+    <Stack.Screen name="LifestyleDataInput" component={LifestyleDataInputScreen} />
+  </Stack.Navigator>
+);
+
+const MainTabs = () => {
+  const { language } = useContext(LanguageContext);
+  const t = getTranslations(language);
+
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Welcome" component={WelcomeScreen} />
-      <Stack.Screen name="Register" component={RegisterScreen} />
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-      <Stack.Screen name="LifestyleDataInput" component={LifestyleDataInputScreen} />
-    </Stack.Navigator>
+    <Tab.Navigator
+      initialRouteName="Home"
+      screenOptions={{
+        headerShown: false, 
+        tabBarActiveTintColor: '#008080',
+        tabBarInactiveTintColor: '#9ca3af',
+        tabBarStyle: styles.tabBar,
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HealthTrackHomeScreen}
+        options={{
+          tabBarLabel: t.tabHome || "Home",
+          tabBarIcon: ({ color }) => <Icon name="home" color={color} size={24} />,
+        }}
+      />
+      <Tab.Screen
+        name="Progress"
+        component={ProgressScreen}
+        options={{
+          tabBarLabel: t.tabProgress || "Progress",
+          tabBarIcon: ({ color }) => <Icon name="analytics" color={color} size={24} />,
+        }}
+      />
+      <Tab.Screen
+        name="Track"
+        component={TrackScreen}
+        options={{
+          tabBarLabel: t.tabTrack || "Track",
+          tabBarIcon: ({ color }) => <Icon name="track-changes" color={color} size={24} />,
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: t.tabProfile || "Profile",
+          tabBarIcon: ({ color }) => <Icon name="person" color={color} size={24} />,
+        }}
+      />
+    </Tab.Navigator>
   );
 };
 
 const AppNavigator = () => {
-  const { language } = useContext(LanguageContext);
-  const t = getTranslations(language);
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState(null);
+  const [hasLifestyleData, setHasLifestyleData] = useState(null);
+
+  const checkLifestyleData = async (userEmail) => {
+    try {
+      const db = await getDb();
+      const result = await db.getFirstAsync(`SELECT * FROM UserProfile LIMIT 1`);
+      return !!result;
+    } catch (error) {
+      console.error("Error checking lifestyle data:", error);
+      return false;
+    }
+  };
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setUser(user);
-      if (initializing) setInitializing(false);
+
+      if (user) {
+        const hasData = await checkLifestyleData(user.email);
+        setHasLifestyleData(hasData);
+      } else {
+        setHasLifestyleData(false);
+      }
+
+      setInitializing(false);
     });
 
     return unsubscribe;
   }, []);
 
-  if (initializing) {
+  if (initializing || (user && hasLifestyleData === null)) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#008080" />
@@ -57,71 +127,32 @@ const AppNavigator = () => {
   }
 
   return (
-    <NavigationContainer>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       {user ? (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="MainApp">
-            {() => (
-              <Tab.Navigator
-                initialRouteName="Home"
-                screenOptions={{
-                  tabBarActiveTintColor: '#008080',
-                  tabBarInactiveTintColor: '#9ca3af',
-                  tabBarStyle: styles.tabBar,
-                }}
-              >
-                <Tab.Screen
-                  name="Home"
-                  component={HealthTrackHomeScreen}
-                  options={{
-                    tabBarLabel: t.tabHome || "Home",
-                    tabBarIcon: ({ color }) => <Icon name="home" color={color} size={24} />,
-                    headerShown: false,
-                  }}
-                />
-                <Tab.Screen
-                  name="Progress"
-                  component={ProgressScreen}
-                  options={{
-                    tabBarLabel: t.tabProgress || "Progress",
-                    tabBarIcon: ({ color }) => <Icon name="analytics" color={color} size={24} />,
-                    headerShown: false,
-                  }}
-                />
-                <Tab.Screen
-                  name="Track"
-                  component={TrackScreen}
-                  options={{
-                    tabBarLabel: t.tabTrack || "Track",
-                    tabBarIcon: ({ color }) => <Icon name="track-changes" color={color} size={24} />,
-                    headerShown: false,
-                  }}
-                />
-                <Tab.Screen
-                  name="Profile"
-                  component={ProfileScreen}
-                  options={{
-                    tabBarLabel: t.tabProfile || "Profile",
-                    tabBarIcon: ({ color }) => <Icon name="person" color={color} size={24} />,
-                    headerShown: false,
-                  }}
-                />
-              </Tab.Navigator>
-            )}
-          </Stack.Screen>
-          <Stack.Screen name="LifestyleDataInput" component={LifestyleDataInputScreen} />
-        </Stack.Navigator>
+        hasLifestyleData ? (
+          <>
+            <Stack.Screen name="MainApp" component={MainTabs} />
+            <Stack.Screen name="LifestyleDataInput" component={LifestyleDataInputScreen} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="LifestyleDataInput" component={LifestyleDataInputScreen} />
+            <Stack.Screen name="MainApp" component={MainTabs} />
+          </>
+        )
       ) : (
-        <AuthStack />
+        <Stack.Screen name="AuthStack" component={AuthStack} />
       )}
-    </NavigationContainer>
+    </Stack.Navigator>
   );
 };
 
 const App = () => {
   return (
     <LanguageProvider>
-      <AppNavigator />
+      <NavigationContainer>
+        <AppNavigator />
+      </NavigationContainer>
     </LanguageProvider>
   );
 };

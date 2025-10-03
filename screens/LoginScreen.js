@@ -100,14 +100,15 @@ const LoginScreen = () => {
 
       console.log("Firebase Sign-In Success:", user.uid);
 
+      // Check if first-time user BEFORE saving data
+      const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
+
       const userData = {
         fullName: user.displayName || params?.name || "Google User",
         email: user.email || params?.email,
       };
 
       await saveUserData(userData);
-
-      const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
 
       if (isFirstTimeUser) {
         navigation.navigate("LifestyleDataInput", { userData });
@@ -207,14 +208,23 @@ const LoginScreen = () => {
   const checkIfFirstTimeUser = async (userEmail) => {
     try {
       const db = await getDb();
-      const result = await db.getFirstAsync(
+
+      // Check if user exists in Users table
+      const userExists = await db.getFirstAsync(
         `SELECT * FROM Users WHERE email = ?`,
         [userEmail]
       );
-      return !result;
+
+      // Check if user has lifestyle data
+      const hasLifestyleData = await db.getFirstAsync(
+        `SELECT * FROM UserProfile LIMIT 1`
+      );
+
+      // User is first-time if they don't exist in Users table OR have no lifestyle data
+      return !userExists || !hasLifestyleData;
     } catch (error) {
       console.error("Error checking first-time user:", error);
-      return true;
+      return true; // Assume first-time on error to be safe
     }
   };
 
@@ -230,14 +240,15 @@ const LoginScreen = () => {
       );
       const user = userCredential.user;
 
+      // Check if first-time user BEFORE saving data
+      const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
+
       const userData = {
         fullName: user.displayName || "User",
         email: user.email,
       };
 
       await saveUserData(userData);
-
-      const isFirstTimeUser = await checkIfFirstTimeUser(user.email);
 
       if (isFirstTimeUser) {
         navigation.navigate("LifestyleDataInput", { userData });
