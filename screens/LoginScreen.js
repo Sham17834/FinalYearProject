@@ -53,24 +53,32 @@ const LoginScreen = () => {
 
   // Handle Google Sign-In response
   useEffect(() => {
+    console.log("Google Auth Response:", JSON.stringify(response, null, 2));
     if (response?.type === "success") {
-      console.log("Auth Response:", JSON.stringify(response, null, 2));
+      console.log("Handling success response");
       handleGoogleAuthResponse(response);
     } else if (response?.type === "error") {
-      console.error("Google Sign-In Error:", response.error);
-      Alert.alert(
-        t.error || "Error",
-        response.error?.message ||
-          t.googleSignInFailed ||
-          "Google Sign-In failed."
-      );
+      const errorMessage = response.error?.message || "";
+      const errorCode = response.error?.code || "";
+      const isUserCancellation =
+        errorMessage.includes("denied") ||
+        errorMessage.includes("cancelled") ||
+        errorMessage.includes("user_cancelled") ||
+        errorMessage.includes("The resource owner or authorization server denied the request") ||
+        errorCode === "CANCELLED" ||
+        errorCode === "access_denied";
+      if (!isUserCancellation) {
+        Alert.alert(
+          t.error || "Error",
+          response.error?.message || t.googleSignInFailed || "Google Sign-In failed."
+        );
+      }
       setIsLoading(false);
-    } else if (response?.type === "cancel") {
-      Alert.alert(
-        t.cancel || "Cancelled",
-        t.googleSignInCancelled || "Google Sign-In was cancelled."
-      );
+    } else if (response?.type === "cancel" || response?.type === "dismiss") {
       setIsLoading(false);
+    } else {
+      console.log("Unhandled response type:", response?.type);
+      setIsLoading(false); 
     }
   }, [response]);
 
@@ -209,22 +217,18 @@ const LoginScreen = () => {
     try {
       const db = await getDb();
 
-      // Check if user exists in Users table
       const userExists = await db.getFirstAsync(
         `SELECT * FROM Users WHERE email = ?`,
         [userEmail]
       );
 
-      // Check if user has lifestyle data
       const hasLifestyleData = await db.getFirstAsync(
         `SELECT * FROM UserProfile LIMIT 1`
       );
 
-      // User is first-time if they don't exist in Users table OR have no lifestyle data
       return !userExists || !hasLifestyleData;
     } catch (error) {
-      console.error("Error checking first-time user:", error);
-      return true; // Assume first-time on error to be safe
+      return true; 
     }
   };
 
@@ -274,8 +278,7 @@ const LoginScreen = () => {
       console.error("Auth request not ready");
       Alert.alert(
         t.error || "Error",
-        t.googleSignInNotReady ||
-          "Google Sign-In is not ready. Please try again."
+        t.googleSignInNotReady || "Google Sign-In is not ready. Please try again."
       );
       return;
     }
@@ -458,7 +461,6 @@ const LoginScreen = () => {
   );
 };
 
-// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,

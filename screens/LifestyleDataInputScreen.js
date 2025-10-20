@@ -82,13 +82,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8fafc",
   },
   header: {
-    paddingTop: 40,
+    paddingTop: 30,
     backgroundColor: "#008080",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
   },
   title: {
     fontSize: 24,
@@ -100,7 +95,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: "#ffffff",
-    marginBottom: 24,
+    marginBottom: 12,
     textAlign: "center",
     opacity: 0.9,
   },
@@ -124,7 +119,6 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 14,
     marginTop: 8,
-    opacity: 0.8,
   },
   content: {
     flex: 1,
@@ -690,12 +684,12 @@ const LifestyleDataInputScreen = () => {
           body: JSON.stringify(data),
         }
       );
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(errorText || "Failed to get predictions");
       }
-      
+
       const predictions = await response.json();
       console.log("Predictions received:", predictions);
 
@@ -752,7 +746,7 @@ const LifestyleDataInputScreen = () => {
     } catch (error) {
       console.error("Error in handleSubmit:", error);
       Alert.alert(
-        "Error", 
+        "Error",
         error.message || "Failed to submit data. Please check your internet connection and try again."
       );
     } finally {
@@ -837,7 +831,7 @@ const LifestyleDataInputScreen = () => {
         bounces={false}
         overScrollMode="never"
       >
-        <View style={styles.stepCard}>
+        <View style={[styles.stepCard]}>
           <Text style={styles.stepTitle}>{stepTitles[currentStep - 1]}</Text>
 
           {currentStep === 1 && (

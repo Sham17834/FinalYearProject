@@ -704,10 +704,10 @@ const HealthHomeScreen = () => {
           : "#FF3B30";
     const scoreStatus =
       lifestyleScore >= 80
-        ? "EXCELLENT"
+        ? t.pdfExcellent || "EXCELLENT"
         : lifestyleScore >= 60
-          ? "GOOD"
-          : "NEEDS IMPROVEMENT";
+          ? t.pdfGood || "GOOD"
+          : t.needsImprovement || "NEEDS IMPROVEMENT";
 
     const htmlContent = `
     <html>
@@ -1069,72 +1069,72 @@ const HealthHomeScreen = () => {
         <div class="container">
           <!-- Hospital Header -->
           <div class="hospital-header">
-            <div class="hospital-name">HEALTH TRACK MEDICAL CENTER</div>
-            <div class="hospital-tagline">Comprehensive Health Assessment & Risk Analysis</div>
-            <div class="report-title">Lifestyle Health Assessment Report</div>
+            <div class="hospital-name">${t.pdfHospitalName || "HEALTH TRACK MEDICAL CENTER"}</div>
+            <div class="hospital-tagline">${t.pdfHospitalTagline || "Comprehensive Health Assessment & Risk Analysis"}</div>
+            <div class="report-title">${t.pdfReportTitle || "Lifestyle Health Assessment Report"}</div>
           </div>
           
           <!-- Patient Information -->
           <div class="patient-info-section">
             <div class="info-grid">
               <div class="info-item">
-                <div class="info-label">Report Date</div>
+                <div class="info-label">${t.pdfReportDate || "Report Date"}</div>
                 <div class="info-value">${currentDate}</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Report ID</div>
+                <div class="info-label">${t.pdfReportID || "Report ID"}</div>
                 <div class="info-value">HT-MC-${Date.now().toString().slice(-8)}</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Patient ID</div>
-                <div class="info-value">Self-Assessment</div>
+                <div class="info-label">${t.pdfPatientID || "Patient ID"}</div>
+                <div class="info-value">${t.pdfSelfAssessment || "Self-Assessment"}</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Assessment Type</div>
-                <div class="info-value">Comprehensive Lifestyle Analysis</div>
+                <div class="info-label">${t.pdfAssessmentType || "Assessment Type"}</div>
+                <div class="info-value">${t.pdfComprehensiveAnalysis || "Comprehensive Lifestyle Analysis"}</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Physician</div>
-                <div class="info-value">Automated Health System</div>
+                <div class="info-label">${t.pdfPhysician || "Physician"}</div>
+                <div class="info-value">${t.pdfAutomatedSystem || "Automated Health System"}</div>
               </div>
               <div class="info-item">
-                <div class="info-label">Department</div>
-                <div class="info-value">Preventive Medicine</div>
+                <div class="info-label">${t.pdfDepartment || "Department"}</div>
+                <div class="info-value">${t.pdfPreventiveMedicine || "Preventive Medicine"}</div>
               </div>
             </div>
           </div>
           
           <!-- Executive Summary -->
           <div class="summary-section">
-            <div class="section-title">Executive Summary</div>
+            <div class="section-title">${t.pdfExecutiveSummary || "Executive Summary"}</div>
             
             <div class="summary-cards">
               <div class="summary-card">
-                <div class="summary-card-title">Overall Health Score</div>
+                <div class="summary-card-title">${t.pdfOverallHealthScore || "Overall Health Score"}</div>
                 <div class="score-display">
                   <div class="score-number">${lifestyleScore ?? 0}</div>
-                  <div class="score-label">out of 100</div>
+                  <div class="score-label">${t.outOf100 || "out of 100"}</div>
                   <div class="score-status">${scoreStatus}</div>
                 </div>
               </div>
               
               <div class="summary-card">
-                <div class="summary-card-title">Risk Assessment Summary</div>
+                <div class="summary-card-title">${t.pdfRiskAssessmentSummary || "Risk Assessment Summary"}</div>
                 <div style="padding: 15px;">
                   <div style="margin-bottom: 10px;">
-                    <strong>Overall Risk Level:</strong> 
+                    <strong>${t.pdfOverallRiskLevel || "Overall Risk Level"}:</strong> 
                     <span style="color: ${getOverallRiskColor()}">${getOverallRiskLevel().toUpperCase()}</span>
                   </div>
                   <div style="margin-bottom: 8px;">
-                    <strong>Obesity Risk:</strong> 
+                    <strong>${t.obesityRisk || "Obesity Risk"}:</strong> 
                     <span style="color: ${getRiskColor(diseaseRisks.obesity)}">${diseaseRisks.obesity.toFixed(1)}%</span>
                   </div>
                   <div style="margin-bottom: 8px;">
-                    <strong>Hypertension Risk:</strong> 
+                    <strong>${t.hypertensionRisk || "Hypertension Risk"}:</strong> 
                     <span style="color: ${getRiskColor(diseaseRisks.hypertension)}">${diseaseRisks.hypertension.toFixed(1)}%</span>
                   </div>
                   <div style="margin-bottom: 8px;">
-                    <strong>Stroke Risk:</strong> 
+                    <strong>${t.strokeRisk || "Stroke Risk"}:</strong> 
                     <span style="color: ${getRiskColor(diseaseRisks.stroke)}">${diseaseRisks.stroke.toFixed(1)}%</span>
                   </div>
                 </div>
@@ -1144,65 +1144,65 @@ const HealthHomeScreen = () => {
           
           <!-- Clinical Metrics -->
           <div class="clinical-section">
-            <div class="section-title">Clinical Metrics & Vital Signs</div>
+            <div class="section-title">${t.pdfClinicalMetrics || "Clinical Metrics & Vital Signs"}</div>
             
             <table class="metrics-table">
               <thead>
                 <tr>
-                  <th>Parameter</th>
-                  <th>Value</th>
-                  <th>Status</th>
-                  <th>Reference Range</th>
+                  <th>${t.pdfParameter || "Parameter"}</th>
+                  <th>${t.pdfValue || "Value"}</th>
+                  <th>${t.pdfStatus || "Status"}</th>
+                  <th>${t.pdfReferenceRange || "Reference Range"}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td><strong>Body Mass Index (BMI)</strong></td>
-                  <td class="metric-value">${lifestyleData?.BMI?.toFixed(1) ?? "N/A"}</td>
+                  <td><strong>${t.pdfBodyMassIndex || "Body Mass Index (BMI)"}</strong></td>
+                  <td class="metric-value">${lifestyleData?.BMI?.toFixed(1) ?? (t.pdfNoData || "N/A")}</td>
                   <td>${getBMICategory(lifestyleData?.BMI)}</td>
                   <td>18.5 - 24.9 kg/m²</td>
                 </tr>
                 <tr>
-                  <td><strong>Physical Activity (Steps)</strong></td>
+                  <td><strong>${t.pdfPhysicalActivity || "Physical Activity (Steps)"}</strong></td>
                   <td class="metric-value">${formatNumber(lifestyleData?.Daily_Steps) ?? "0"}</td>
-                  <td>${lifestyleData?.Daily_Steps >= 10000 ? "Excellent" : lifestyleData?.Daily_Steps >= 8000 ? "Good" : lifestyleData?.Daily_Steps >= 6000 ? "Fair" : "Poor"}</td>
-                  <td>> 8,000 steps/day</td>
+                  <td>${lifestyleData?.Daily_Steps >= 10000 ? t.pdfExcellent || "Excellent" : lifestyleData?.Daily_Steps >= 8000 ? t.pdfGood || "Good" : lifestyleData?.Daily_Steps >= 6000 ? t.pdfFair || "Fair" : t.pdfPoor || "Poor"}</td>
+                  <td>> 8,000 ${t.steps || "steps"}/${t.day || "day"}</td>
                 </tr>
                 <tr>
-                  <td><strong>Sleep Duration</strong></td>
-                  <td class="metric-value">${lifestyleData?.Sleep_Hours ?? 0} hours</td>
+                  <td><strong>${t.pdfSleepDuration || "Sleep Duration"}</strong></td>
+                  <td class="metric-value">${lifestyleData?.Sleep_Hours ?? 0} ${t.hours || "hours"}</td>
                   <td>${getSleepStatus(lifestyleData?.Sleep_Hours)}</td>
-                  <td>7-9 hours/night</td>
+                  <td>7-9 ${t.pdfHoursPerNight || "hours/night"}</td>
                 </tr>
                 <tr>
-                  <td><strong>Exercise Frequency</strong></td>
-                  <td class="metric-value">${lifestyleData?.Exercise_Frequency ?? 0} days/week</td>
+                  <td><strong>${t.pdfExerciseFrequency || "Exercise Frequency"}</strong></td>
+                  <td class="metric-value">${lifestyleData?.Exercise_Frequency ?? 0} ${t.pdfDaysPerWeek || "days/week"}</td>
                   <td>${getExerciseStatus(lifestyleData?.Exercise_Frequency)}</td>
-                  <td>3-5 days/week</td>
+                  <td>3-5 ${t.pdfDaysPerWeek || "days/week"}</td>
                 </tr>
                 <tr>
-                  <td><strong>Diet Quality</strong></td>
+                  <td><strong>${t.pdfDietQuality || "Diet Quality"}</strong></td>
                   <td class="metric-value">${getDietQualityText(lifestyleData?.Diet_Quality)}</td>
-                  <td>${lifestyleData?.Diet_Quality === "excellent" ? "Optimal" : lifestyleData?.Diet_Quality === "good" ? "Good" : lifestyleData?.Diet_Quality === "fair" ? "Fair" : "Needs Improvement"}</td>
-                  <td>Good - Excellent</td>
+                  <td>${lifestyleData?.Diet_Quality === "excellent" ? t.pdfOptimal || "Optimal" : lifestyleData?.Diet_Quality === "good" ? t.pdfGood || "Good" : lifestyleData?.Diet_Quality === "fair" ? t.pdfFair || "Fair" : t.needsImprovement || "Needs Improvement"}</td>
+                  <td>${t.pdfGood || "Good"} - ${t.pdfExcellent || "Excellent"}</td>
                 </tr>
                 <tr>
-                  <td><strong>Fruit & Vegetable Intake</strong></td>
-                  <td class="metric-value">${lifestyleData?.FRUITS_VEGGIES ?? 0} servings/day</td>
-                  <td>${lifestyleData?.FRUITS_VEGGIES >= 5 ? "Excellent" : lifestyleData?.FRUITS_VEGGIES >= 3 ? "Good" : "Insufficient"}</td>
-                  <td>≥ 5 servings/day</td>
+                  <td><strong>${t.pdfFruitVegetableIntake || "Fruit & Vegetable Intake"}</strong></td>
+                  <td class="metric-value">${lifestyleData?.FRUITS_VEGGIES ?? 0} ${t.pdfServingsPerDay || "servings/day"}</td>
+                  <td>${lifestyleData?.FRUITS_VEGGIES >= 5 ? t.pdfExcellent || "Excellent" : lifestyleData?.FRUITS_VEGGIES >= 3 ? t.pdfGood || "Good" : t.pdfInsufficient || "Insufficient"}</td>
+                  <td>≥ 5 ${t.pdfServingsPerDay || "servings/day"}</td>
                 </tr>
                 <tr>
-                  <td><strong>Stress Level</strong></td>
-                  <td class="metric-value">${lifestyleData?.Stress_Level ?? 0}/10</td>
+                  <td><strong>${t.pdfStressLevel || "Stress Level"}</strong></td>
+                  <td class="metric-value">${lifestyleData?.Stress_Level ?? 0}${t.pdfOutOf10 || "/10"}</td>
                   <td>${getStressLevelText(lifestyleData?.Stress_Level)}</td>
-                  <td>1-3 (Low)</td>
+                  <td>1-3 (${t.low || "Low"})</td>
                 </tr>
                 <tr>
-                  <td><strong>Screen Time</strong></td>
-                  <td class="metric-value">${lifestyleData?.Screen_Time_Hours ?? 0} hours/day</td>
-                  <td>${lifestyleData?.Screen_Time_Hours <= 4 ? "Good" : lifestyleData?.Screen_Time_Hours <= 6 ? "Moderate" : "High"}</td>
-                  <td>< 6 hours/day</td>
+                  <td><strong>${t.pdfScreenTime || "Screen Time"}</strong></td>
+                  <td class="metric-value">${lifestyleData?.Screen_Time_Hours ?? 0} ${t.pdfHoursPerDay || "hours/day"}</td>
+                  <td>${lifestyleData?.Screen_Time_Hours <= 4 ? t.pdfGood || "Good" : lifestyleData?.Screen_Time_Hours <= 6 ? t.medium || "Moderate" : t.high || "High"}</td>
+                  <td>< 6 ${t.pdfHoursPerDay || "hours/day"}</td>
                 </tr>
               </tbody>
             </table>
@@ -1210,66 +1210,66 @@ const HealthHomeScreen = () => {
           
           <!-- Risk Assessment -->
           <div class="risk-section">
-            <div class="section-title">Chronic Disease Risk Assessment</div>
+            <div class="section-title">${t.pdfChronicDiseaseRisk || "Chronic Disease Risk Assessment"}</div>
             
             <table class="risk-table">
               <thead>
                 <tr>
-                  <th>Condition</th>
-                  <th style="width: 15%;">Risk Level</th>
-                  <th style="width: 25%;">Probability</th>
-                  <th style="width: 30%;">Risk Category</th>
+                  <th>${t.pdfCondition || "Condition"}</th>
+                  <th style="width: 15%;">${t.pdfRiskLevel || "Risk Level"}</th>
+                  <th style="width: 25%;">${t.pdfProbability || "Probability"}</th>
+                  <th style="width: 30%;">${t.pdfRiskCategory || "Risk Category"}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td class="risk-name">Obesity</td>
+                  <td class="risk-name">${t.pdfObesity || "Obesity"}</td>
                   <td class="risk-percentage" style="color: ${getRiskColor(diseaseRisks.obesity)}">${diseaseRisks.obesity.toFixed(1)}%</td>
                   <td>
                     <div class="risk-bar">
                       <div class="risk-bar-fill" style="width: ${diseaseRisks.obesity}%; background-color: ${getRiskColor(diseaseRisks.obesity)}"></div>
                     </div>
                     <div style="font-size: 10px; text-align: center;">
-                      Low │ Medium │ High
+                      ${t.low || "Low"} │ ${t.medium || "Medium"} │ ${t.high || "High"}
                     </div>
                   </td>
                   <td>
                     <div class="risk-category" style="background: ${getRiskColor(diseaseRisks.obesity)}; color: white;">
-                      ${diseaseRisks.obesity >= 67 ? "HIGH RISK" : diseaseRisks.obesity >= 34 ? "MEDIUM RISK" : "LOW RISK"}
+                      ${diseaseRisks.obesity >= 67 ? t.pdfHighRisk || "HIGH RISK" : diseaseRisks.obesity >= 34 ? t.pdfMediumRisk || "MEDIUM RISK" : t.pdfLowRisk || "LOW RISK"}
                     </div>
                   </td>
                 </tr>
                 <tr>
-                  <td class="risk-name">Hypertension</td>
+                  <td class="risk-name">${t.pdfHypertension || "Hypertension"}</td>
                   <td class="risk-percentage" style="color: ${getRiskColor(diseaseRisks.hypertension)}">${diseaseRisks.hypertension.toFixed(1)}%</td>
                   <td>
                     <div class="risk-bar">
                       <div class="risk-bar-fill" style="width: ${diseaseRisks.hypertension}%; background-color: ${getRiskColor(diseaseRisks.hypertension)}"></div>
                     </div>
                     <div style="font-size: 10px; text-align: center;">
-                      Low │ Medium │ High
+                      ${t.low || "Low"} │ ${t.medium || "Medium"} │ ${t.high || "High"}
                     </div>
                   </td>
                   <td>
                     <div class="risk-category" style="background: ${getRiskColor(diseaseRisks.hypertension)}; color: white;">
-                      ${diseaseRisks.hypertension >= 67 ? "HIGH RISK" : diseaseRisks.hypertension >= 34 ? "MEDIUM RISK" : "LOW RISK"}
+                      ${diseaseRisks.hypertension >= 67 ? t.pdfHighRisk || "HIGH RISK" : diseaseRisks.hypertension >= 34 ? t.pdfMediumRisk || "MEDIUM RISK" : t.pdfLowRisk || "LOW RISK"}
                     </div>
                   </td>
                 </tr>
                 <tr>
-                  <td class="risk-name">Stroke</td>
+                  <td class="risk-name">${t.pdfStroke || "Stroke"}</td>
                   <td class="risk-percentage" style="color: ${getRiskColor(diseaseRisks.stroke)}">${diseaseRisks.stroke.toFixed(1)}%</td>
                   <td>
                     <div class="risk-bar">
                       <div class="risk-bar-fill" style="width: ${diseaseRisks.stroke}%; background-color: ${getRiskColor(diseaseRisks.stroke)}"></div>
                     </div>
                     <div style="font-size: 10px; text-align: center;">
-                      Low │ Medium │ High
+                      ${t.low || "Low"} │ ${t.medium || "Medium"} │ ${t.high || "High"}
                     </div>
                   </td>
                   <td>
                     <div class="risk-category" style="background: ${getRiskColor(diseaseRisks.stroke)}; color: white;">
-                      ${diseaseRisks.stroke >= 67 ? "HIGH RISK" : diseaseRisks.stroke >= 34 ? "MEDIUM RISK" : "LOW RISK"}
+                      ${diseaseRisks.stroke >= 67 ? t.pdfHighRisk || "HIGH RISK" : diseaseRisks.stroke >= 34 ? t.pdfMediumRisk || "MEDIUM RISK" : t.pdfLowRisk || "LOW RISK"}
                     </div>
                   </td>
                 </tr>
@@ -1279,13 +1279,13 @@ const HealthHomeScreen = () => {
           
           <!-- Recommendations -->
           <div class="recommendations-section">
-            <div class="section-title">Medical Recommendations & Health Plan</div>
+            <div class="section-title">${t.pdfMedicalRecommendations || "Medical Recommendations & Health Plan"}</div>
             
             ${generatePersonalizedTips()
               .map(
                 (tip, index) => `
                 <div class="recommendation-item">
-                  <span class="rec-priority">${index < 3 ? "HIGH" : "MEDIUM"}</span>
+                  <span class="rec-priority">${index < 3 ? t.pdfHighPriority || "HIGH" : t.pdfMediumPriority || "MEDIUM"}</span>
                   <strong>${tip.text.split(".")[0]}:</strong> ${tip.text}
                 </div>
               `
@@ -1293,8 +1293,8 @@ const HealthHomeScreen = () => {
               .join("")}
               
             <div class="recommendation-item">
-              <span class="rec-priority">FOLLOW-UP</span>
-              <strong>Next Assessment:</strong> Recommend follow-up assessment in 3 months to monitor progress and adjust recommendations as needed.
+              <span class="rec-priority">${t.pdfFollowUp || "FOLLOW-UP"}</span>
+              <strong>${t.pdfNextAssessment || "Next Assessment"}</strong> ${t.pdfNextAssessmentDesc || "Recommend follow-up assessment in 3 months to monitor progress and adjust recommendations as needed."}
             </div>
           </div>
           
@@ -1303,22 +1303,22 @@ const HealthHomeScreen = () => {
             <div class="footer-grid">
               <div>
                 <div class="disclaimer">
-                  <div class="disclaimer-title">MEDICAL DISCLAIMER</div>
-                  <div>This report is generated based on self-reported lifestyle data and predictive algorithms. It is intended for informational purposes only and should not be considered medical advice. This assessment does not replace consultation with a qualified healthcare professional. Please consult your physician for proper medical evaluation and personalized health recommendations.</div>
+                  <div class="disclaimer-title">${t.pdfMedicalDisclaimer || "MEDICAL DISCLAIMER"}</div>
+                  <div>${t.pdfDisclaimerText || "This report is generated based on self-reported lifestyle data and predictive algorithms. It is intended for informational purposes only and should not be considered medical advice. This assessment does not replace consultation with a qualified healthcare professional. Please consult your physician for proper medical evaluation and personalized health recommendations."}</div>
                 </div>
               </div>
               <div>
                 <div style="text-align: center;">
-                  <div style="font-weight: bold; margin-bottom: 10px;">Health Track Medical Center</div>
-                  <div style="font-size: 9px;">Preventive Medicine Department</div>
-                  <div style="font-size: 9px;">Report Generated: ${currentDate}</div>
+                  <div style="font-weight: bold; margin-bottom: 10px;">${t.pdfHospitalName || "Health Track Medical Center"}</div>
+                  <div style="font-size: 9px;">${t.pdfPreventiveMedicine || "Preventive Medicine Department"}</div>
+                  <div style="font-size: 9px;">${t.pdfReportGenerated || "Report Generated"}: ${currentDate}</div>
                 </div>
               </div>
             </div>
             
             <div class="signature-area">
               <div class="signature-line"></div>
-              <div class="signature-label">Automated Health Assessment System</div>
+              <div class="signature-label">${t.pdfAutomatedSystem || "Automated Health Assessment System"}</div>
             </div>
           </div>
         </div>
