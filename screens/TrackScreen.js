@@ -21,7 +21,7 @@ const getCurrentDate = () => {
   const day = String(today.getDate()).padStart(2, "0");
   const month = String(today.getMonth() + 1).padStart(2, "0");
   const year = today.getFullYear();
- return `${day}/${month}/${year}`; 
+  return `${day}/${month}/${year}`;
 };
 
 const styles = {
@@ -302,13 +302,21 @@ const TrackScreen = () => {
   ];
 
   const calculateBMI = (height, weight) => {
-    if (height && weight && !isNaN(height) && !isNaN(weight)) {
-      const heightM = parseFloat(height) / 100;
-      const bmiValue = (parseFloat(weight) / (heightM * heightM)).toFixed(1);
+    const h = parseFloat(height);
+    const w = parseFloat(weight);
+
+    if (height && weight && !isNaN(h) && !isNaN(w) && h > 0 && w > 0) {
+      const heightM = h / 100;
+      const bmiValue = (w / (heightM * heightM)).toFixed(1);
       setBmi(bmiValue);
     } else {
-      setBmi("");
+      setBmi("0");
     }
+  };
+
+  const displayBmi = () => {
+    if (!heightCm || !weightKg) return "";
+    return bmi !== "0" ? bmi : "—";
   };
 
   const validateForm = () => {
@@ -382,78 +390,78 @@ const TrackScreen = () => {
   };
 
   const handleSubmit = async () => {
-  if (!validateForm()) {
-    return;
-  }
-  setIsSubmitting(true);
-  const data = {
-    date: getCurrentDate(),
-    daily_steps: Math.round(dailySteps),
-    sleep_hours: sleepHours,
-    bmi: parseFloat(bmi) || null,
-    age: parseInt(age),
-    gender,
-    height_cm: parseFloat(heightCm),
-    weight_kg: parseFloat(weightKg),
-    chronic_disease: chronicDisease,
-    exercise_frequency: exerciseFrequency,
-    alcohol_consumption: alcoholConsumption ? "Yes" : "No",
-    smoking_habit: smokingHabit ? "Yes" : "No",
-    diet_quality: dietQuality,
-    fruits_veggies: fruitsVeggies,
-    stress_level: stressLevel,
-    screen_time_hours: screenTimeHours,
-    salt_intake: "Moderate",
-  };
+    if (!validateForm()) {
+      return;
+    }
+    setIsSubmitting(true);
+    const data = {
+      date: getCurrentDate(),
+      daily_steps: Math.round(dailySteps),
+      sleep_hours: sleepHours,
+      bmi: parseFloat(bmi) || null,
+      age: parseInt(age),
+      gender,
+      height_cm: parseFloat(heightCm),
+      weight_kg: parseFloat(weightKg),
+      chronic_disease: chronicDisease,
+      exercise_frequency: exerciseFrequency,
+      alcohol_consumption: alcoholConsumption ? "Yes" : "No",
+      smoking_habit: smokingHabit ? "Yes" : "No",
+      diet_quality: dietQuality,
+      fruits_veggies: fruitsVeggies,
+      stress_level: stressLevel,
+      screen_time_hours: screenTimeHours,
+      salt_intake: "Moderate",
+    };
 
-  try {
-    const db = await getDb();
-    console.log("Saving data to HealthRecords:", data);
-    const result = await db.runAsync(
-      `INSERT INTO HealthRecords (
+    try {
+      const db = await getDb();
+      console.log("Saving data to HealthRecords:", data);
+      const result = await db.runAsync(
+        `INSERT INTO HealthRecords (
         date, daily_steps, sleep_hours, bmi, age, gender, height_cm, weight_kg,
         chronic_disease, exercise_frequency, alcohol_consumption, smoking_habit,
         diet_quality, fruits_veggies, stress_level, screen_time_hours, salt_intake
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        data.date,
-        data.daily_steps,
-        data.sleep_hours,
-        data.bmi,
-        data.age,
-        data.gender,
-        data.height_cm,
-        data.weight_kg,
-        data.chronic_disease,
-        data.exercise_frequency,
-        data.alcohol_consumption,
-        data.smoking_habit,
-        data.diet_quality,
-        data.fruits_veggies,
-        data.stress_level,
-        data.screen_time_hours,
-        data.salt_intake,
-      ]
-    );
-    // Retrieve the inserted record with its ID
-    const insertedRecord = await db.getAllAsync(
-      "SELECT * FROM HealthRecords ORDER BY id DESC LIMIT 1"
-    );
-    const newRecord = { ...data, id: insertedRecord[0].id };
-    console.log("Inserted HealthRecords entry:", newRecord);
-    navigation.navigate("MainApp", {
-      screen: "Progress",
-      params: { newRecord },
-    });
-  } catch (error) {
-    Alert.alert(
-      t.error || "Error",
-      t.errorSaving || "Failed to save health record: " + error.message
-    );
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+        [
+          data.date,
+          data.daily_steps,
+          data.sleep_hours,
+          data.bmi,
+          data.age,
+          data.gender,
+          data.height_cm,
+          data.weight_kg,
+          data.chronic_disease,
+          data.exercise_frequency,
+          data.alcohol_consumption,
+          data.smoking_habit,
+          data.diet_quality,
+          data.fruits_veggies,
+          data.stress_level,
+          data.screen_time_hours,
+          data.salt_intake,
+        ]
+      );
+      // Retrieve the inserted record with its ID
+      const insertedRecord = await db.getAllAsync(
+        "SELECT * FROM HealthRecords ORDER BY id DESC LIMIT 1"
+      );
+      const newRecord = { ...data, id: insertedRecord[0].id };
+      console.log("Inserted HealthRecords entry:", newRecord);
+      navigation.navigate("MainApp", {
+        screen: "Progress",
+        params: { newRecord },
+      });
+    } catch (error) {
+      Alert.alert(
+        t.error || "Error",
+        t.errorSaving || "Failed to save health record: " + error.message
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const currentDate = getCurrentDate();
 
@@ -565,7 +573,7 @@ const TrackScreen = () => {
               </Text>
               <TextInput
                 style={[styles.fieldValue, styles.readOnlyField]}
-                value={bmi}
+                value={displayBmi()}
                 editable={false}
                 placeholder={t.bmiPlaceholder || "Calculated automatically"}
               />
