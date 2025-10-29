@@ -18,7 +18,7 @@ app = FastAPI(
 MODEL_DIR = r"C:\IT\FYP\React Native\HealthApps\api"
 
 try:
-    model = joblib.load("XGBoost_multilabel.pkl")
+    model = joblib.load("XXGBoost_model.pkl")
     scaler = joblib.load("scaler_final.pkl")
     label_encoders = joblib.load("label_encoders_final.pkl")
     selected_features = joblib.load("selected_features_final.pkl")

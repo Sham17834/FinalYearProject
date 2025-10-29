@@ -25,7 +25,7 @@ import { LineChart } from "react-native-chart-kit";
 
 const screenWidth = Dimensions.get("window").width;
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-const API_BASE_URL = "https://finalyearproject-c5hy.onrender.com/predict";
+const API_BASE_URL = "https://finalyearproject-c5hy.onrender.com";
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "N/A";
