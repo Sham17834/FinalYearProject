@@ -25,7 +25,6 @@ import { LineChart } from "react-native-chart-kit";
 
 const screenWidth = Dimensions.get("window").width;
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-const API_BASE_URL = "https://finalyearproject-c5hy.onrender.com";
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "N/A";
@@ -558,7 +557,6 @@ const ProgressScreen = () => {
     runPrediction();
   }, [latestUserProfile]);
 
-  /* -------------------------- CALCULATIONS -------------------------- */
   const calculateDiseaseRisks = useCallback((data) => {
     if (!data) return { obesity: 1, hypertension: 1, stroke: 1 };
     const risks = { obesity: 1, hypertension: 1, stroke: 1 };
