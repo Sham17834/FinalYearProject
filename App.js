@@ -3,7 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { StyleSheet, ActivityIndicator, View } from 'react-native';
+import { StyleSheet, ActivityIndicator, View, Platform } from 'react-native';
+
 import WelcomeScreen from './screens/WelcomeScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -13,6 +14,7 @@ import HealthTrackHomeScreen from './screens/HealthHomeScreen';
 import ProgressScreen from './screens/ProgressScreen';
 import TrackScreen from './screens/TrackScreen';
 import ProfileScreen from './screens/ProfileScreen';
+
 import { LanguageProvider, LanguageContext } from './screens/LanguageContext';
 import { getTranslations } from './screens/translations';
 import { auth } from './firebaseConfig';
@@ -20,10 +22,14 @@ import { getDb } from './screens/db';
 import { enableScreens } from 'react-native-screens';
 import "setimmediate";
 
-enableScreens(); 
+enableScreens();
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+
+const StaticTabIcon = ({ color, size, name }) => (
+  <Icon name={name} size={size} color={color} />
+);
 
 const AuthStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -43,10 +49,14 @@ const MainTabs = () => {
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={{
-        headerShown: false, 
+        headerShown: false,
         tabBarActiveTintColor: '#008080',
         tabBarInactiveTintColor: '#9ca3af',
-        tabBarStyle: styles.tabBar,
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+        },
       }}
     >
       <Tab.Screen
@@ -54,7 +64,9 @@ const MainTabs = () => {
         component={HealthTrackHomeScreen}
         options={{
           tabBarLabel: t.tabHome || "Home",
-          tabBarIcon: ({ color }) => <Icon name="home" color={color} size={24} />,
+          tabBarIcon: ({ color, size }) => (
+            <StaticTabIcon color={color} size={size} name="home" />
+          ),
         }}
       />
       <Tab.Screen
@@ -62,7 +74,9 @@ const MainTabs = () => {
         component={ProgressScreen}
         options={{
           tabBarLabel: t.tabProgress || "Progress",
-          tabBarIcon: ({ color }) => <Icon name="analytics" color={color} size={24} />,
+          tabBarIcon: ({ color, size }) => (
+            <StaticTabIcon color={color} size={size} name="analytics" />
+          ),
         }}
       />
       <Tab.Screen
@@ -70,7 +84,9 @@ const MainTabs = () => {
         component={TrackScreen}
         options={{
           tabBarLabel: t.tabTrack || "Track",
-          tabBarIcon: ({ color }) => <Icon name="track-changes" color={color} size={24} />,
+          tabBarIcon: ({ color, size }) => (
+            <StaticTabIcon color={color} size={size} name="track-changes" />
+          ),
         }}
       />
       <Tab.Screen
@@ -78,7 +94,9 @@ const MainTabs = () => {
         component={ProfileScreen}
         options={{
           tabBarLabel: t.tabProfile || "Profile",
-          tabBarIcon: ({ color }) => <Icon name="person" color={color} size={24} />,
+          tabBarIcon: ({ color, size }) => (
+            <StaticTabIcon color={color} size={size} name="person" />
+          ),
         }}
       />
     </Tab.Navigator>
@@ -158,12 +176,6 @@ const App = () => {
 };
 
 const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: '#ffffff',
-    borderTopWidth: 1,
-    borderTopColor: '#d1d5db',
-    paddingBottom: 5,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
