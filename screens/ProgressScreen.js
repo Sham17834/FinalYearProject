@@ -14,6 +14,7 @@ import {
   Dimensions,
   FlatList,
   StyleSheet,
+  Animated,
   Alert,
   Modal,
 } from "react-native";
@@ -23,6 +24,7 @@ import { getDb } from "./db";
 import { LineChart } from "react-native-chart-kit";
 
 const screenWidth = Dimensions.get("window").width;
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "N/A";
@@ -410,7 +412,7 @@ const ProgressScreen = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [selectedDataPoint, setSelectedDataPoint] = useState(null);
-  const [shapRankingsData, setShapRankingsData] = useState(null);
+  const scrollY = new Animated.Value(0);
 
   const handleDeleteEntry = useCallback(
     async (item) => {
@@ -450,109 +452,6 @@ const ProgressScreen = () => {
     },
     [t, handleDeleteEntry]
   );
-
-  // Fetch SHAP values from API when latest profile changes
-  useEffect(() => {
-    const fetchShapValues = async () => {
-      if (!latestUserProfile) return;
-
-      try {
-        const response = await fetch("https://finalyearproject-c5hy.onrender.com/predict", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            Age: latestUserProfile.age,
-            Gender: latestUserProfile.gender,
-            Height_cm: latestUserProfile.height_cm,
-            Weight_kg: latestUserProfile.weight_kg,
-            BMI: latestUserProfile.bmi,
-            Daily_Steps: latestUserProfile.daily_steps,
-            Exercise_Frequency: latestUserProfile.exercise_frequency,
-            Sleep_Hours: latestUserProfile.sleep_hours,
-            Alcohol_Consumption: latestUserProfile.alcohol_consumption,
-            Smoking_Habit: latestUserProfile.smoking_habit,
-            Diet_Quality: latestUserProfile.diet_quality,
-            Stress_Level: latestUserProfile.stress_level,
-            FRUITS_VEGGIES: latestUserProfile.fruits_veggies,
-            Screen_Time_Hours: latestUserProfile.screen_time_hours,
-          }),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-
-          // Combine SHAP values from all targets and aggregate
-          const allShapValues = {};
-
-          ["Obesity_Flag", "Hypertension_Flag", "Stroke_Flag"].forEach(
-            (target) => {
-              const targetShap = result.predictions[target]?.shap_values;
-              if (targetShap) {
-                targetShap.forEach((item) => {
-                  if (!allShapValues[item.feature]) {
-                    allShapValues[item.feature] = {
-                      feature: item.feature,
-                      total_abs_shap: 0,
-                      count: 0,
-                    };
-                  }
-                  allShapValues[item.feature].total_abs_shap +=
-                    item.abs_shap_value;
-                  allShapValues[item.feature].count += 1;
-                });
-              }
-            }
-          );
-
-          // Calculate average and create ranking
-          const shapRanking = Object.values(allShapValues)
-            .map((item) => ({
-              feature: item.feature,
-              value: item.total_abs_shap / item.count,
-            }))
-            .sort((a, b) => b.value - a.value)
-            .slice(0, 6); // Top 6 features
-
-          // Normalize to percentages
-          const total = shapRanking.reduce((sum, item) => sum + item.value, 0);
-          const normalizedRanking = shapRanking.map((item) => ({
-            factor: formatFeatureName(item.feature),
-            value: item.value / total,
-          }));
-
-          setShapRankingsData(normalizedRanking);
-        }
-      } catch (error) {
-        console.error("Failed to fetch SHAP values:", error);
-        // Fall back to default rankings if API fails
-        setShapRankingsData(null);
-      }
-    };
-
-    fetchShapValues();
-  }, [latestUserProfile]);
-
-  // Helper function to format feature names for display
-  const formatFeatureName = useCallback((feature) => {
-    const nameMap = {
-      Daily_Steps: t.steps || "Steps",
-      BMI: t.bmi || "BMI",
-      Exercise_Frequency: t.exerciseFrequency || "Exercise Frequency",
-      Sleep_Hours: t.sleep || "Sleep",
-      Diet_Quality: t.dietQuality?.label || "Diet Quality",
-      FRUITS_VEGGIES: t.fruitsVeggies || "Fruits & Veggies",
-      Stress_Level: t.stress || "Stress Level",
-      Screen_Time_Hours: t.screenTime || "Screen Time",
-      Age: t.age || "Age",
-      Weight_kg: t.weight || "Weight",
-      Height_cm: t.height || "Height",
-      Alcohol_Consumption: t.alcohol || "Alcohol",
-      Smoking_Habit: t.smoking || "Smoking",
-    };
-    return nameMap[feature] || feature;
-  }, [t]);
 
   const fetchProgressData = useCallback(async () => {
     setIsLoading(true);
@@ -943,30 +842,26 @@ const ProgressScreen = () => {
     [filteredData, calculateDiseaseRisks]
   );
 
-  const shapRankings = useMemo(() => {
-    if (shapRankingsData && shapRankingsData.length > 0) {
-      return shapRankingsData;
-    }
-
-    return [
+  const shapRankings = useMemo(
+    () => [
       { factor: t.steps || "Steps", value: 0.25 },
       { factor: t.bmi || "BMI", value: 0.2 },
       { factor: t.exerciseFrequency || "Exercise Frequency", value: 0.2 },
       { factor: t.sleep || "Sleep", value: 0.15 },
       { factor: t.dietQuality?.label || "Diet Quality", value: 0.1 },
       { factor: t.fruitsVeggies || "Fruits & Veggies", value: 0.1 },
-    ];
-  }, [
-    shapRankingsData,
-    t.steps,
-    t.bmi,
-    t.exerciseFrequency,
-    t.sleep,
-    t.dietQuality,
-    t.fruitsVeggies,
-  ]);
+    ],
+    [
+      t.steps,
+      t.bmi,
+      t.exerciseFrequency,
+      t.sleep,
+      t.dietQuality,
+      t.fruitsVeggies,
+    ]
+  );
 
-  const chartConfig = useMemo(() => ({
+  const chartConfig = {
     backgroundColor: "#ffffff",
     backgroundGradientFrom: "#ffffff",
     backgroundGradientTo: "#ffffff",
@@ -981,7 +876,7 @@ const ProgressScreen = () => {
       strokeWidth: "2",
       stroke: "#008080",
     },
-  }), []);
+  };
 
   const summaryStats = useMemo(() => {
     if (!latestUserProfile) return null;
@@ -1652,42 +1547,75 @@ const ProgressScreen = () => {
     ]
   );
 
+  const fadeAnim = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+
+  const slideAnim = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [0, -20],
+    extrapolate: "clamp",
+  });
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
-      {/* Static header - no animation */}
-      <View style={styles.header}>
+      <Animated.View
+        style={[
+          styles.header,
+          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+        ]}
+      >
         <Text style={styles.headerTitle}>
           {t.progressTitle || "Your Health Progress"}
         </Text>
-        <Text style={styles.headerSubtitle}>
+        <Animated.Text
+          style={[
+            styles.headerSubtitle,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+          ]}
+        >
           {t.progressTagline || "Track and improve your wellbeing"}
-        </Text>
-      </View>
-      
-      {/* Optimized FlatList - no scroll animations */}
-      <FlatList
+        </Animated.Text>
+      </Animated.View>
+      <AnimatedFlatList
         data={data}
         renderItem={renderItem}
         keyExtractor={(item, index) => `${item.type}-${index}`}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.mainContent}
-        // Performance optimizations
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
         removeClippedSubviews={true}
-        maxToRenderPerBatch={3}
-        windowSize={7}
+        maxToRenderPerBatch={2}
+        windowSize={5}
         initialNumToRender={3}
         getItemLayout={(data, index) => ({
           length:
-            index === 0 ? 120 :
-            index === 1 ? 60 :
-            index === 2 ? 240 :
-            index === 3 ? 220 : 300,
+            index === 0
+              ? 120
+              : index === 1
+                ? 60
+                : index === 2
+                  ? 240
+                  : index === 3
+                    ? 220
+                    : 300,
           offset:
-            index === 0 ? 0 :
-            index === 1 ? 120 :
-            index === 2 ? 180 :
-            index === 3 ? 420 : 640,
+            index === 0
+              ? 0
+              : index === 1
+                ? 120
+                : index === 2
+                  ? 180
+                  : index === 3
+                    ? 420
+                    : 640,
           index,
         })}
       />
@@ -1696,4 +1624,4 @@ const ProgressScreen = () => {
   );
 };
 
-export default React.memo(ProgressScreen);
+export default ProgressScreen;
