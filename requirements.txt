@@ -1,6 +1,8 @@
 fastapi
 uvicorn
-numpy
-joblib
 scikit-learn
 xgboost
+pandas
+numpy
+shap
+pydantic

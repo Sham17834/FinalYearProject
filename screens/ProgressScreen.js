@@ -528,7 +528,7 @@ const ProgressScreen = () => {
 
         console.log("Making SHAP prediction request...");
         const response = await fetch(
-          `https://finalyearproject-c5hy.onrender.com/predict`,
+          `https://finalyearproject-1-dii1.onrender.com/predict`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
