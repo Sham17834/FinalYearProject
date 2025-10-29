@@ -300,13 +300,22 @@ const styles = StyleSheet.create({
   tooltipCloseText: { color: "#ffffff", fontWeight: "500" },
 });
 
+// Static SHAP Rankings (Mocked)
+const STATIC_SHAP_RANKINGS = [
+  { factor: "BMI", value: 0.28 },
+  { factor: "Daily Steps", value: 0.22 },
+  { factor: "Sleep Hours", value: 0.18 },
+  { factor: "Exercise Frequency", value: 0.15 },
+  { factor: "Diet Quality", value: 0.1 },
+  { factor: "Stress Level", value: 0.07 },
+];
+
 const ProgressScreen = () => {
   const { t } = useContext(LanguageContext);
   const route = useRoute();
 
   const [timeRange, setTimeRange] = useState("7days");
   const [activeTab, setActiveTab] = useState("factors");
-  const [refreshKey, setRefreshKey] = useState(0);
   const [progressData, setProgressData] = useState([]);
   const [latestUserProfile, setLatestUserProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -315,23 +324,40 @@ const ProgressScreen = () => {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [selectedDataPoint, setSelectedDataPoint] = useState(null);
   const scrollY = new Animated.Value(0);
-  const [predictionResult, setPredictionResult] = useState(null);
-  const [shapLoading, setShapLoading] = useState(false);
 
+  // OPTIMISTIC DELETE – INSTANT UI UPDATE
   const handleDeleteEntry = useCallback(
-    async (item) => {
-      try {
-        const db = await getDb();
-        const table =
-          item.source === "UserProfile" ? "UserProfile" : "HealthRecords";
-        await db.runAsync(`DELETE FROM ${table} WHERE id = ?`, [item.id]);
-        setRefreshKey((prev) => prev + 1);
-      } catch (e) {
-        Alert.alert(
-          t.error || "Error",
-          t.deleteError || "Failed to delete entry"
-        );
-      }
+    async (itemToDelete) => {
+      // 1. Remove from UI immediately
+      setProgressData((prev) =>
+        prev.filter(
+          (it) =>
+            !(it.id === itemToDelete.id && it.source === itemToDelete.source)
+        )
+      );
+
+      // 2. Delete in DB in background
+      const deleteInBackground = async () => {
+        try {
+          const db = await getDb();
+          const table =
+            itemToDelete.source === "UserProfile"
+              ? "UserProfile"
+              : "HealthRecords";
+          await db.runAsync(`DELETE FROM ${table} WHERE id = ?`, [
+            itemToDelete.id,
+          ]);
+        } catch (e) {
+          Alert.alert(
+            t.error || "Error",
+            t.deleteError || "Failed to delete entry – restoring it."
+          );
+          // 3. Restore if DB fails
+          setProgressData((prev) => [...prev, itemToDelete]);
+        }
+      };
+
+      deleteInBackground(); // fire-and-forget
     },
     [t]
   );
@@ -359,7 +385,6 @@ const ProgressScreen = () => {
     setError(null);
     try {
       const db = await getDb();
-
       const navLifestyleData = route.params?.lifestyleData;
       const today = formatDate(new Date().toISOString().split("T")[0]);
       let currentDayData = null;
@@ -490,72 +515,17 @@ const ProgressScreen = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [route.params]);
+  }, [route.params?.lifestyleData]);
 
   useEffect(() => {
     fetchProgressData();
-  }, [fetchProgressData, refreshKey, route.params]);
+  }, [fetchProgressData]);
 
   useEffect(() => {
     if (route.params?.lifestyleData) {
-      setRefreshKey((prev) => prev + 1);
+      fetchProgressData();
     }
-  }, [route.params]);
-
-  useEffect(() => {
-    if (!latestUserProfile) return;
-
-    const runPrediction = async () => {
-      setShapLoading(true);
-      try {
-        const payload = {
-          Age: latestUserProfile.age ?? 30,
-          Gender: latestUserProfile.gender ?? "Unknown",
-          Height_cm: latestUserProfile.height_cm ?? 170,
-          Weight_kg: latestUserProfile.weight_kg ?? 70,
-          BMI: latestUserProfile.bmi ?? 24,
-          Daily_Steps: latestUserProfile.daily_steps ?? 0,
-          Exercise_Frequency: latestUserProfile.exercise_frequency ?? 0,
-          Sleep_Hours: latestUserProfile.sleep_hours ?? 0,
-          Alcohol_Consumption: latestUserProfile.alcohol_consumption ?? "No",
-          Smoking_Habit: latestUserProfile.smoking_habit ?? "No",
-          Diet_Quality: latestUserProfile.diet_quality ?? "Average",
-          Stress_Level: latestUserProfile.stress_level ?? 5,
-          FRUITS_VEGGIES: latestUserProfile.fruits_veggies ?? 0,
-          Screen_Time_Hours: latestUserProfile.screen_time_hours ?? 0,
-          Chronic_Disease: latestUserProfile.chronic_disease ?? "None",
-        };
-
-        console.log("Making SHAP prediction request...");
-        const response = await fetch(
-          `https://finalyearproject-1-dii1.onrender.com/predict`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          }
-        );
-
-        console.log("Response status:", response.status);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-
-        const result = await response.json();
-        console.log("SHAP prediction result:", result);
-        setPredictionResult(result);
-      } catch (err) {
-        console.error("SHAP prediction failed:", err);
-        setPredictionResult(null);
-      } finally {
-        setShapLoading(false);
-      }
-    };
-
-    runPrediction();
-  }, [latestUserProfile]);
+  }, [route.params?.lifestyleData]);
 
   const calculateDiseaseRisks = useCallback((data) => {
     if (!data) return { obesity: 1, hypertension: 1, stroke: 1 };
@@ -730,14 +700,11 @@ const ProgressScreen = () => {
   const filteredData = useMemo(() => {
     const today = new Date();
     const daysAgo = timeRange === "7days" ? 7 : 30;
-    const cutoffDate = formatDate(
-      new Date(today.setDate(today.getDate() - daysAgo))
-    );
+    const cutoffDate = new Date(today.setDate(today.getDate() - daysAgo));
     return progressData
       .filter((item) => {
         const itemDate = new Date(item.date.split("/").reverse().join("-"));
-        const cutoff = new Date(cutoffDate.split("/").reverse().join("-"));
-        return itemDate >= cutoff;
+        return itemDate >= cutoffDate;
       })
       .sort((a, b) => {
         const dateA = new Date(a.date.split("/").reverse().join("-"));
@@ -779,27 +746,107 @@ const ProgressScreen = () => {
   };
 
   const shapRankings = useMemo(() => {
-    if (!predictionResult?.predictions) return [];
+    if (!latestUserProfile) return [];
 
-    const map = new Map();
+    const data = latestUserProfile;
 
-    Object.values(predictionResult.predictions).forEach((disease) => {
-      (disease.top_features ?? []).forEach((f) => {
-        const name = f.feature;
-        const abs = Math.abs(f.shap_value);
-        map.set(name, (map.get(name) ?? 0) + abs);
-      });
-    });
+    // ---- 1.  Lifestyle-score contribution (0-100) ----------------
+    const bmiScore = (() => {
+      const b = data.bmi || 0;
+      if (b >= 18.5 && b < 25) return 15;
+      if (b >= 17 && b < 18.5) return 12;
+      if (b >= 25 && b < 27) return 12;
+      if (b >= 16 && b < 17) return 8;
+      if (b >= 27 && b < 30) return 8;
+      if (b >= 15 && b < 16) return 4;
+      if (b >= 30 && b < 35) return 4;
+      return 0;
+    })();
 
-    const total = Array.from(map.values()).reduce((a, b) => a + b, 0) || 1;
-    return Array.from(map.entries())
-      .map(([feature, weight]) => ({
-        factor: featureToLabel(feature, t),
-        value: weight / total,
-      }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 8);
-  }, [predictionResult, t]);
+    const stepsScore = (() => {
+      const s = data.daily_steps || 0;
+      if (s >= 10000) return 15;
+      if (s >= 8000) return 12;
+      if (s >= 6000) return 9;
+      if (s >= 4000) return 6;
+      if (s >= 2000) return 3;
+      return 0;
+    })();
+
+    const sleepScore = (() => {
+      const h = data.sleep_hours || 0;
+      if (h >= 7 && h <= 9) return 15;
+      if (h >= 6 && h < 7) return 12;
+      if (h > 9 && h <= 10) return 12;
+      if (h >= 5 && h < 6) return 8;
+      if (h > 10 && h <= 11) return 8;
+      if (h >= 4 && h < 5) return 4;
+      if (h > 11) return 4;
+      return 0;
+    })();
+
+    const exerciseScore = (() => {
+      const f = data.exercise_frequency || 0;
+      if (f >= 5) return 15;
+      if (f >= 3) return 12;
+      if (f >= 2) return 8;
+      if (f >= 1) return 4;
+      return 0;
+    })();
+
+    const dietScore = (() => {
+      const q = data.diet_quality?.toLowerCase() || "poor";
+      switch (q) {
+        case "excellent":
+          return 10;
+        case "good":
+          return 8;
+        case "fair":
+          return 6;
+        case "poor":
+          return 2;
+        default:
+          return 0;
+      }
+    })();
+
+    const stressScore = (() => {
+      const s = data.stress_level || 5;
+      if (s <= 2) return 10;
+      if (s <= 4) return 8;
+      if (s <= 6) return 6;
+      if (s <= 8) return 3;
+      return 0;
+    })();
+
+    // ---- 2.  Normalise to percentages ---------------------------
+    const total =
+      bmiScore +
+      stepsScore +
+      sleepScore +
+      exerciseScore +
+      dietScore +
+      stressScore;
+
+    const toPct = (v) => (total ? (v / total) * 100 : 0);
+
+    return [
+      { factor: t.bmi || "BMI", value: toPct(bmiScore) },
+      { factor: t.steps || "Daily Steps", value: toPct(stepsScore) },
+      { factor: t.sleep || "Sleep Hours", value: toPct(sleepScore) },
+      {
+        factor: t.exercise || "Exercise Frequency",
+        value: toPct(exerciseScore),
+      },
+      {
+        factor: t.dietQuality?.label || "Diet Quality",
+        value: toPct(dietScore),
+      },
+      { factor: t.stressLevel || "Stress Level", value: toPct(stressScore) },
+    ]
+      .filter((i) => i.value > 0) // hide 0 % items (optional)
+      .sort((a, b) => b.value - a.value);
+  }, [latestUserProfile, t]);
 
   const chartConfig = {
     backgroundColor: "#ffffff",
@@ -905,21 +952,17 @@ const ProgressScreen = () => {
       });
   }, [filteredData, sourceFilter, sortOrder]);
 
-  const FactorsTab = React.memo(({ shapRankings, t, loading }) => (
+  const FactorsTab = React.memo(({ shapRankings, t }) => (
     <View>
-      {loading ? (
-        <Text style={styles.loadingText}>{t.loading || "Loading SHAP…"}</Text>
-      ) : shapRankings.length === 0 ? (
+      {shapRankings.length === 0 ? (
         <Text style={styles.riskName}>
-          {t.noShapData || "SHAP data unavailable"}
+          {t.noShapData || "No factors available"}
         </Text>
       ) : (
         shapRankings.map((item, i) => (
           <View key={i} style={styles.factorItem}>
             <Text style={styles.factorName}>{item.factor}</Text>
-            <Text style={styles.factorValue}>
-              {(item.value * 100).toFixed(0)}%
-            </Text>
+            <Text style={styles.factorValue}>{item.value.toFixed(0)}%</Text>
           </View>
         ))
       )}
@@ -1052,11 +1095,7 @@ const ProgressScreen = () => {
 
         <View style={styles.tabContent}>
           {activeTab === "factors" && (
-            <FactorsTab
-              shapRankings={shapRankings}
-              t={t}
-              loading={shapLoading}
-            />
+            <FactorsTab shapRankings={shapRankings} t={t} />
           )}
           {activeTab === "risks" && (
             <RisksTab summaryStats={summaryStats} t={t} />
@@ -1131,7 +1170,6 @@ const ProgressScreen = () => {
   }, [
     activeTab,
     shapRankings,
-    shapLoading,
     summaryStats,
     filteredHistoryData,
     t,
@@ -1499,16 +1537,9 @@ const ProgressScreen = () => {
         )}
         scrollEventThrottle={16}
         removeClippedSubviews={true}
-        maxToRenderPerBatch={3}
-        windowSize={7}
-        initialNumToRender={3}
-        getItemLayout={(d, i) => ({
-          length:
-            i === 0 ? 120 : i === 1 ? 60 : i === 2 ? 240 : i === 3 ? 220 : 300,
-          offset:
-            i === 0 ? 0 : i === 1 ? 120 : i === 2 ? 180 : i === 3 ? 420 : 640,
-          index: i,
-        })}
+        maxToRenderPerBatch={5}
+        windowSize={9}
+        updateCellsBatchingPeriod={50}
       />
       {renderTooltip()}
     </SafeAreaView>
