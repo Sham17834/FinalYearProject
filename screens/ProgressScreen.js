@@ -524,20 +524,31 @@ const ProgressScreen = () => {
           Stress_Level: latestUserProfile.stress_level ?? 5,
           FRUITS_VEGGIES: latestUserProfile.fruits_veggies ?? 0,
           Screen_Time_Hours: latestUserProfile.screen_time_hours ?? 0,
+          Chronic_Disease: latestUserProfile.chronic_disease ?? "None",
         };
 
-        const response = await fetch(`${API_BASE_URL}/predict`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        console.log("Making SHAP prediction request...");
+        const response = await fetch(
+          `https://finalyearproject-c5hy.onrender.com/predict`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        );
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        console.log("Response status:", response.status);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
 
         const result = await response.json();
+        console.log("SHAP prediction result:", result);
         setPredictionResult(result);
       } catch (err) {
-        console.warn("SHAP prediction failed:", err);
+        console.error("SHAP prediction failed:", err);
         setPredictionResult(null);
       } finally {
         setShapLoading(false);
