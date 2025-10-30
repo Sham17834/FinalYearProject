@@ -4,6 +4,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
 } from "react";
 import {
   View,
@@ -49,6 +50,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     position: "absolute",
+    zIndex: 10,
   },
   headerTitle: {
     fontSize: 24,
@@ -300,16 +302,6 @@ const styles = StyleSheet.create({
   tooltipCloseText: { color: "#ffffff", fontWeight: "500" },
 });
 
-// Static SHAP Rankings (Mocked)
-const STATIC_SHAP_RANKINGS = [
-  { factor: "BMI", value: 0.28 },
-  { factor: "Daily Steps", value: 0.22 },
-  { factor: "Sleep Hours", value: 0.18 },
-  { factor: "Exercise Frequency", value: 0.15 },
-  { factor: "Diet Quality", value: 0.1 },
-  { factor: "Stress Level", value: 0.07 },
-];
-
 const ProgressScreen = () => {
   const { t } = useContext(LanguageContext);
   const route = useRoute();
@@ -323,12 +315,12 @@ const ProgressScreen = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [selectedDataPoint, setSelectedDataPoint] = useState(null);
-  const scrollY = new Animated.Value(0);
 
-  // OPTIMISTIC DELETE – INSTANT UI UPDATE
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  // OPTIMISTIC DELETE
   const handleDeleteEntry = useCallback(
     async (itemToDelete) => {
-      // 1. Remove from UI immediately
       setProgressData((prev) =>
         prev.filter(
           (it) =>
@@ -336,7 +328,6 @@ const ProgressScreen = () => {
         )
       );
 
-      // 2. Delete in DB in background
       const deleteInBackground = async () => {
         try {
           const db = await getDb();
@@ -352,12 +343,11 @@ const ProgressScreen = () => {
             t.error || "Error",
             t.deleteError || "Failed to delete entry – restoring it."
           );
-          // 3. Restore if DB fails
           setProgressData((prev) => [...prev, itemToDelete]);
         }
       };
 
-      deleteInBackground(); // fire-and-forget
+      deleteInBackground();
     },
     [t]
   );
@@ -622,16 +612,11 @@ const ProgressScreen = () => {
     const dietScore = (() => {
       const q = data.diet_quality?.toLowerCase() || "poor";
       switch (q) {
-        case "excellent":
-          return 10;
-        case "good":
-          return 8;
-        case "fair":
-          return 6;
-        case "poor":
-          return 2;
-        default:
-          return 0;
+        case "excellent": return 10;
+        case "good": return 8;
+        case "fair": return 6;
+        case "poor": return 2;
+        default: return 0;
       }
     })();
 
@@ -726,31 +711,11 @@ const ProgressScreen = () => {
     [filteredData]
   );
 
-  const featureToLabel = (feat, t) => {
-    const map = {
-      Daily_Steps: t.steps || "Steps",
-      BMI: t.bmi || "BMI",
-      Exercise_Frequency: t.exerciseFrequency || "Exercise Frequency",
-      Sleep_Hours: t.sleep || "Sleep",
-      Diet_Quality: t.dietQuality?.label || "Diet Quality",
-      FRUITS_VEGGIES: t.fruitsVeggies || "Fruits & Veggies",
-      Stress_Level: t.stress || "Stress",
-      Screen_Time_Hours: t.screenTime || "Screen Time",
-      Age: t.age || "Age",
-      Alcohol_Consumption: t.alcohol || "Alcohol",
-      Smoking_Habit: t.smoking || "Smoking",
-      Height_cm: t.height || "Height",
-      Weight_kg: t.weight || "Weight",
-    };
-    return map[feat] ?? feat;
-  };
-
   const shapRankings = useMemo(() => {
     if (!latestUserProfile) return [];
 
     const data = latestUserProfile;
 
-    // ---- 1.  Lifestyle-score contribution (0-100) ----------------
     const bmiScore = (() => {
       const b = data.bmi || 0;
       if (b >= 18.5 && b < 25) return 15;
@@ -797,16 +762,11 @@ const ProgressScreen = () => {
     const dietScore = (() => {
       const q = data.diet_quality?.toLowerCase() || "poor";
       switch (q) {
-        case "excellent":
-          return 10;
-        case "good":
-          return 8;
-        case "fair":
-          return 6;
-        case "poor":
-          return 2;
-        default:
-          return 0;
+        case "excellent": return 10;
+        case "good": return 8;
+        case "fair": return 6;
+        case "poor": return 2;
+        default: return 0;
       }
     })();
 
@@ -819,7 +779,6 @@ const ProgressScreen = () => {
       return 0;
     })();
 
-    // ---- 2.  Normalise to percentages ---------------------------
     const total =
       bmiScore +
       stepsScore +
@@ -834,17 +793,11 @@ const ProgressScreen = () => {
       { factor: t.bmi || "BMI", value: toPct(bmiScore) },
       { factor: t.steps || "Daily Steps", value: toPct(stepsScore) },
       { factor: t.sleep || "Sleep Hours", value: toPct(sleepScore) },
-      {
-        factor: t.exercise || "Exercise Frequency",
-        value: toPct(exerciseScore),
-      },
-      {
-        factor: t.dietQuality?.label || "Diet Quality",
-        value: toPct(dietScore),
-      },
+      { factor: t.exercise || "Exercise Frequency", value: toPct(exerciseScore) },
+      { factor: t.dietQuality?.label || "Diet Quality", value: toPct(dietScore) },
       { factor: t.stressLevel || "Stress Level", value: toPct(stressScore) },
     ]
-      .filter((i) => i.value > 0) // hide 0 % items (optional)
+      .filter((i) => i.value > 0)
       .sort((a, b) => b.value - a.value);
   }, [latestUserProfile, t]);
 
@@ -952,6 +905,7 @@ const ProgressScreen = () => {
       });
   }, [filteredData, sourceFilter, sortOrder]);
 
+  // === DEFINE TAB COMPONENTS INSIDE (before use) ===
   const FactorsTab = React.memo(({ shapRankings, t }) => (
     <View>
       {shapRankings.length === 0 ? (
@@ -1070,113 +1024,104 @@ const ProgressScreen = () => {
     );
   });
 
-  const renderTabs = useCallback(() => {
-    return (
-      <View style={styles.bottomSection}>
-        <View style={styles.tabContainer}>
-          {["factors", "risks", "history"].map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              style={[styles.tabButton, activeTab === tab && styles.activeTab]}
-              onPress={() => setActiveTab(tab)}
-              accessibilityLabel={t[tab] || tab}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === tab && styles.activeTabText,
-                ]}
+  // === NOW DEFINE TabsSection (after subcomponents) ===
+  const TabsSection = React.memo(
+    ({
+      activeTab,
+      setActiveTab,
+      shapRankings,
+      summaryStats,
+      filteredHistoryData,
+      t,
+      sortOrder,
+      setSortOrder,
+      sourceFilter,
+      setSourceFilter,
+      confirmDelete,
+    }) => {
+      return (
+        <View style={styles.bottomSection}>
+          <View style={styles.tabContainer}>
+            {["factors", "risks", "history"].map((tab) => (
+              <TouchableOpacity
+                key={tab}
+                style={[styles.tabButton, activeTab === tab && styles.activeTab]}
+                onPress={() => setActiveTab(tab)}
               >
-                {t[tab] || tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === tab && styles.activeTabText,
+                  ]}
+                >
+                  {t[tab] || tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-        <View style={styles.tabContent}>
-          {activeTab === "factors" && (
-            <FactorsTab shapRankings={shapRankings} t={t} />
-          )}
-          {activeTab === "risks" && (
-            <RisksTab summaryStats={summaryStats} t={t} />
-          )}
-          {activeTab === "history" && (
-            <>
-              <View style={styles.historyControls}>
-                <View style={styles.timeRangeContainer}>
-                  <TouchableOpacity
-                    style={[
-                      styles.controlButton,
-                      sortOrder === "asc" && styles.activeControlButton,
-                    ]}
-                    onPress={() => setSortOrder("asc")}
-                  >
-                    <Text
+          <View style={styles.tabContent}>
+            {activeTab === "factors" && (
+              <FactorsTab shapRankings={shapRankings} t={t} />
+            )}
+            {activeTab === "risks" && (
+              <RisksTab summaryStats={summaryStats} t={t} />
+            )}
+            {activeTab === "history" && (
+              <>
+                <View style={styles.historyControls}>
+                  <View style={styles.timeRangeContainer}>
+                    {["asc", "desc"].map((order) => (
+                      <TouchableOpacity
+                        key={order}
+                        style={[
+                          styles.controlButton,
+                          sortOrder === order && styles.activeControlButton,
+                        ]}
+                        onPress={() => setSortOrder(order)}
+                      >
+                        <Text
+                          style={[
+                            styles.controlButtonText,
+                            sortOrder === order && styles.activeControlButtonText,
+                          ]}
+                        >
+                          {order === "asc" ? t.sortAsc || "Oldest" : t.sortDesc || "Newest"}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <View style={styles.timeRangeContainer}>
+                    <TouchableOpacity
                       style={[
-                        styles.controlButtonText,
-                        sortOrder === "asc" && styles.activeControlButtonText,
+                        styles.controlButton,
+                        sourceFilter === "all" && styles.activeControlButton,
                       ]}
+                      onPress={() => setSourceFilter("all")}
                     >
-                      {t.sortAsc || "Oldest"}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.controlButton,
-                      sortOrder === "desc" && styles.activeControlButton,
-                    ]}
-                    onPress={() => setSortOrder("desc")}
-                  >
-                    <Text
-                      style={[
-                        styles.controlButtonText,
-                        sortOrder === "desc" && styles.activeControlButtonText,
-                      ]}
-                    >
-                      {t.sortDesc || "Newest"}
-                    </Text>
-                  </TouchableOpacity>
+                      <Text
+                        style={[
+                          styles.controlButtonText,
+                          sourceFilter === "all" && styles.activeControlButtonText,
+                        ]}
+                      >
+                        {t.allSources || "All"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-                <View style={styles.timeRangeContainer}>
-                  <TouchableOpacity
-                    style={[
-                      styles.controlButton,
-                      sourceFilter === "all" && styles.activeControlButton,
-                    ]}
-                    onPress={() => setSourceFilter("all")}
-                  >
-                    <Text
-                      style={[
-                        styles.controlButtonText,
-                        sourceFilter === "all" &&
-                          styles.activeControlButtonText,
-                      ]}
-                    >
-                      {t.allSources || "All"}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <HistoryTab
-                filteredHistoryData={filteredHistoryData}
-                t={t}
-                onDelete={confirmDelete}
-              />
-            </>
-          )}
+                <HistoryTab
+                  filteredHistoryData={filteredHistoryData}
+                  t={t}
+                  onDelete={confirmDelete}
+                />
+              </>
+            )}
+          </View>
         </View>
-      </View>
-    );
-  }, [
-    activeTab,
-    shapRankings,
-    summaryStats,
-    filteredHistoryData,
-    t,
-    sortOrder,
-    sourceFilter,
-    confirmDelete,
-  ]);
+      );
+    }
+  );
 
   const renderQuickStats = useCallback(
     () => (
@@ -1261,7 +1206,6 @@ const ProgressScreen = () => {
               timeRange === "7days" && styles.activeTimeRange,
             ]}
             onPress={() => setTimeRange("7days")}
-            accessibilityLabel={t.sevenDays || "7 Days"}
           >
             <Text
               style={[
@@ -1280,7 +1224,6 @@ const ProgressScreen = () => {
               timeRange === "30days" && styles.activeTimeRange,
             ]}
             onPress={() => setTimeRange("30days")}
-            accessibilityLabel={t.thirtyDays || "30 Days"}
           >
             <Text
               style={[
@@ -1420,11 +1363,37 @@ const ProgressScreen = () => {
     [stepsData, sleepData, filteredData, chartConfig, summaryStats, t]
   );
 
+  const renderTabs = useCallback(() => {
+    return (
+      <TabsSection
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        shapRankings={shapRankings}
+        summaryStats={summaryStats}
+        filteredHistoryData={filteredHistoryData}
+        t={t}
+        sortOrder={sortOrder}
+        setSortOrder={setSortOrder}
+        sourceFilter={sourceFilter}
+        setSourceFilter={setSourceFilter}
+        confirmDelete={confirmDelete}
+      />
+    );
+  }, [
+    activeTab,
+    shapRankings,
+    summaryStats,
+    filteredHistoryData,
+    t,
+    sortOrder,
+    sourceFilter,
+    confirmDelete,
+  ]);
+
   const renderTooltip = useCallback(() => {
     if (!selectedDataPoint) return null;
     const { chartType, date, value, details } = selectedDataPoint;
-    let title = "",
-      valueText = "";
+    let title = "", valueText = "";
     if (chartType === "lifestyle") {
       title = t.lifestyleScore || "Lifestyle Score";
       valueText = `${Math.round(value)}`;
