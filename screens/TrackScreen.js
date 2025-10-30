@@ -9,12 +9,14 @@ import {
   StatusBar,
   Switch,
   Alert,
+  Modal,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import Slider from "@react-native-community/slider";
 import { useNavigation } from "@react-navigation/native";
 import { LanguageContext } from "./LanguageContext";
 import { getDb } from "./db";
+import { center } from "@shopify/react-native-skia";
 
 const getCurrentDate = () => {
   const today = new Date();
@@ -22,6 +24,21 @@ const getCurrentDate = () => {
   const month = String(today.getMonth() + 1).padStart(2, "0");
   const year = today.getFullYear();
   return `${day}/${month}/${year}`;
+};
+
+const formatDateForDisplay = (date) => {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
+const getDaysInMonth = (month, year) => {
+  return new Date(year, month + 1, 0).getDate();
+};
+
+const getFirstDayOfMonth = (month, year) => {
+  return new Date(year, month, 1).getDay();
 };
 
 const styles = {
@@ -41,7 +58,6 @@ const styles = {
     marginBottom: 8,
     alignItems: "center",
     justifyContent: "center",
-    transition: "all 0.2s ease",
   },
   appName: {
     fontSize: 24,
@@ -76,6 +92,171 @@ const styles = {
     fontSize: 14,
     color: "#64748b",
     fontWeight: "500",
+  },
+  datePickerButton: {
+    backgroundColor: "#f9fafb",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginTop: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  datePickerButtonText: {
+    fontSize: 15,
+    color: "#1f2937",
+    fontWeight: "500",
+  },
+  datePickerIcon: {
+    fontSize: 16,
+    color: "#008080",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    width: "90%",
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+    overflow: "hidden",
+  },
+  calendarHeader: {
+    backgroundColor: "#008080",
+    padding: 16,
+  },
+  calendarYearText: {
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.9)",
+    fontWeight: "500",
+  },
+  calendarDateText: {
+    fontSize: 24,
+    color: "#ffffff",
+    fontWeight: "700",
+    marginTop: 4,
+  },
+  calendarNavigator: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#ffffff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
+  pickerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8,
+  },
+  monthPickerContainer: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    backgroundColor: "#f9fafb",
+    overflow: "hidden",
+  },
+  yearPickerContainer: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    backgroundColor: "#f9fafb",
+    overflow: "hidden",
+  },
+  datePickerPicker: {
+    height: 50,
+  },
+  calendarBody: {
+    padding: 16,
+  },
+  weekDaysRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 8,
+  },
+  weekDayText: {
+    width: 40,
+    textAlign: "center",
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#64748b",
+  },
+  calendarGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  dayCell: {
+    width: "14.28%",
+    aspectRatio: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 4,
+  },
+  dayButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dayText: {
+    fontSize: 14,
+    color: "#1f2937",
+  },
+  emptyDay: {
+    opacity: 0,
+  },
+  selectedDay: {
+    backgroundColor: "#008080",
+  },
+  selectedDayText: {
+    color: "#ffffff",
+    fontWeight: "700",
+  },
+  todayDay: {
+    borderWidth: 1,
+    borderColor: "#008080",
+  },
+  disabledDay: {
+    opacity: 0.3,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+    gap: 12,
+  },
+  modalButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 4,
+  },
+  modalButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
+  cancelButton: {
+    color: "#374151",
+  },
+  okButton: {
+    color: "#008080",
   },
   sectionCard: {
     backgroundColor: "#ffffff",
@@ -252,6 +433,15 @@ const TrackScreen = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [isScrollEnabled, setIsScrollEnabled] = useState(true);
+  
+  // Date picker state
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDate, setTempDate] = useState(new Date());
+  const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
+  const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
+  
+  // Form data - matching LifestyleDataInputScreen fields
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("Male");
   const [heightCm, setHeightCm] = useState("");
@@ -263,29 +453,22 @@ const TrackScreen = () => {
   const [isSlidingDailySteps, setIsSlidingDailySteps] = useState(false);
   const [exerciseFrequency, setExerciseFrequency] = useState(3);
   const [exerciseFrequencyLive, setExerciseFrequencyLive] = useState(3);
-  const [isSlidingExerciseFrequency, setIsSlidingExerciseFrequency] =
-    useState(false);
+  const [isSlidingExerciseFrequency, setIsSlidingExerciseFrequency] = useState(false);
   const [sleepHours, setSleepHours] = useState(7);
   const [sleepHoursLive, setSleepHoursLive] = useState(7);
   const [isSlidingSleepHours, setIsSlidingSleepHours] = useState(false);
   const [alcoholConsumption, setAlcoholConsumption] = useState(false);
   const [smokingHabit, setSmokingHabit] = useState(false);
   const [dietQuality, setDietQuality] = useState("Good");
-  const [fruitsVeggies, setFruitsVeggies] = useState(5);
-  const [fruitsVeggiesLive, setFruitsVeggiesLive] = useState(5);
+  const [fruitsVeggies, setFruitsVeggies] = useState(3);
+  const [fruitsVeggiesLive, setFruitsVeggiesLive] = useState(3);
   const [isSlidingFruitsVeggies, setIsSlidingFruitsVeggies] = useState(false);
   const [stressLevel, setStressLevel] = useState(5);
   const [stressLevelLive, setStressLevelLive] = useState(5);
   const [isSlidingStressLevel, setIsSlidingStressLevel] = useState(false);
   const [screenTimeHours, setScreenTimeHours] = useState(4);
   const [screenTimeHoursLive, setScreenTimeHoursLive] = useState(4);
-  const [isSlidingScreenTimeHours, setIsSlidingScreenTimeHours] =
-    useState(false);
-
-  const genderOptions = [
-    { label: t.male || "Male", value: "Male" },
-    { label: t.female || "Female", value: "Female" },
-  ];
+  const [isSlidingScreenTimeHours, setIsSlidingScreenTimeHours] = useState(false);
 
   const chronicDiseaseOptions = [
     { label: t.none || "None", value: "None" },
@@ -301,200 +484,337 @@ const TrackScreen = () => {
     { label: t.poor || "Poor", value: "Poor" },
   ];
 
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
+
+  const generateYears = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = currentYear; i >= currentYear - 100; i--) {
+      years.push(i);
+    }
+    return years;
+  };
+
+  const handleHeightChange = (text) => {
+    setHeightCm(text);
+    calculateBMI(text, weightKg);
+  };
+
+  const handleWeightChange = (text) => {
+    setWeightKg(text);
+    calculateBMI(heightCm, text);
+  };
+
   const calculateBMI = (height, weight) => {
-    const h = parseFloat(height);
-    const w = parseFloat(weight);
-
-    if (height && weight && !isNaN(h) && !isNaN(w) && h > 0 && w > 0) {
-      const heightM = h / 100;
-      const bmiValue = (w / (heightM * heightM)).toFixed(1);
-      setBmi(bmiValue);
+    if (height && weight) {
+      const heightM = parseFloat(height) / 100;
+      const weightNum = parseFloat(weight);
+      if (heightM > 0 && weightNum > 0) {
+        const bmiValue = (weightNum / (heightM * heightM)).toFixed(1);
+        setBmi(bmiValue);
+      } else {
+        setBmi("");
+      }
     } else {
-      setBmi("0");
+      setBmi("");
     }
   };
 
-  const displayBmi = () => {
-    if (!heightCm || !weightKg) return "";
-    return bmi !== "0" ? bmi : "—";
+  const showDatePickerModal = () => {
+    setTempDate(new Date(selectedDate));
+    setCalendarMonth(selectedDate.getMonth());
+    setCalendarYear(selectedDate.getFullYear());
+    setShowDatePicker(true);
   };
 
-  const validateForm = () => {
-    if (!age || isNaN(age) || parseInt(age) < 18 || parseInt(age) > 120) {
-      Alert.alert(
-        t.error || "Validation Error",
-        t.errorAge || "Please enter a valid age (18 - 120)"
-      );
-      return false;
+  const handleDateConfirm = () => {
+    setSelectedDate(new Date(tempDate));
+    setShowDatePicker(false);
+  };
+
+  const handleDateCancel = () => {
+    setShowDatePicker(false);
+  };
+
+  const handleMonthChange = (month) => {
+    setCalendarMonth(month);
+    // Adjust day if it exceeds the days in the new month
+    const daysInNewMonth = getDaysInMonth(month, calendarYear);
+    if (tempDate.getDate() > daysInNewMonth) {
+      setTempDate(new Date(calendarYear, month, daysInNewMonth));
     }
-    if (
-      !heightCm ||
-      isNaN(heightCm) ||
-      parseFloat(heightCm) < 100 ||
-      parseFloat(heightCm) > 250
-    ) {
-      Alert.alert(
-        t.error || "Validation Error",
-        t.errorHeight || "Please enter a valid height (100 - 250 cm)"
-      );
-      return false;
+  };
+
+  const handleYearChange = (year) => {
+    setCalendarYear(year);
+    // Adjust day if it exceeds the days in the new month/year
+    const daysInNewMonth = getDaysInMonth(calendarMonth, year);
+    if (tempDate.getDate() > daysInNewMonth) {
+      setTempDate(new Date(year, calendarMonth, daysInNewMonth));
     }
-    if (
-      !weightKg ||
-      isNaN(weightKg) ||
-      parseFloat(weightKg) < 30 ||
-      parseFloat(weightKg) > 300
-    ) {
-      Alert.alert(
-        t.error || "Validation Error",
-        t.errorWeight || "Please enter a valid weight (30 - 300 kg)"
-      );
-      return false;
+  };
+
+  const handleDayPress = (day) => {
+    const newDate = new Date(calendarYear, calendarMonth, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (newDate <= today) {
+      setTempDate(newDate);
     }
-    if (dailySteps < 0 || dailySteps > 50000) {
-      Alert.alert(
-        t.error || "Validation Error",
-        t.errorSteps || "Please enter valid daily steps (0 - 50,000)"
+  };
+
+  const renderCalendar = () => {
+    const daysInMonth = getDaysInMonth(calendarMonth, calendarYear);
+    const firstDay = getFirstDayOfMonth(calendarMonth, calendarYear);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const days = [];
+    
+    for (let i = 0; i < firstDay; i++) {
+      days.push(
+        <View key={`empty-${i}`} style={styles.dayCell}>
+          <View style={[styles.dayButton, styles.emptyDay]}>
+            <Text style={styles.dayText}></Text>
+          </View>
+        </View>
       );
-      return false;
     }
-    if (sleepHours < 0 || sleepHours > 12) {
-      Alert.alert(
-        t.error || "Validation Error",
-        t.errorSleep || "Please enter valid sleep hours (0 - 12)"
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const currentDate = new Date(calendarYear, calendarMonth, day);
+      currentDate.setHours(0, 0, 0, 0);
+      const isSelected = tempDate.getDate() === day && 
+                        tempDate.getMonth() === calendarMonth && 
+                        tempDate.getFullYear() === calendarYear;
+      const isToday = currentDate.getTime() === today.getTime();
+      const isFuture = currentDate > today;
+      
+      days.push(
+        <View key={day} style={styles.dayCell}>
+          <TouchableOpacity
+            style={[
+              styles.dayButton,
+              isSelected && styles.selectedDay,
+              isToday && !isSelected && styles.todayDay,
+              isFuture && styles.disabledDay,
+            ]}
+            onPress={() => handleDayPress(day)}
+            disabled={isFuture}
+          >
+            <Text
+              style={[
+                styles.dayText,
+                isSelected && styles.selectedDayText,
+              ]}
+            >
+              {day}
+            </Text>
+          </TouchableOpacity>
+        </View>
       );
-      return false;
     }
-    if (exerciseFrequency < 0 || exerciseFrequency > 7) {
-      Alert.alert(
-        t.error || "Validation Error",
-        t.errorExercise || "Please enter valid exercise frequency (0 - 7 days)"
-      );
-      return false;
-    }
-    if (fruitsVeggies < 0 || fruitsVeggies > 15) {
-      Alert.alert(
-        t.error || "Validation Error",
-        t.errorFruitsVeggies || "Please enter valid servings (0 - 15)"
-      );
-      return false;
-    }
-    if (screenTimeHours < 0 || screenTimeHours > 16) {
-      Alert.alert(
-        t.error || "Validation Error",
-        t.errorScreenTime || "Please enter valid screen time (0 - 16 hours)"
-      );
-      return false;
-    }
-    return true;
+    
+    return days;
+  };
+
+  const formatCalendarDate = (date) => {
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+  };
+
+  const formatNumber = (num) => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
+    if (!age || !heightCm || !weightKg) {
+      Alert.alert(
+        t.validationError || "Validation Error",
+        t.pleaseComplete || "Please complete all required fields"
+      );
       return;
     }
+
     setIsSubmitting(true);
-    const data = {
-      date: getCurrentDate(),
-      daily_steps: Math.round(dailySteps),
-      sleep_hours: sleepHours,
-      bmi: parseFloat(bmi) || null,
-      age: parseInt(age),
-      gender,
-      height_cm: parseFloat(heightCm),
-      weight_kg: parseFloat(weightKg),
-      chronic_disease: chronicDisease,
-      exercise_frequency: exerciseFrequency,
-      alcohol_consumption: alcoholConsumption ? "Yes" : "No",
-      smoking_habit: smokingHabit ? "Yes" : "No",
-      diet_quality: dietQuality,
-      fruits_veggies: fruitsVeggies,
-      stress_level: stressLevel,
-      screen_time_hours: screenTimeHours,
-      salt_intake: "Moderate",
-    };
 
     try {
       const db = await getDb();
-      console.log("Saving data to HealthRecords:", data);
-      const result = await db.runAsync(
+      const formattedDate = formatDateForDisplay(selectedDate);
+      
+      await db.runAsync(
         `INSERT INTO HealthRecords (
-        date, daily_steps, sleep_hours, bmi, age, gender, height_cm, weight_kg,
-        chronic_disease, exercise_frequency, alcohol_consumption, smoking_habit,
-        diet_quality, fruits_veggies, stress_level, screen_time_hours, salt_intake
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          date, age, gender, height_cm, weight_kg, bmi, 
+          chronic_disease, daily_steps, exercise_frequency, sleep_hours,
+          alcohol_consumption, smoking_habit, screen_time_hours,
+          diet_quality, fruits_veggies, stress_level
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          data.date,
-          data.daily_steps,
-          data.sleep_hours,
-          data.bmi,
-          data.age,
-          data.gender,
-          data.height_cm,
-          data.weight_kg,
-          data.chronic_disease,
-          data.exercise_frequency,
-          data.alcohol_consumption,
-          data.smoking_habit,
-          data.diet_quality,
-          data.fruits_veggies,
-          data.stress_level,
-          data.screen_time_hours,
-          data.salt_intake,
+          formattedDate,
+          parseInt(age),
+          gender,
+          parseFloat(heightCm),
+          parseFloat(weightKg),
+          parseFloat(bmi),
+          chronicDisease,
+          dailySteps,
+          exerciseFrequency,
+          sleepHours,
+          alcoholConsumption ? 1 : 0,
+          smokingHabit ? 1 : 0,
+          screenTimeHours,
+          dietQuality,
+          fruitsVeggies,
+          stressLevel,
         ]
       );
-      // Retrieve the inserted record with its ID
-      const insertedRecord = await db.getAllAsync(
-        "SELECT * FROM HealthRecords ORDER BY id DESC LIMIT 1"
+
+      Alert.alert(
+        t.success || "Success",
+        t.recordSaved || "Health record saved successfully!",
+        [
+          {
+            text: t.ok || "OK",
+            onPress: () => navigation.navigate("Home"),
+          },
+        ]
       );
-      const newRecord = { ...data, id: insertedRecord[0].id };
-      console.log("Inserted HealthRecords entry:", newRecord);
-      navigation.navigate("MainApp", {
-        screen: "Progress",
-        params: { newRecord },
-      });
     } catch (error) {
+      console.error("Error saving record:", error);
       Alert.alert(
         t.error || "Error",
-        t.errorSaving || "Failed to save health record: " + error.message
+        t.errorSaving || "Failed to save health record. Please try again."
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const currentDate = getCurrentDate();
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
+      <View style={styles.header}>
+        <Text style={styles.appName}>HealthTrack</Text>
+        <Text style={styles.appTagline}>
+          {t.tagline || "Your Personal Health Companion"}
+        </Text>
+      </View>
+      
+      <Modal
+        visible={showDatePicker}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleDateCancel}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.calendarHeader}>
+              <Text style={styles.calendarYearText}>{calendarYear}</Text>
+              <Text style={styles.calendarDateText}>
+                {formatCalendarDate(tempDate)}
+              </Text>
+            </View>
+            
+            <View style={styles.calendarNavigator}>
+              <View style={styles.pickerRow}>
+                <View style={styles.monthPickerContainer}>
+                  <Picker
+                    selectedValue={calendarMonth}
+                    style={styles.datePickerPicker}
+                    onValueChange={handleMonthChange}
+                  >
+                    {monthNames.map((month, index) => (
+                      <Picker.Item key={index} label={month} value={index} />
+                    ))}
+                  </Picker>
+                </View>
+                
+                <View style={styles.yearPickerContainer}>
+                  <Picker
+                    selectedValue={calendarYear}
+                    style={styles.datePickerPicker}
+                    onValueChange={handleYearChange}
+                  >
+                    {generateYears().map((year) => (
+                      <Picker.Item key={year} label={String(year)} value={year} />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
+            </View>
+            
+            <View style={styles.calendarBody}>
+              <View style={styles.weekDaysRow}>
+                {weekDays.map((day, index) => (
+                  <Text key={index} style={styles.weekDayText}>
+                    {day}
+                  </Text>
+                ))}
+              </View>
+              
+              <View style={styles.calendarGrid}>
+                {renderCalendar()}
+              </View>
+            </View>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={handleDateCancel}
+              >
+                <Text style={[styles.modalButtonText, styles.cancelButton]}>
+                  {t.cancel || "CANCEL"}
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={handleDateConfirm}
+              >
+                <Text style={[styles.modalButtonText, styles.okButton]}>
+                  {t.ok || "OK"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      
       <ScrollView
         style={styles.content}
         scrollEnabled={isScrollEnabled}
-        onScroll={(e) => {
-          if (isScrollEnabled) {
-            setScrollY(e.nativeEvent.contentOffset.y);
-          }
+        showsVerticalScrollIndicator={false}
+        onScroll={(event) => {
+          setScrollY(event.nativeEvent.contentOffset.y);
         }}
         scrollEventThrottle={16}
-        showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.header, {}]}>
-          <Text style={styles.appName}>
-            {t.trackHealthTitle || "Track Your Health"}
-          </Text>
-          <Text style={styles.appTagline}>
-            {t.trackTagline || "Record your health metrics"}
-          </Text>
-        </View>
         <View style={styles.recordHeader}>
           <Text style={styles.recordTitle}>
-            {t.healthAssessmentRecord || "Health Assessment Record"}
+            {t.newHealthRecord || "New Health Record"}
           </Text>
           <Text style={styles.recordDate}>
-            {t.date || "Date"}: {currentDate}
+            {t.date || "Date"}: {formatDateForDisplay(selectedDate)}
           </Text>
+          <TouchableOpacity 
+            style={styles.datePickerButton}
+            onPress={showDatePickerModal}
+          >
+            <Text style={styles.datePickerButtonText}>
+              {t.selectDate || "Select Date"}
+            </Text>
+            <Text style={styles.datePickerIcon}>📅</Text>
+          </TouchableOpacity>
         </View>
+        
+        {/* PERSONAL INFORMATION */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
@@ -506,10 +826,10 @@ const TrackScreen = () => {
               <Text style={styles.fieldLabel}>{t.age || "Age"}</Text>
               <TextInput
                 style={styles.fieldValue}
-                placeholder={t.enterAge || "Enter your age"}
-                keyboardType="numeric"
                 value={age}
                 onChangeText={setAge}
+                keyboardType="numeric"
+                placeholder={t.enterAge || "Enter your age"}
               />
             </View>
             <View style={styles.fieldGroup}>
@@ -519,71 +839,53 @@ const TrackScreen = () => {
                 style={styles.picker}
                 onValueChange={(itemValue) => setGender(itemValue)}
               >
-                {genderOptions.map((option) => (
-                  <Picker.Item
-                    key={option.value}
-                    label={option.label}
-                    value={option.value}
-                  />
-                ))}
+                <Picker.Item label={t.male || "Male"} value="Male" />
+                <Picker.Item label={t.female || "Female"} value="Female" />
               </Picker>
             </View>
-          </View>
-        </View>
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {t.physicalMeasurements || "Physical Measurements"}
-            </Text>
-          </View>
-          <View style={styles.sectionContent}>
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>
-                {t.heightCm || "Height (cm)"}
+                {t.height || "Height (cm)"}
               </Text>
               <TextInput
                 style={styles.fieldValue}
-                placeholder={t.enterHeight || "Enter your height in cm"}
-                keyboardType="numeric"
                 value={heightCm}
-                onChangeText={(text) => {
-                  setHeightCm(text);
-                  if (text && weightKg) calculateBMI(text, weightKg);
-                }}
+                onChangeText={handleHeightChange}
+                keyboardType="numeric"
+                placeholder={t.enterHeight || "Enter height in cm"}
               />
             </View>
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>
-                {t.weightKg || "Weight (kg)"}
+                {t.weight || "Weight (kg)"}
               </Text>
               <TextInput
                 style={styles.fieldValue}
-                placeholder={t.enterWeight || "Enter your weight in kg"}
-                keyboardType="numeric"
                 value={weightKg}
-                onChangeText={(text) => {
-                  setWeightKg(text);
-                  if (heightCm && text) calculateBMI(heightCm, text);
-                }}
+                onChangeText={handleWeightChange}
+                keyboardType="numeric"
+                placeholder={t.enterWeight || "Enter weight in kg"}
               />
             </View>
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>
-                {t.bmi || "BMI (calculated)"}
+                {t.bmi || "BMI (Body Mass Index)"}
               </Text>
               <TextInput
                 style={[styles.fieldValue, styles.readOnlyField]}
-                value={displayBmi()}
+                value={bmi}
                 editable={false}
-                placeholder={t.bmiPlaceholder || "Calculated automatically"}
+                placeholder={t.calculatedAuto || "Calculated automatically"}
               />
             </View>
           </View>
         </View>
+
+        {/* HEALTH & ACTIVITY */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              {t.medicalHistory || "Medical History"}
+              {t.healthActivity || "Health & Activity"}
             </Text>
           </View>
           <View style={styles.sectionContent}>
@@ -605,17 +907,11 @@ const TrackScreen = () => {
                 ))}
               </Picker>
             </View>
-          </View>
-        </View>
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {t.activityExercise || "Activity & Exercise"}
-            </Text>
-          </View>
-          <View style={styles.sectionContent}>
+
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>{t.steps || "Daily Steps"}</Text>
+              <Text style={styles.fieldLabel}>
+                {t.dailySteps || "Daily Steps"}
+              </Text>
               <View style={styles.sliderContainer}>
                 <Slider
                   style={styles.slider}
@@ -631,7 +927,7 @@ const TrackScreen = () => {
                     setIsScrollEnabled(false);
                   }}
                   onSlidingComplete={(value) => {
-                    setDailySteps(Math.round(value));
+                    setDailySteps(value);
                     setIsSlidingDailySteps(false);
                     setIsScrollEnabled(true);
                   }}
@@ -642,13 +938,11 @@ const TrackScreen = () => {
                   <Text style={styles.rangeLabel}>50,000+</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {Math.round(
-                    isSlidingDailySteps ? dailyStepsLive : dailySteps
-                  ).toLocaleString()}{" "}
-                  {t.steps || "steps"}
+                  {formatNumber(isSlidingDailySteps ? dailyStepsLive : dailySteps)} steps
                 </Text>
               </View>
             </View>
+
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>
                 {t.exerciseFrequency || "Exercise Frequency (days/week)"}
@@ -659,11 +953,7 @@ const TrackScreen = () => {
                   minimumValue={0}
                   maximumValue={7}
                   step={1}
-                  value={
-                    isSlidingExerciseFrequency
-                      ? exerciseFrequencyLive
-                      : exerciseFrequency
-                  }
+                  value={isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency}
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e5e7eb"
                   onSlidingStart={() => {
@@ -679,38 +969,23 @@ const TrackScreen = () => {
                   onValueChange={(value) => setExerciseFrequencyLive(value)}
                 />
                 <View style={styles.sliderRange}>
-                  <Text style={styles.rangeLabel}>
-                    {t.sedentary || "Sedentary"}
-                  </Text>
-                  <Text style={styles.rangeLabel}>{t.daily || "Daily"}</Text>
+                  <Text style={styles.rangeLabel}>{t.sedentary || "Sedentary"}</Text>
+                  <Text style={styles.rangeLabel}>{t.veryActive || "Very Active"}</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {(isSlidingExerciseFrequency
-                    ? exerciseFrequencyLive
-                    : exerciseFrequency) === 1
-                    ? `${isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency} ${t.day || "day"}`
-                    : `${isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency} ${t.days || "days"}`}{" "}
-                  {t.perWeek}
+                  {isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency} days/week
                 </Text>
               </View>
             </View>
-          </View>
-        </View>
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {t.sleepRecovery || "Sleep & Recovery"}
-            </Text>
-          </View>
-          <View style={styles.sectionContent}>
+
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>
-                {t.sleepHours || "Sleep Duration"}
+                {t.sleepHours || "Sleep Hours"}
               </Text>
               <View style={styles.sliderContainer}>
                 <Slider
                   style={styles.slider}
-                  minimumValue={0}
+                  minimumValue={3}
                   maximumValue={12}
                   step={0.5}
                   value={isSlidingSleepHours ? sleepHoursLive : sleepHours}
@@ -729,26 +1004,15 @@ const TrackScreen = () => {
                   onValueChange={(value) => setSleepHoursLive(value)}
                 />
                 <View style={styles.sliderRange}>
-                  <Text style={styles.rangeLabel}>{t.poor || "Poor"}</Text>
-                  <Text style={styles.rangeLabel}>
-                    {t.excessive || "Excessive"}
-                  </Text>
+                  <Text style={styles.rangeLabel}>3h</Text>
+                  <Text style={styles.rangeLabel}>12h</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {isSlidingSleepHours ? sleepHoursLive : sleepHours}{" "}
-                  {t.hours || "hours"} {t.perNight || "per night"}
+                  {isSlidingSleepHours ? sleepHoursLive : sleepHours} {t.hours || "hours"}
                 </Text>
               </View>
             </View>
-          </View>
-        </View>
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {t.lifestyleHabits || "Lifestyle Habits"}
-            </Text>
-          </View>
-          <View style={styles.sectionContent}>
+
             <View style={styles.fieldGroup}>
               <View style={styles.switchRow}>
                 <Text style={styles.switchLabel}>
@@ -763,6 +1027,7 @@ const TrackScreen = () => {
                 />
               </View>
             </View>
+
             <View style={styles.fieldGroup}>
               <View style={styles.switchRow}>
                 <Text style={styles.switchLabel}>
@@ -777,63 +1042,20 @@ const TrackScreen = () => {
                 />
               </View>
             </View>
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>
-                {t.screenTimeHours || "Screen Time (hours/day)"}
-              </Text>
-              <View style={styles.sliderContainer}>
-                <Slider
-                  style={styles.slider}
-                  minimumValue={0}
-                  maximumValue={16}
-                  step={0.5}
-                  value={
-                    isSlidingScreenTimeHours
-                      ? screenTimeHoursLive
-                      : screenTimeHours
-                  }
-                  minimumTrackTintColor="#008080"
-                  maximumTrackTintColor="#e5e7eb"
-                  onSlidingStart={() => {
-                    setIsSlidingScreenTimeHours(true);
-                    setScreenTimeHoursLive(screenTimeHours);
-                    setIsScrollEnabled(false);
-                  }}
-                  onSlidingComplete={(value) => {
-                    setScreenTimeHours(value);
-                    setIsSlidingScreenTimeHours(false);
-                    setIsScrollEnabled(true);
-                  }}
-                  onValueChange={(value) => setScreenTimeHoursLive(value)}
-                />
-                <View style={styles.sliderRange}>
-                  <Text style={styles.rangeLabel}>
-                    {t.minimal || "Minimal"}
-                  </Text>
-                  <Text style={styles.rangeLabel}>
-                    {t.extensive || "Extensive"}
-                  </Text>
-                </View>
-                <Text style={styles.sliderValue}>
-                  {isSlidingScreenTimeHours
-                    ? screenTimeHoursLive
-                    : screenTimeHours}{" "}
-                  {t.hours || "hours"} {t.daily || "daily"}
-                </Text>
-              </View>
-            </View>
           </View>
         </View>
+
+        {/* LIFESTYLE & WELLNESS */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              {t.nutritionAssessment || "Nutrition Assessment"}
+              {t.lifestyleWellness || "Lifestyle & Wellness"}
             </Text>
           </View>
           <View style={styles.sectionContent}>
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>
-                {t.dietQuality?.label || "Overall Diet Quality"}
+                {t.dietQuality?.label || "Diet Quality"}
               </Text>
               <Picker
                 selectedValue={dietQuality}
@@ -849,6 +1071,7 @@ const TrackScreen = () => {
                 ))}
               </Picker>
             </View>
+
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>
                 {t.fruitsVeggies || "Fruits & Vegetables (servings/day)"}
@@ -857,11 +1080,9 @@ const TrackScreen = () => {
                 <Slider
                   style={styles.slider}
                   minimumValue={0}
-                  maximumValue={15}
+                  maximumValue={10}
                   step={1}
-                  value={
-                    isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies
-                  }
+                  value={isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies}
                   minimumTrackTintColor="#008080"
                   maximumTrackTintColor="#e5e7eb"
                   onSlidingStart={() => {
@@ -877,31 +1098,18 @@ const TrackScreen = () => {
                   onValueChange={(value) => setFruitsVeggiesLive(value)}
                 />
                 <View style={styles.sliderRange}>
-                  <Text style={styles.rangeLabel}>{t.low || "Low"}</Text>
-                  <Text style={styles.rangeLabel}>{t.high || "High"}</Text>
+                  <Text style={styles.rangeLabel}>0</Text>
+                  <Text style={styles.rangeLabel}>10+</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {(isSlidingFruitsVeggies
-                    ? fruitsVeggiesLive
-                    : fruitsVeggies) === 1
-                    ? `${isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies} ${t.serving || "serving"}`
-                    : `${isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies} ${t.servings || "servings"}`}{" "}
-                  {t.daily || "daily"}
+                  {isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies} servings/day
                 </Text>
               </View>
             </View>
-          </View>
-        </View>
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {t.mentalHealthAssessment || "Mental Health Assessment"}
-            </Text>
-          </View>
-          <View style={styles.sectionContent}>
+
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>
-                {t.stressLevel || "Perceived Stress Level (1-10)"}
+                {t.stressLevel || "Stress Level"}
               </Text>
               <View style={styles.sliderContainer}>
                 <Slider
@@ -939,17 +1147,52 @@ const TrackScreen = () => {
                   />
                 </View>
                 <View style={styles.sliderRange}>
-                  <Text style={styles.rangeLabel}>{t.low || "Low"}</Text>
-                  <Text style={styles.rangeLabel}>{t.high || "High"}</Text>
+                  <Text style={styles.rangeLabel}>{t.lowStress || "Low"}</Text>
+                  <Text style={styles.rangeLabel}>{t.highStress || "High"}</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {t.level || "Level"}{" "}
-                  {isSlidingStressLevel ? stressLevelLive : stressLevel}/10
+                  {t.level || "Level"} {isSlidingStressLevel ? stressLevelLive : stressLevel}/10
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>
+                {t.screenTimeHours || "Screen Time (hours/day)"}
+              </Text>
+              <View style={styles.sliderContainer}>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={0}
+                  maximumValue={16}
+                  step={0.5}
+                  value={isSlidingScreenTimeHours ? screenTimeHoursLive : screenTimeHours}
+                  minimumTrackTintColor="#008080"
+                  maximumTrackTintColor="#e5e7eb"
+                  onSlidingStart={() => {
+                    setIsSlidingScreenTimeHours(true);
+                    setScreenTimeHoursLive(screenTimeHours);
+                    setIsScrollEnabled(false);
+                  }}
+                  onSlidingComplete={(value) => {
+                    setScreenTimeHours(value);
+                    setIsSlidingScreenTimeHours(false);
+                    setIsScrollEnabled(true);
+                  }}
+                  onValueChange={(value) => setScreenTimeHoursLive(value)}
+                />
+                <View style={styles.sliderRange}>
+                  <Text style={styles.rangeLabel}>0 {t.hours || "hours"}</Text>
+                  <Text style={styles.rangeLabel}>16 {t.hours || "hours"}</Text>
+                </View>
+                <Text style={styles.sliderValue}>
+                  {isSlidingScreenTimeHours ? screenTimeHoursLive : screenTimeHours} {t.hours || "hours"}
                 </Text>
               </View>
             </View>
           </View>
         </View>
+
         <View style={styles.submitSection}>
           <TouchableOpacity
             style={[

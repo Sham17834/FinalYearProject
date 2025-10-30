@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { StyleSheet, ActivityIndicator, View } from 'react-native';
+import { StyleSheet, ActivityIndicator, View, TouchableOpacity } from 'react-native';
 import WelcomeScreen from './screens/WelcomeScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -44,8 +44,9 @@ const MainTabs = () => {
         tabBarActiveTintColor: '#008080',
         tabBarInactiveTintColor: '#9ca3af',
         tabBarStyle: styles.tabBar,
-        tabBarPressColor: 'transparent',  
-        animationEnabled: false,      
+        tabBarButton: (props) => (
+          <TouchableOpacity {...props} activeOpacity={1} />
+        ),
       }}
     >
       <Tab.Screen
