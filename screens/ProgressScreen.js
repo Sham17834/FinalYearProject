@@ -300,6 +300,55 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   tooltipCloseText: { color: "#ffffff", fontWeight: "500" },
+  loadMoreButton: {
+    padding: 12,
+    backgroundColor: "#f1f5f9",
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+    marginHorizontal: 12,
+  },
+  loadMoreText: {
+    color: "#008080",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  historyHeaderInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#f8fafc",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
+  },
+  historyCountText: {
+    fontSize: 12,
+    color: "#64748b",
+    fontWeight: "500",
+  },
+  showAllButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: "#008080",
+    borderRadius: 6,
+  },
+  showAllButtonText: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  loadMoreContainer: {
+    alignItems: "center",
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  remainingText: {
+    fontSize: 11,
+    color: "#64748b",
+    marginTop: 4,
+  },
 });
 
 const ProgressScreen = () => {
@@ -317,6 +366,148 @@ const ProgressScreen = () => {
   const [selectedDataPoint, setSelectedDataPoint] = useState(null);
 
   const scrollY = useRef(new Animated.Value(0)).current;
+  const lastLifestyleDataRef = useRef(null);
+
+  // Transform helper
+  const transformUserProfileItem = useCallback((item, source = "UserProfile") => ({
+    id: item.id,
+    date: formatDate(item.date || new Date().toISOString().split("T")[0]),
+    daily_steps: Number(source === "UserProfile" ? item.Daily_Steps : item.daily_steps) || 0,
+    sleep_hours: Number(source === "UserProfile" ? item.Sleep_Hours : item.sleep_hours) || 0,
+    bmi: Number(source === "UserProfile" ? item.BMI : item.bmi) || null,
+    age: Number(source === "UserProfile" ? item.Age : item.age) || null,
+    gender: (source === "UserProfile" ? item.Gender : item.gender) || "Unknown",
+    height_cm: Number(source === "UserProfile" ? item.Height_cm : item.height_cm) || null,
+    weight_kg: Number(source === "UserProfile" ? item.Weight_kg : item.weight_kg) || null,
+    chronic_disease: (source === "UserProfile" ? item.Chronic_Disease : item.chronic_disease) || "None",
+    exercise_frequency: Number(source === "UserProfile" ? item.Exercise_Frequency : item.exercise_frequency) || 0,
+    alcohol_consumption: (source === "UserProfile" ? item.Alcohol_Consumption : item.alcohol_consumption) || "No",
+    smoking_habit: (source === "UserProfile" ? item.Smoking_Habit : item.smoking_habit) || "No",
+    diet_quality: (source === "UserProfile" ? item.Diet_Quality : item.diet_quality) || "Average",
+    fruits_veggies: Number(source === "UserProfile" ? item.FRUITS_VEGGIES : item.fruits_veggies) || 0,
+    stress_level: Number(source === "UserProfile" ? item.Stress_Level : item.stress_level) || 1,
+    screen_time_hours: Number(source === "UserProfile" ? item.Screen_Time_Hours : item.screen_time_hours) || 0,
+    salt_intake: (source === "UserProfile" ? item.Salt_Intake : item.salt_intake) || "Moderate",
+    source,
+  }), []);
+
+  // FETCH DATA SMARTLY
+  const fetchProgressData = useCallback(async (force = false) => {
+    const navLifestyleData = route.params?.lifestyleData;
+
+    // Skip if already loaded and no new data
+    if (!force && progressData.length > 0 && !navLifestyleData) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Skip if nav data hasn't changed
+    if (
+      !force &&
+      navLifestyleData &&
+      JSON.stringify(navLifestyleData) === JSON.stringify(lastLifestyleDataRef.current)
+    ) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const db = await getDb();
+      const today = formatDate(new Date().toISOString().split("T")[0]);
+
+      const [userProfileLatest, userProfileData, healthRecordsData] = await Promise.all([
+        db.getAllAsync("SELECT * FROM UserProfile ORDER BY id DESC LIMIT 1"),
+        db.getAllAsync("SELECT * FROM UserProfile ORDER BY id DESC"),
+        db.getAllAsync("SELECT * FROM HealthRecords ORDER BY id DESC")
+      ]);
+
+      let latestRecord = null;
+      if (userProfileLatest.length > 0) {
+        latestRecord = transformUserProfileItem(userProfileLatest[0], "UserProfile");
+      } else if (navLifestyleData) {
+        latestRecord = {
+          date: today,
+          daily_steps: Number(navLifestyleData.Daily_Steps) || 0,
+          sleep_hours: Number(navLifestyleData.Sleep_Hours) || 0,
+          bmi: Number(navLifestyleData.BMI) || null,
+          age: Number(navLifestyleData.Age) || null,
+          gender: navLifestyleData.Gender || "Unknown",
+          height_cm: Number(navLifestyleData.Height_cm) || null,
+          weight_kg: Number(navLifestyleData.Weight_kg) || null,
+          chronic_disease: navLifestyleData.Chronic_Disease || "None",
+          exercise_frequency: Number(navLifestyleData.Exercise_Frequency) || 0,
+          alcohol_consumption: navLifestyleData.Alcohol_Consumption || "No",
+          smoking_habit: navLifestyleData.Smoking_Habit || "No",
+          diet_quality: navLifestyleData.Diet_Quality || "Average",
+          fruits_veggies: Number(navLifestyleData.FRUITS_VEGGIES) || 0,
+          stress_level: Number(navLifestyleData.Stress_Level) || 1,
+          screen_time_hours: Number(navLifestyleData.Screen_Time_Hours) || 0,
+          salt_intake: navLifestyleData.Salt_Intake || "Moderate",
+          source: "UserProfile",
+        };
+      }
+
+      setLatestUserProfile(latestRecord);
+
+      const transformedUserProfileData = userProfileData.map(item => transformUserProfileItem(item, "UserProfile"));
+      const transformedHealthRecordsData = healthRecordsData.map(item => transformUserProfileItem(item, "HealthRecords"));
+
+      let allData = [...transformedUserProfileData, ...transformedHealthRecordsData];
+
+      if (navLifestyleData && !latestRecord) {
+        allData.push({
+          date: today,
+          daily_steps: Number(navLifestyleData.Daily_Steps) || 0,
+          sleep_hours: Number(navLifestyleData.Sleep_Hours) || 0,
+          bmi: Number(navLifestyleData.BMI) || null,
+          age: Number(navLifestyleData.Age) || null,
+          gender: navLifestyleData.Gender || "Unknown",
+          height_cm: Number(navLifestyleData.Height_cm) || null,
+          weight_kg: Number(navLifestyleData.Weight_kg) || null,
+          chronic_disease: navLifestyleData.Chronic_Disease || "None",
+          exercise_frequency: Number(navLifestyleData.Exercise_Frequency) || 0,
+          alcohol_consumption: navLifestyleData.Alcohol_Consumption || "No",
+          smoking_habit: navLifestyleData.Smoking_Habit || "No",
+          diet_quality: navLifestyleData.Diet_Quality || "Average",
+          fruits_veggies: Number(navLifestyleData.FRUITS_VEGGIES) || 0,
+          stress_level: Number(navLifestyleData.Stress_Level) || 1,
+          screen_time_hours: Number(navLifestyleData.Screen_Time_Hours) || 0,
+          salt_intake: navLifestyleData.Salt_Intake || "Moderate",
+          source: "UserProfile",
+        });
+      }
+
+      allData.sort((a, b) => {
+        const dateA = new Date(a.date.split("/").reverse().join("-"));
+        const dateB = new Date(b.date.split("/").reverse().join("-"));
+        return dateA - dateB;
+      });
+
+      setProgressData(allData);
+      lastLifestyleDataRef.current = navLifestyleData;
+    } catch (e) {
+      console.error("DB Error:", e);
+      setError("Failed to load data");
+      setLatestUserProfile(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [route.params?.lifestyleData, transformUserProfileItem]);
+
+  // INITIAL LOAD
+  useEffect(() => {
+    fetchProgressData(true);
+  }, []);
+
+  // REFRESH ONLY ON NEW NAV DATA
+  useEffect(() => {
+    if (route.params?.lifestyleData) {
+      fetchProgressData();
+    }
+  }, [route.params?.lifestyleData, fetchProgressData]);
 
   // OPTIMISTIC DELETE
   const handleDeleteEntry = useCallback(
@@ -370,153 +561,7 @@ const ProgressScreen = () => {
     [t, handleDeleteEntry]
   );
 
-  const fetchProgressData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const db = await getDb();
-      const navLifestyleData = route.params?.lifestyleData;
-      const today = formatDate(new Date().toISOString().split("T")[0]);
-      let currentDayData = null;
-
-      if (navLifestyleData) {
-        currentDayData = {
-          date: today,
-          daily_steps: Number(navLifestyleData.Daily_Steps) || 0,
-          sleep_hours: Number(navLifestyleData.Sleep_Hours) || 0,
-          bmi: Number(navLifestyleData.BMI) || null,
-          age: Number(navLifestyleData.Age) || null,
-          gender: navLifestyleData.Gender || "Unknown",
-          height_cm: Number(navLifestyleData.Height_cm) || null,
-          weight_kg: Number(navLifestyleData.Weight_kg) || null,
-          chronic_disease: navLifestyleData.Chronic_Disease || "None",
-          exercise_frequency: Number(navLifestyleData.Exercise_Frequency) || 0,
-          alcohol_consumption: navLifestyleData.Alcohol_Consumption || "No",
-          smoking_habit: navLifestyleData.Smoking_Habit || "No",
-          diet_quality: navLifestyleData.Diet_Quality || "Average",
-          fruits_veggies: Number(navLifestyleData.FRUITS_VEGGIES) || 0,
-          stress_level: Number(navLifestyleData.Stress_Level) || 1,
-          screen_time_hours: Number(navLifestyleData.Screen_Time_Hours) || 0,
-          salt_intake: navLifestyleData.Salt_Intake || "Moderate",
-          source: "UserProfile",
-        };
-      }
-
-      const userProfileLatest = await db.getAllAsync(
-        "SELECT * FROM UserProfile ORDER BY id DESC LIMIT 1"
-      );
-
-      let latestRecord = null;
-      if (userProfileLatest.length > 0) {
-        const item = userProfileLatest[0];
-        latestRecord = {
-          id: item.id,
-          date: formatDate(item.date || new Date().toISOString().split("T")[0]),
-          daily_steps: Number(item.Daily_Steps) || 0,
-          sleep_hours: Number(item.Sleep_Hours) || 0,
-          bmi: Number(item.BMI) || null,
-          age: Number(item.Age) || null,
-          gender: item.Gender || "Unknown",
-          height_cm: Number(item.Height_cm) || null,
-          weight_kg: Number(item.Weight_kg) || null,
-          chronic_disease: item.Chronic_Disease || "None",
-          exercise_frequency: Number(item.Exercise_Frequency) || 0,
-          alcohol_consumption: item.Alcohol_Consumption || "No",
-          smoking_habit: item.Smoking_Habit || "No",
-          diet_quality: item.Diet_Quality || "Average",
-          fruits_veggies: Number(item.FRUITS_VEGGIES) || 0,
-          stress_level: Number(item.Stress_Level) || 1,
-          screen_time_hours: Number(item.Screen_Time_Hours) || 0,
-          salt_intake: item.Salt_Intake || "Moderate",
-          source: "UserProfile",
-        };
-      } else if (currentDayData) {
-        latestRecord = currentDayData;
-      }
-
-      setLatestUserProfile(latestRecord);
-
-      const userProfileData = await db.getAllAsync(
-        "SELECT * FROM UserProfile ORDER BY id DESC"
-      );
-      const transformedUserProfileData = userProfileData.map((item) => ({
-        id: item.id,
-        date: formatDate(item.date || new Date().toISOString().split("T")[0]),
-        daily_steps: Number(item.Daily_Steps) || 0,
-        sleep_hours: Number(item.Sleep_Hours) || 0,
-        bmi: Number(item.BMI) || null,
-        age: Number(item.Age) || null,
-        gender: item.Gender || "Unknown",
-        height_cm: Number(item.Height_cm) || null,
-        weight_kg: Number(item.Weight_kg) || null,
-        chronic_disease: item.Chronic_Disease || "None",
-        exercise_frequency: Number(item.Exercise_Frequency) || 0,
-        alcohol_consumption: item.Alcohol_Consumption || "No",
-        smoking_habit: item.Smoking_Habit || "No",
-        diet_quality: item.Diet_Quality || "Average",
-        fruits_veggies: Number(item.FRUITS_VEGGIES) || 0,
-        stress_level: Number(item.Stress_Level) || 1,
-        screen_time_hours: Number(item.Screen_Time_Hours) || 0,
-        salt_intake: item.Salt_Intake || "Moderate",
-        source: "UserProfile",
-      }));
-
-      const healthRecordsData = await db.getAllAsync(
-        "SELECT * FROM HealthRecords ORDER BY id DESC"
-      );
-      const transformedHealthRecordsData = healthRecordsData.map((item) => ({
-        id: item.id,
-        date: formatDate(item.date || new Date().toISOString().split("T")[0]),
-        daily_steps: Number(item.daily_steps) || 0,
-        sleep_hours: Number(item.sleep_hours) || 0,
-        bmi: Number(item.bmi) || null,
-        age: Number(item.age) || null,
-        gender: item.gender || "Unknown",
-        height_cm: Number(item.height_cm) || null,
-        weight_kg: Number(item.weight_kg) || null,
-        chronic_disease: item.chronic_disease || "None",
-        exercise_frequency: Number(item.exercise_frequency) || 0,
-        alcohol_consumption: item.alcohol_consumption || "No",
-        smoking_habit: item.smoking_habit || "No",
-        diet_quality: item.diet_quality || "Average",
-        fruits_veggies: Number(item.fruits_veggies) || 0,
-        stress_level: Number(item.stress_level) || 1,
-        screen_time_hours: Number(item.screen_time_hours) || 0,
-        salt_intake: item.salt_intake || "Moderate",
-        source: "HealthRecords",
-      }));
-
-      let allData = [
-        ...transformedUserProfileData,
-        ...transformedHealthRecordsData,
-      ];
-      if (currentDayData) allData.push(currentDayData);
-
-      setProgressData(
-        allData.sort((a, b) => {
-          const dateA = new Date(a.date.split("/").reverse().join("-"));
-          const dateB = new Date(b.date.split("/").reverse().join("-"));
-          return dateA - dateB;
-        })
-      );
-    } catch (e) {
-      setError("Failed to load data from database");
-      setLatestUserProfile(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [route.params?.lifestyleData]);
-
-  useEffect(() => {
-    fetchProgressData();
-  }, [fetchProgressData]);
-
-  useEffect(() => {
-    if (route.params?.lifestyleData) {
-      fetchProgressData();
-    }
-  }, [route.params?.lifestyleData]);
-
+  // CALCULATIONS
   const calculateDiseaseRisks = useCallback((data) => {
     if (!data) return { obesity: 1, hypertension: 1, stroke: 1 };
     const risks = { obesity: 1, hypertension: 1, stroke: 1 };
@@ -543,10 +588,7 @@ const ProgressScreen = () => {
     if (data.alcohol_consumption === "Yes") hypertensionScore += 15;
     if (data.stress_level > 7) hypertensionScore += 20;
     else if (data.stress_level > 3) hypertensionScore += 10;
-    risks.hypertension = Math.max(
-      1,
-      Math.min(100, Math.round(hypertensionScore))
-    );
+    risks.hypertension = Math.max(1, Math.min(100, Math.round(hypertensionScore)));
 
     let strokeScore = 0;
     if (data.bmi >= 30) strokeScore += 25;
@@ -702,10 +744,12 @@ const ProgressScreen = () => {
     () => filteredData.map((item) => calculateLifestyleScore(item)),
     [filteredData, calculateLifestyleScore]
   );
+
   const stepsData = useMemo(
     () => filteredData.map((item) => item.daily_steps || 0),
     [filteredData]
   );
+
   const sleepData = useMemo(
     () => filteredData.map((item) => item.sleep_hours || 0),
     [filteredData]
@@ -905,7 +949,7 @@ const ProgressScreen = () => {
       });
   }, [filteredData, sourceFilter, sortOrder]);
 
-  // === DEFINE TAB COMPONENTS INSIDE (before use) ===
+  // TAB COMPONENTS
   const FactorsTab = React.memo(({ shapRankings, t }) => (
     <View>
       {shapRankings.length === 0 ? (
@@ -1003,6 +1047,9 @@ const ProgressScreen = () => {
   ));
 
   const HistoryTab = React.memo(({ filteredHistoryData, t, onDelete }) => {
+    const [visibleCount, setVisibleCount] = useState(10);
+    const [showAll, setShowAll] = useState(false);
+
     if (filteredHistoryData.length === 0) {
       return (
         <Text style={styles.riskName}>
@@ -1010,9 +1057,34 @@ const ProgressScreen = () => {
         </Text>
       );
     }
+
+    const displayedData = showAll
+      ? filteredHistoryData
+      : filteredHistoryData.slice(0, visibleCount);
+    const hasMore = visibleCount < filteredHistoryData.length;
+
     return (
       <>
-        {filteredHistoryData.map((item, i) => (
+        <View style={styles.historyHeaderInfo}>
+          <Text style={styles.historyCountText}>
+            {t.showing || "Showing"} {displayedData.length} {t.of || "of"} {filteredHistoryData.length} {t.records || "records"}
+          </Text>
+          {filteredHistoryData.length > 10 && (
+            <TouchableOpacity
+              style={styles.showAllButton}
+              onPress={() => {
+                setShowAll(!showAll);
+                if (showAll) setVisibleCount(10);
+              }}
+            >
+              <Text style={styles.showAllButtonText}>
+                {showAll ? (t.showLess || "Show Less") : (t.showAll || "Show All")}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {displayedData.map((item, i) => (
           <HistoryItem
             key={`${item.id || item.date}-${item.source}-${i}`}
             item={item}
@@ -1020,11 +1092,26 @@ const ProgressScreen = () => {
             onDelete={onDelete}
           />
         ))}
+
+        {!showAll && hasMore && (
+          <View style={styles.loadMoreContainer}>
+            <TouchableOpacity
+              style={styles.loadMoreButton}
+              onPress={() => setVisibleCount(prev => Math.min(prev + 10, filteredHistoryData.length))}
+            >
+              <Text style={styles.loadMoreText}>
+                {t.loadMore || "Load More"} (+10)
+              </Text>
+            </TouchableOpacity>
+            <Text style={styles.remainingText}>
+              {filteredHistoryData.length - visibleCount} {t.remaining || "remaining"}
+            </Text>
+          </View>
+        )}
       </>
     );
   });
 
-  // === NOW DEFINE TabsSection (after subcomponents) ===
   const TabsSection = React.memo(
     ({
       activeTab,
@@ -1506,9 +1593,15 @@ const ProgressScreen = () => {
         )}
         scrollEventThrottle={16}
         removeClippedSubviews={true}
-        maxToRenderPerBatch={5}
-        windowSize={9}
-        updateCellsBatchingPeriod={50}
+        maxToRenderPerBatch={3}
+        initialNumToRender={3}
+        windowSize={5}
+        updateCellsBatchingPeriod={100}
+        getItemLayout={(data, index) => ({
+          length: 200,
+          offset: 200 * index,
+          index,
+        })}
       />
       {renderTooltip()}
     </SafeAreaView>

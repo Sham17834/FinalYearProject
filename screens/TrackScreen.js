@@ -484,13 +484,6 @@ const TrackScreen = () => {
     { label: t.poor || "Poor", value: "Poor" },
   ];
 
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
-  const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
-
   const generateYears = () => {
     const currentYear = new Date().getFullYear();
     const years = [];
@@ -625,9 +618,9 @@ const TrackScreen = () => {
   };
 
   const formatCalendarDate = (date) => {
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+    const shortWeekDays = t.shortWeekDays || ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const shortMonthNames = t.shortMonthNames || ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${shortWeekDays[date.getDay()]}, ${shortMonthNames[date.getMonth()]} ${date.getDate()}`;
   };
 
   const formatNumber = (num) => {
@@ -701,7 +694,7 @@ const TrackScreen = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#008080" />
       <View style={styles.header}>
-        <Text style={styles.appName}>HealthTrack</Text>
+        <Text style={styles.appName}>{t.appName || "HealthTrack"}</Text>
         <Text style={styles.appTagline}>
           {t.tagline || "Your Personal Health Companion"}
         </Text>
@@ -730,7 +723,7 @@ const TrackScreen = () => {
                     style={styles.datePickerPicker}
                     onValueChange={handleMonthChange}
                   >
-                    {monthNames.map((month, index) => (
+                    {(t.monthNames || ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]).map((month, index) => (
                       <Picker.Item key={index} label={month} value={index} />
                     ))}
                   </Picker>
@@ -752,7 +745,7 @@ const TrackScreen = () => {
             
             <View style={styles.calendarBody}>
               <View style={styles.weekDaysRow}>
-                {weekDays.map((day, index) => (
+                {(t.weekDayShorts || ["S", "M", "T", "W", "T", "F", "S"]).map((day, index) => (
                   <Text key={index} style={styles.weekDayText}>
                     {day}
                   </Text>
@@ -845,7 +838,7 @@ const TrackScreen = () => {
             </View>
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>
-                {t.height || "Height (cm)"}
+                {t.heightCm || "Height (cm)"}
               </Text>
               <TextInput
                 style={styles.fieldValue}
@@ -857,7 +850,7 @@ const TrackScreen = () => {
             </View>
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>
-                {t.weight || "Weight (kg)"}
+                {t.weightKg || "Weight (kg)"}
               </Text>
               <TextInput
                 style={styles.fieldValue}
@@ -875,7 +868,7 @@ const TrackScreen = () => {
                 style={[styles.fieldValue, styles.readOnlyField]}
                 value={bmi}
                 editable={false}
-                placeholder={t.calculatedAuto || "Calculated automatically"}
+                placeholder={t.bmiPlaceholder || "Calculated automatically"}
               />
             </View>
           </View>
@@ -885,7 +878,7 @@ const TrackScreen = () => {
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              {t.healthActivity || "Health & Activity"}
+              {t.healthHabitsTitle || "Health & Activity"}
             </Text>
           </View>
           <View style={styles.sectionContent}>
@@ -938,7 +931,7 @@ const TrackScreen = () => {
                   <Text style={styles.rangeLabel}>50,000+</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {formatNumber(isSlidingDailySteps ? dailyStepsLive : dailySteps)} steps
+                  {formatNumber(isSlidingDailySteps ? dailyStepsLive : dailySteps)} {t.steps || "steps"}
                 </Text>
               </View>
             </View>
@@ -973,7 +966,7 @@ const TrackScreen = () => {
                   <Text style={styles.rangeLabel}>{t.veryActive || "Very Active"}</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency} days/week
+                  {isSlidingExerciseFrequency ? exerciseFrequencyLive : exerciseFrequency} {t.daysPerWeek || "days/week"}
                 </Text>
               </View>
             </View>
@@ -1004,8 +997,8 @@ const TrackScreen = () => {
                   onValueChange={(value) => setSleepHoursLive(value)}
                 />
                 <View style={styles.sliderRange}>
-                  <Text style={styles.rangeLabel}>3h</Text>
-                  <Text style={styles.rangeLabel}>12h</Text>
+                  <Text style={styles.rangeLabel}>{`3 ${t.hoursAbbrev || "h"}`}</Text>
+                  <Text style={styles.rangeLabel}>{`12 ${t.hoursAbbrev || "h"}`}</Text>
                 </View>
                 <Text style={styles.sliderValue}>
                   {isSlidingSleepHours ? sleepHoursLive : sleepHours} {t.hours || "hours"}
@@ -1049,7 +1042,7 @@ const TrackScreen = () => {
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              {t.lifestyleWellness || "Lifestyle & Wellness"}
+              {t.lifestyleTitle || "Lifestyle & Wellness"}
             </Text>
           </View>
           <View style={styles.sectionContent}>
@@ -1102,7 +1095,7 @@ const TrackScreen = () => {
                   <Text style={styles.rangeLabel}>10+</Text>
                 </View>
                 <Text style={styles.sliderValue}>
-                  {isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies} servings/day
+                  {isSlidingFruitsVeggies ? fruitsVeggiesLive : fruitsVeggies} {t.servingsPerDay || "servings/day"}
                 </Text>
               </View>
             </View>
@@ -1182,8 +1175,8 @@ const TrackScreen = () => {
                   onValueChange={(value) => setScreenTimeHoursLive(value)}
                 />
                 <View style={styles.sliderRange}>
-                  <Text style={styles.rangeLabel}>0 {t.hours || "hours"}</Text>
-                  <Text style={styles.rangeLabel}>16 {t.hours || "hours"}</Text>
+                  <Text style={styles.rangeLabel}>{`0 ${t.hours || "hours"}`}</Text>
+                  <Text style={styles.rangeLabel}>{`16 ${t.hours || "hours"}`}</Text>
                 </View>
                 <Text style={styles.sliderValue}>
                   {isSlidingScreenTimeHours ? screenTimeHoursLive : screenTimeHours} {t.hours || "hours"}
