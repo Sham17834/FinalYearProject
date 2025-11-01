@@ -7,30 +7,42 @@ export const getDb = async () => {
 
   db = await SQLite.openDatabaseAsync("userprofile.db");
 
+  // Create Users table with all columns
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS Users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       fullName TEXT,
       email TEXT UNIQUE,
       password TEXT,
+      dateOfBirth TEXT,
+      bio TEXT,
+      profileImage TEXT,
       createdAt TEXT,
       updatedAt TEXT
     );
   `);
 
-  try {
-    await db.execAsync(`
-      ALTER TABLE Users ADD COLUMN updatedAt TEXT;
-    `);
-  } catch (error) {
-    if (!error.message.includes("duplicate column name")) {
-      console.log("updatedAt column may already exist");
+  // Add new columns to Users table if they don't exist
+  const addColumnIfNotExists = async (table, column, type) => {
+    try {
+      await db.execAsync(`ALTER TABLE ${table} ADD COLUMN ${column} ${type};`);
+    } catch (error) {
+      // Column already exists, ignore error
     }
-  }
+  };
 
+  // Add new columns for existing databases
+  await addColumnIfNotExists('Users', 'dateOfBirth', 'TEXT');
+  await addColumnIfNotExists('Users', 'bio', 'TEXT');
+  await addColumnIfNotExists('Users', 'profileImage', 'TEXT');
+  await addColumnIfNotExists('Users', 'updatedAt', 'TEXT');
+
+  // Create UserProfile table with all columns
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS UserProfile (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      Full_Name TEXT,
+      email TEXT,
       date TEXT,
       Daily_Steps INTEGER,
       Sleep_Hours REAL,
@@ -51,76 +63,20 @@ export const getDb = async () => {
       Obesity_Flag TEXT,
       Hypertension_Flag TEXT,
       Stroke_Flag TEXT,
-      Full_Name TEXT,
-      email TEXT,
       Lifestyle_Score INTEGER
     );
   `);
 
-  try {
-    await db.execAsync(`
-      ALTER TABLE UserProfile ADD COLUMN Full_Name TEXT;
-    `);
-  } catch (error) {
-    if (!error.message.includes("duplicate column name")) {
-    }
-  }
+  // Add new columns for existing UserProfile databases
+  await addColumnIfNotExists('UserProfile', 'Full_Name', 'TEXT');
+  await addColumnIfNotExists('UserProfile', 'email', 'TEXT');
+  await addColumnIfNotExists('UserProfile', 'date', 'TEXT');
+  await addColumnIfNotExists('UserProfile', 'Salt_Intake', 'TEXT');
+  await addColumnIfNotExists('UserProfile', 'Obesity_Flag', 'TEXT');
+  await addColumnIfNotExists('UserProfile', 'Hypertension_Flag', 'TEXT');
+  await addColumnIfNotExists('UserProfile', 'Stroke_Flag', 'TEXT');
 
-  try {
-    await db.execAsync(`
-      ALTER TABLE UserProfile ADD COLUMN email TEXT;
-    `);
-  } catch (error) {
-    if (!error.message.includes("duplicate column name")) {
-    }
-  }
-
-  try {
-    await db.execAsync(`
-      ALTER TABLE UserProfile ADD COLUMN date TEXT;
-    `);
-  } catch (error) {
-    if (!error.message.includes("duplicate column name")) {
-    }
-  }
-
-  try {
-    await db.execAsync(`
-      ALTER TABLE UserProfile ADD COLUMN Salt_Intake TEXT;
-    `);
-  } catch (error) {
-    if (!error.message.includes("duplicate column name")) {
-    }
-  }
-
-  try {
-    await db.execAsync(`
-      ALTER TABLE UserProfile ADD COLUMN Obesity_Flag TEXT;
-    `);
-  } catch (error) {
-    if (!error.message.includes("duplicate column name")) {
-    }
-  }
-
-  try {
-    await db.execAsync(`
-      ALTER TABLE UserProfile ADD COLUMN Hypertension_Flag TEXT;
-    `);
-  } catch (error) {
-    if (!error.message.includes("duplicate column name")) {
-    }
-  }
-
-  try {
-    await db.execAsync(`
-      ALTER TABLE UserProfile ADD COLUMN Stroke_Flag TEXT;
-    `);
-  } catch (error) {
-    if (!error.message.includes("duplicate column name")) {
-    }
-  }
-
-  // Create HealthRecords table with all necessary columns
+  // Create HealthRecords table with all columns
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS HealthRecords (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -144,16 +100,8 @@ export const getDb = async () => {
     );
   `);
 
-  // Add salt_intake column if it doesn't exist (for existing databases)
-  try {
-    await db.execAsync(`
-      ALTER TABLE HealthRecords ADD COLUMN salt_intake TEXT;
-    `);
-  } catch (error) {
-    if (!error.message.includes("duplicate column name")) {
-      console.log("salt_intake column may already exist or couldn't be added");
-    }
-  }
+  // Add new columns for existing HealthRecords databases
+  await addColumnIfNotExists('HealthRecords', 'salt_intake', 'TEXT');
 
   return db;
 };
