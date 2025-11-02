@@ -199,16 +199,58 @@ const ProfileScreen = () => {
     return currentLang ? currentLang.nativeName : language;
   };
 
+  const saveProfileWithImage = async (imageUri) => {
+    const data = {
+      fullName: name,
+      email,
+      dateOfBirth: dateOfBirth ? dateOfBirth.toISOString() : null,
+      bio: bio.trim(),
+      profileImage: imageUri,
+    };
+
+    try {
+      const db = await getDb();
+      const user = await db.getFirstAsync(
+        `SELECT id FROM Users WHERE email = ?`,
+        [data.email]
+      );
+
+      if (user) {
+        await db.runAsync(
+          `UPDATE Users SET profileImage = ? WHERE email = ?`,
+          [data.profileImage, data.email]
+        );
+      } else {
+        await db.runAsync(
+          `INSERT INTO Users (fullName, email, dateOfBirth, bio, profileImage, createdAt) VALUES (?, ?, ?, ?, ?, ?)`,
+          [
+            data.fullName,
+            data.email,
+            data.dateOfBirth,
+            data.bio,
+            data.profileImage,
+            new Date().toISOString(),
+          ]
+        );
+      }
+
+      await AsyncStorage.setItem("userProfileData", JSON.stringify(data));
+    } catch (error) {
+      console.log("Error saving profile image:", error);
+    }
+  };
+
   const handleImagePick = async (type) => {
     setShowImageOptions(false);
 
     try {
       let result;
       const options = {
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: 'images',
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
+        base64: true, // Enable base64 encoding for permanent storage
       };
 
       if (type === "camera") {
@@ -218,7 +260,23 @@ const ProfileScreen = () => {
       }
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setProfileImage(result.assets[0].uri);
+        const imageUri = result.assets[0].uri;
+        const base64Image = result.assets[0].base64;
+        
+        // Store as base64 data URI for permanent storage
+        const dataUri = base64Image 
+          ? `data:image/jpeg;base64,${base64Image}`
+          : imageUri;
+        
+        setProfileImage(dataUri);
+        
+        // Auto-save after selecting image
+        await saveProfileWithImage(dataUri);
+        
+        Alert.alert(
+          t.success || "Success",
+          t.profileImageSaved || "Profile picture updated successfully!"
+        );
       }
     } catch (error) {
       console.log("Image pick error:", error);
@@ -239,9 +297,17 @@ const ProfileScreen = () => {
         {
           text: t.remove || "Remove",
           style: "destructive",
-          onPress: () => {
+          onPress: async () => {
             setProfileImage(null);
             setShowImageOptions(false);
+            
+            // Auto-save after removing image
+            await saveProfileWithImage(null);
+            
+            Alert.alert(
+              t.success || "Success",
+              t.profileImageRemoved || "Profile picture removed successfully!"
+            );
           },
         },
       ]
