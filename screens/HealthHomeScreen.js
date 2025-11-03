@@ -1327,7 +1327,17 @@ const HealthHomeScreen = () => {
   `;
 
     try {
-      const { uri } = await Print.printToFileAsync({ html: htmlContent });
+      // Generate filename with current date in YYYYMMDD format
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      const filename = `HealthReport_${year}${month}${day}.pdf`;
+
+      const { uri } = await Print.printToFileAsync({
+        html: htmlContent,
+        fileName: filename,
+      });
       await Sharing.shareAsync(uri);
     } catch (error) {
       Alert.alert(
