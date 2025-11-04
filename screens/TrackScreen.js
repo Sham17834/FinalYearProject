@@ -674,8 +674,13 @@ const TrackScreen = () => {
         t.recordSaved || "Health record saved successfully!",
         [
           {
-            text: t.ok || "OK",
+            text: t.viewProgress || "View Progress",
+            onPress: () => navigation.navigate("Progress"),
+          },
+          {
+            text: t.goHome || "Go Home",
             onPress: () => navigation.navigate("Home"),
+            style: "cancel",
           },
         ]
       );

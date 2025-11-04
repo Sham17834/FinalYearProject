@@ -20,7 +20,7 @@ import {
   Modal,
 } from "react-native";
 import { LanguageContext } from "./LanguageContext";
-import { useRoute } from "@react-navigation/native";
+import { useRoute, useFocusEffect } from "@react-navigation/native";
 import { getDb } from "./db";
 import { LineChart } from "react-native-chart-kit";
 
@@ -395,22 +395,6 @@ const ProgressScreen = () => {
   const fetchProgressData = useCallback(async (force = false) => {
     const navLifestyleData = route.params?.lifestyleData;
 
-    // Skip if already loaded and no new data
-    if (!force && progressData.length > 0 && !navLifestyleData) {
-      setIsLoading(false);
-      return;
-    }
-
-    // Skip if nav data hasn't changed
-    if (
-      !force &&
-      navLifestyleData &&
-      JSON.stringify(navLifestyleData) === JSON.stringify(lastLifestyleDataRef.current)
-    ) {
-      setIsLoading(false);
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
@@ -497,17 +481,12 @@ const ProgressScreen = () => {
     }
   }, [route.params?.lifestyleData, transformUserProfileItem]);
 
-  // INITIAL LOAD
-  useEffect(() => {
-    fetchProgressData(true);
-  }, []);
-
-  // REFRESH ONLY ON NEW NAV DATA
-  useEffect(() => {
-    if (route.params?.lifestyleData) {
-      fetchProgressData();
-    }
-  }, [route.params?.lifestyleData, fetchProgressData]);
+  // RELOAD DATA WHENEVER SCREEN COMES INTO FOCUS
+  useFocusEffect(
+    useCallback(() => {
+      fetchProgressData(true);
+    }, [fetchProgressData])
+  );
 
   // OPTIMISTIC DELETE
   const handleDeleteEntry = useCallback(

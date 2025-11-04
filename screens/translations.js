@@ -1,4 +1,3 @@
-// Updated translations.js with missing words added and sortAsc/sortDesc updated
 const translations = {
   English: {
     confirmDelete: "Confirm Delete",
@@ -149,6 +148,8 @@ const translations = {
     errorPleaseAgree: "Please agree to terms and conditions",
     success: "Success",
     dataSubmitted: "Data submitted successfully! Score: {score}, Risk: {risk}",
+    viewProgress: "View Progress",
+    goHome: "Go Home",
     help: "Help",
     forgotPassword: "Forgot Password?",
     signIn: "Sign In",
@@ -558,6 +559,8 @@ const translations = {
     errorPleaseAgree: "请同意条款和条件",
     success: "成功",
     dataSubmitted: "数据提交成功！分数：{score}，风险：{risk}",
+    viewProgress: "查看进度",
+    goHome: "返回主页",
     help: "帮助",
     submit: "提交",
     forgotPassword: "忘记密码？",
@@ -1071,6 +1074,8 @@ const translations = {
     errorPleaseAgree: "Sila setuju dengan terma dan syarat",
     success: "Berjaya",
     dataSubmitted: "Data berjaya dihantar! Skor: {score}, Risiko: {risk}",
+    viewProgress: "Lihat Kemajuan",
+    goHome: "Ke Laman Utama",
     help: "Bantuan",
     forgotPassword: "Lupa Katalaluan?",
     signIn: "Log Masuk",
