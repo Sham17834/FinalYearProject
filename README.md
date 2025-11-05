@@ -60,11 +60,3 @@ The project consists of three main components:
 | KNN | 0.7630 | 0.8204 | Moderate accuracy |
 | Logistic Regression | 0.3445 | 0.4692 | Baseline model |
 
----
-
-## 🧰 Installation and Setup
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/Sham17834/FinalYearProject.git
-cd lifestyle-risk-analysis
