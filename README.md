@@ -1,61 +1,70 @@
-# 🩺 Lifestyle Scoring & Chronic Disease Risk Analysis System  
-**Final Year Project – INTI International University**  
-[![License](https://img.shields.io/badge/License-Academic%20Use%20Only-red.svg)](LICENSE)  
-[![React Native](https://img.shields.io/badge/Frontend-React%20Native%20(Expo)-61DAFB?logo=react)](https://reactnative.dev)  
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi)](https://fastapi.tiangolo.com)  
-[![XGBoost](https://img.shields.io/badge/ML-XGBoost%2081.6%25%20Acc-f28c38?logo=xgboost)](https://xgboost.ai)  
-[![Firebase](https://img.shields.io/badge/Auth-Firebase%20Auth-FFCA28?logo=firebase)](https://firebase.google.com)  
-[![Expo](https://img.shields.io/badge/Build-Expo%20EAS-000000?logo=expo)](https://expo.dev)  
-[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)](https://python.org)  
-[![Status](https://img.shields.io/badge/Status-Completed-brightgreen)]()
+# Lifestyle Scoring and Chronic Disease Risk Analysis System
 
-An **AI-powered mobile health app** that scores your daily habits and predicts your risk of **Obesity**, **Hypertension**, and **Stroke** — all in one tap.
+## 📘 Overview
+This Final Year Project (FYP) presents the **Lifestyle Scoring and Chronic Disease Risk Analysis System**, an intelligent mobile-based application designed to evaluate users’ lifestyle habits and predict potential chronic disease risks. The system integrates **machine learning**, **FastAPI**, and **React Native (Expo)** to deliver personalized health analytics and preventive insights.
 
-Built with **React Native (Expo)**, **FastAPI**, and **XGBoost + SHAP** for crystal-clear, explainable insights.
+The goal is to transform self-reported lifestyle data (diet, activity, sleep, and habits) into a measurable **Healthy Lifestyle Score** and predict risks for **obesity, hypertension, and stroke** using trained machine-learning models.
 
 ---
 
-## 🚀 Live Demo  
-<img src="./assets/demo.gif" width="250" align="right" alt="App Demo" />  
+## ⚙️ System Architecture
+The project consists of three main components:
 
-- **Dashboard** – See your **Healthy Lifestyle Score (0-100)**  
-- **Risk Radar** – Visual risk levels for 3 chronic diseases  
-- **SHAP Explainer** – “Why did the AI flag you high-risk?”  
+1. **Frontend (React Native / Expo)**
+   - Cross-platform mobile app (Android & iOS)
+   - User authentication via Firebase
+   - Interactive UI for data input, score display, and personalized recommendations
 
----
+2. **Backend (FastAPI - Python)**
+   - RESTful API handling data processing and model inference
+   - Integration with trained ML models (XGBoost, Random Forest, Logistic Regression)
+   - JSON-based communication between app and API
 
-## 📱 Key Features  
-
-| Feature                  | Tech Used                     |
-|--------------------------|-------------------------------|
-| 🧠 **Multi-Disease Prediction** | XGBoost (81.6% acc) + SHAP    |
-| 💪 **Lifestyle Score Engine**  | Custom weighted algorithm     |
-| 🔐 **Secure Google Login**     | Firebase Auth + Firestore     |
-| 📊 **Interactive Charts**      | Victory Native + Reanimated   |
-| 🛡️ **Input Sanitization**     | Pydantic + React Hook Form    |
-
----
-
-## 🏆 Model Leaderboard  
-
-| Model               | Accuracy | Macro F1 | Status      |
-|---------------------|----------|----------|-------------|
-| **XGBoost**         | **0.8160** | **0.9749** | ✅ Final     |
-| Random Forest       | 0.792    | 0.891    | Runner-up   |
-| Logistic Regression | 0.345    | 0.469    | Benchmark   |
-| KNN                 | 0.763    | 0.820    | Baseline    |
-
-*Trained on 15,000+ anonymized lifestyle records.*
+3. **Machine Learning Models**
+   - Trained using public and custom health datasets
+   - Features include age, BMI, activity level, smoking, alcohol intake, sleep duration, and more
+   - Evaluated with metrics such as Subset Accuracy and Macro F1-Score
+   - Explainability via **SHAP** values for transparent prediction insights
 
 ---
 
-## 🧩 System Architecture  
+## 🧠 Key Features
+- Personalized **Healthy Lifestyle Score**
+- Risk prediction for **Obesity**, **Hypertension**, and **Stroke**
+- Explainable AI (SHAP) visualization
+- Firebase authentication (Google login, account deletion)
+- Local and remote data handling (SQLite + Firebase)
+- Multi-language support (English, Chinese, Malay)
+- User-friendly, minimalistic design with responsive UI
 
-```mermaid
-graph LR
-  A[React Native App] --> B[FastAPI Backend]
-  B --> C[XGBoost Models]
-  B --> D[SHAP Explainer]
-  A --> E[Firebase Auth]
-  E --> F[Firestore DB]
-  A --> G[Expo EAS Build]
+---
+
+## 🧩 Tech Stack
+
+| Layer | Technology |
+|-------|-------------|
+| Frontend | React Native (Expo), JavaScript |
+| Backend | FastAPI, Python |
+| ML Models | XGBoost, Scikit-Learn, Pandas, NumPy |
+| Database | Firebase, SQLite |
+| Authentication | Firebase Auth |
+| Explainability | SHAP |
+| Design Tools | Figma (UI/UX Wireframes) |
+
+---
+
+## 🧪 Model Evaluation Summary
+| Model | Subset Accuracy | Macro F1 | Remark |
+|-------|------------------|----------|--------|
+| XGBoost | 0.8160 | 0.9749 | Best performance, selected as final model |
+| KNN | 0.7630 | 0.8204 | Moderate accuracy |
+| Logistic Regression | 0.3445 | 0.4692 | Baseline model |
+
+---
+
+## 🧰 Installation and Setup
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/lifestyle-risk-analysis.git
+cd lifestyle-risk-analysis
