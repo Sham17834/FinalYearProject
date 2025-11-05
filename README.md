@@ -66,5 +66,5 @@ The project consists of three main components:
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/lifestyle-risk-analysis.git
+git clone https://github.com/Sham17834/FinalYearProject.git
 cd lifestyle-risk-analysis
