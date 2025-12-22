@@ -16,7 +16,7 @@ The project consists of three main components:
    - Interactive UI for data input, score display, and personalized recommendations
 
 2. **Backend (FastAPI - Python)**
-   - RESTful API handling data processing and model inference
+   - FastAPI handling data processing and model inference
    - Integration with trained ML models (XGBoost, Random Forest, Logistic Regression)
    - JSON-based communication between app and API
 
