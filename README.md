@@ -1,4 +1,4 @@
-# Lifestyle Scoring and Chronic Disease Risk Analysis System
+# Lifestyle Scoring and Chronic Disease Risk Prediction System
 
 ## 📘 Overview
 This Final Year Project (FYP) presents the **Lifestyle Scoring and Chronic Disease Risk Analysis System**, an intelligent mobile-based application designed to evaluate users’ lifestyle habits and predict potential chronic disease risks. The system integrates **machine learning**, **FastAPI**, and **React Native (Expo)** to deliver personalized health analytics and preventive insights.
